@@ -1,0 +1,125 @@
+define hokuyo laser(
+  	range_max 2.6
+  	fov 270.25
+  	samples 1081  
+  	
+  	size [ 0.33 0.33 0.025 ]
+
+ 	block(
+ 		points 16
+ 		point[0] [ 0.225 0.000 ]
+ 		point[1] [ 0.208 0.086 ]
+ 		point[2] [ 0.159 0.159 ]
+ 		point[3] [ 0.086 0.208 ]
+ 		point[4] [ 0.000 0.225 ]
+ 		point[5] [ -0.086 0.208 ]
+ 		point[6] [ -0.159 0.159 ]
+ 		point[7] [ -0.208 0.086 ]
+ 		point[8] [ -0.225 0.000 ]
+ 		point[9] [ -0.208 -0.086 ]
+ 		point[10] [ -0.159 -0.159 ]
+ 		point[11] [ -0.086 -0.208 ]
+ 		point[12] [ -0.000 -0.225 ]
+ 		point[13] [ 0.086 -0.208 ]
+ 		point[14] [ 0.159 -0.159 ]
+ 		point[15] [ 0.208 -0.086 ]
+ 		color "gray40"
+ 	)
+
+)
+
+define robot position(
+  	size [0.33 0.33 0.075]
+
+  	# This block approximates a circular shape of a Robot
+  	block
+	( 
+    	points 16
+    	point[0] [ 0.225 0.000 ]
+    	point[1] [ 0.208 0.086 ]
+    	point[2] [ 0.159 0.159 ]
+    	point[3] [ 0.086 0.208 ]
+    	point[4] [ 0.000 0.225 ]
+    	point[5] [ -0.086 0.208 ]
+    	point[6] [ -0.159 0.159 ]
+    	point[7] [ -0.208 0.086 ]
+    	point[8] [ -0.225 0.000 ]
+    	point[9] [ -0.208 -0.086 ]
+    	point[10] [ -0.159 -0.159 ]
+    	point[11] [ -0.086 -0.208 ]
+    	point[12] [ -0.000 -0.225 ]
+    	point[13] [ 0.086 -0.208 ]
+    	point[14] [ 0.159 -0.159 ]
+   	point[15] [ 0.208 -0.086 ]
+        
+	color "gray50"
+  	)
+ 	
+	hokuyo( pose [0 0 0 0] )
+  	color "gray50"
+)
+
+window( 
+  size [ 720 692 1] 		# Tamanho da janela em pixeis
+  rotate [ 0.000 0.000 ]	# Mapa não rodado
+  center [5.975 6.225 ]		# Centro da Janela no ponto central do ambiente (em metros)
+  scale 35 			# zoom da janela
+  show_data 1   
+
+)
+
+define floorplan model (
+  	# Sombre, sensible, artistic
+  	color "gray30"
+
+	# Most maps will need a bounding box
+	boundary 1
+
+	gui_nose 1	# Verificar para onde está virado o robot
+	gui_grid 0
+	gui_move 0
+	gui_outline 0
+	gripper_return 0
+	fiducial_return 0
+	laser_return 1
+)
+
+# Set the resolution of the underlying raytrace model in meters
+# resolution 0.025
+# interval_sim 100  # the length of each simulation update cycle in milliseconds.
+
+# load an environment bitmap
+floorplan (
+  size [11.95 12.45  1]	#metros (a imagem tem 239x249pixeis => 0.05 resolução no .yaml)
+  pose [5.975 6.225 0 0]
+  bitmap "1r-5-map.pgm"
+)
+
+# throw in a robot (Penso que o 4º parametro é a rotação do robot)
+
+robot(		  
+  	# Can refer to the robot by this name
+  	name "robot0"
+  	# pose [ 5.975 6.225 0 90.0 ]
+	pose [ 4.4 9.6 0 90.0 ]
+
+
+	drive "diff"
+
+  	# Report error-free position in world coordinates
+  	localization "gps"
+  	localization_origin [ 0 0 0 0 ]
+)
+
+robot(		  
+  	# Can refer to the robot by this name
+  	name "robot1"
+	pose [ 2.7 4.05 0 90.0 ]
+
+
+	drive "diff"
+
+  	# Report error-free position in world coordinates
+  	localization "gps"
+  	localization_origin [ 0 0 0 0 ]
+)

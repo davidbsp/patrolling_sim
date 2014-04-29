@@ -1,0 +1,9 @@
+<stack>
+  <description brief="patrol">Multi-Robot Patrol-Related Stack from the ISR Coimbra.</description>
+  <author>Maintained by David Portugal</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/patrol</url>
+  <depend stack="ros" />
+
+</stack>

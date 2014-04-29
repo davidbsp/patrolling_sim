@@ -1,0 +1,22 @@
+#Vertices
+Width (px)
+Height (px)
+Resolution (m/px)
+
+ID Vertex
+X coordinate (px)
+Y coordinate (px)
+# Neighbors
+ID Neighbor 1
+Direction
+Cost
+ID Neighbor 2
+Direction
+Cost
+...
+
+ID Vertex
+X coordinate (px)
+Y coordinate (px)
+# Neighbors
+...

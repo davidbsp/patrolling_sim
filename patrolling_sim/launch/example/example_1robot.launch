@@ -1,0 +1,30 @@
+<launch>
+  <master auto="start"/>
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/example/example.yaml"/>
+
+
+  <!-- Parameter with Initial Position Estimate [x0, y0, x1, y1, ...] -->
+   <rosparam param="initial_pos">[42.45, 19.80]</rosparam>
+
+  <!--- Run AMCL -->
+  <include file="$(find patrolling_sim)/params/amcl/example_1robot/amcl_diff.launch" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find patrolling_sim)/params/amcl/example_1robot/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/example_1robot/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/example_1robot/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/example_1robot/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/base_local_planner_params.yaml" command="load" />
+  </node>
+
+  <!-- Run Rviz -->
+  <!-- <node pkg="rviz" type="rviz" name="rviz">  </node> -->
+ 
+
+ <!-- Run Nav_View -->
+ <!-- <include file="$(find navigation_stage)/move_base_config/nav_view.xml"/> -->
+ <!-- COMENTÁRIO -->
+
+</launch>

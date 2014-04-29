@@ -1,0 +1,395 @@
+ID= 0
+X= 2.325000, Y= 21.675001
+#Neigh= 1
+	ID = 1, DIR = S, COST = 177
+
+ID= 1
+X= 6.150000, Y= 12.000000
+#Neigh= 3
+	ID = 0, DIR = W, COST = 177
+	ID = 2, DIR = N, COST = 143
+	ID = 4, DIR = E, COST = 61
+
+ID= 2
+X= 6.150000, Y= 21.000000
+#Neigh= 1
+	ID = 1, DIR = W, COST = 143
+
+ID= 3
+X= 10.725000, Y= 14.775001
+#Neigh= 1
+	ID = 4, DIR = S, COST = 37
+
+ID= 4
+X= 10.725000, Y= 12.000000
+#Neigh= 3
+	ID = 1, DIR = W, COST = 61
+	ID = 3, DIR = N, COST = 37
+	ID = 5, DIR = E, COST = 78
+
+ID= 5
+X= 16.575001, Y= 12.375001
+#Neigh= 3
+	ID = 4, DIR = SW, COST = 78
+	ID = 6, DIR = N, COST = 136
+	ID = 13, DIR = E, COST = 87
+
+ID= 6
+X= 16.950001, Y= 22.575001
+#Neigh= 3
+	ID = 7, DIR = W, COST = 94
+	ID = 5, DIR = S, COST = 136
+	ID = 8, DIR = NE, COST = 92
+
+ID= 7
+X= 19.500000, Y= 28.125002
+#Neigh= 1
+	ID = 6, DIR = W, COST = 94
+
+ID= 8
+X= 14.250001, Y= 28.125002
+#Neigh= 1
+	ID = 6, DIR = E, COST = 92
+
+ID= 9
+X= 21.525002, Y= 25.050001
+#Neigh= 1
+	ID = 16, DIR = E, COST = 90
+
+ID= 10
+X= 22.125000, Y= 27.525002
+#Neigh= 1
+	ID = 17, DIR = E, COST = 84
+
+ID= 11
+X= 22.725000, Y= 17.400002
+#Neigh= 1
+	ID = 13, DIR = S, COST = 72
+
+ID= 12
+X= 22.800001, Y= 21.975000
+#Neigh= 1
+	ID = 16, DIR = E, COST = 124
+
+ID= 13
+X= 23.100000, Y= 12.000000
+#Neigh= 3
+	ID = 5, DIR = W, COST = 87
+	ID = 11, DIR = N, COST = 72
+	ID = 15, DIR = E, COST = 65
+
+ID= 14
+X= 26.250002, Y= 18.525002
+#Neigh= 1
+	ID = 15, DIR = E, COST = 154
+
+ID= 15
+X= 27.975000, Y= 12.075001
+#Neigh= 3
+	ID = 13, DIR = W, COST = 65
+	ID = 14, DIR = N, COST = 154
+	ID = 18, DIR = E, COST = 65
+
+ID= 16
+X= 28.275002, Y= 25.950001
+#Neigh= 3
+	ID = 9, DIR = W, COST = 90
+	ID = 17, DIR = N, COST = 5
+	ID = 12, DIR = S, COST = 124
+
+ID= 17
+X= 28.425001, Y= 26.325001
+#Neigh= 3
+	ID = 10, DIR = NW, COST = 84
+	ID = 16, DIR = SW, COST = 5
+	ID = 20, DIR = E, COST = 76
+
+ID= 18
+X= 32.850002, Y= 10.350000
+#Neigh= 3
+	ID = 15, DIR = W, COST = 65
+	ID = 32, DIR = S, COST = 177
+	ID = 19, DIR = NE, COST = 22
+
+ID= 19
+X= 33.975002, Y= 12.000000
+#Neigh= 3
+	ID = 23, DIR = N, COST = 53
+	ID = 18, DIR = S, COST = 22
+	ID = 26, DIR = E, COST = 54
+
+ID= 20
+X= 34.125000, Y= 24.525002
+#Neigh= 3
+	ID = 17, DIR = NW, COST = 76
+	ID = 21, DIR = S, COST = 13
+	ID = 25, DIR = E, COST = 30
+
+ID= 21
+X= 34.125000, Y= 23.550001
+#Neigh= 3
+	ID = 23, DIR = SW, COST = 122
+	ID = 20, DIR = N, COST = 13
+	ID = 22, DIR = E, COST = 12
+
+ID= 22
+X= 35.025002, Y= 22.725000
+#Neigh= 1
+	ID = 21, DIR = NW, COST = 12
+
+ID= 23
+X= 35.025002, Y= 15.975000
+#Neigh= 3
+	ID = 19, DIR = SW, COST = 53
+	ID = 21, DIR = N, COST = 122
+	ID = 28, DIR = E, COST = 48
+
+ID= 24
+X= 35.175003, Y= 22.575001
+#Neigh= 1
+	ID = 27, DIR = SE, COST = 81
+
+ID= 25
+X= 36.375000, Y= 25.200001
+#Neigh= 3
+	ID = 20, DIR = W, COST = 30
+	ID = 30, DIR = NE, COST = 91
+	ID = 33, DIR = SE, COST = 67
+
+ID= 26
+X= 37.050003, Y= 10.875000
+#Neigh= 1
+	ID = 19, DIR = N, COST = 54
+
+ID= 27
+X= 38.625000, Y= 16.500000
+#Neigh= 3
+	ID = 24, DIR = NW, COST = 81
+	ID = 28, DIR = S, COST = 5
+	ID = 40, DIR = NE, COST = 66
+
+ID= 28
+X= 38.625000, Y= 16.125000
+#Neigh= 3
+	ID = 23, DIR = SW, COST = 48
+	ID = 27, DIR = N, COST = 5
+	ID = 41, DIR = SE, COST = 69
+
+ID= 29
+X= 40.275002, Y= 33.000000
+#Neigh= 1
+	ID = 30, DIR = S, COST = 14
+
+ID= 30
+X= 39.750000, Y= 31.950001
+#Neigh= 3
+	ID = 25, DIR = SW, COST = 91
+	ID = 29, DIR = N, COST = 14
+	ID = 35, DIR = SE, COST = 21
+
+ID= 31
+X= 40.425003, Y= 20.700001
+#Neigh= 1
+	ID = 38, DIR = E, COST = 35
+
+ID= 32
+X= 40.650002, Y= 3.225000
+#Neigh= 3
+	ID = 18, DIR = W, COST = 177
+	ID = 41, DIR = NE, COST = 105
+	ID = 58, DIR = SE, COST = 110
+
+ID= 33
+X= 41.400002, Y= 25.425001
+#Neigh= 3
+	ID = 25, DIR = W, COST = 67
+	ID = 34, DIR = S, COST = 5
+	ID = 36, DIR = NE, COST = 64
+
+ID= 34
+X= 41.700001, Y= 25.050001
+#Neigh= 1
+	ID = 33, DIR = NW, COST = 5
+
+ID= 35
+X= 41.775002, Y= 30.375002
+#Neigh= 1
+	ID = 30, DIR = NW, COST = 21
+
+ID= 36
+X= 41.775002, Y= 30.225000
+#Neigh= 1
+	ID = 33, DIR = S, COST = 64
+
+ID= 37
+X= 41.850002, Y= 24.900002
+#Neigh= 1
+	ID = 45, DIR = SE, COST = 33
+
+ID= 38
+X= 43.050003, Y= 20.775002
+#Neigh= 3
+	ID = 31, DIR = W, COST = 35
+	ID = 39, DIR = NE, COST = 7
+	ID = 40, DIR = SE, COST = 34
+
+ID= 39
+X= 43.575001, Y= 21.000000
+#Neigh= 3
+	ID = 38, DIR = W, COST = 7
+	ID = 45, DIR = N, COST = 44
+	ID = 42, DIR = E, COST = 4
+
+ID= 40
+X= 43.575001, Y= 18.225000
+#Neigh= 3
+	ID = 27, DIR = W, COST = 66
+	ID = 38, DIR = N, COST = 34
+	ID = 52, DIR = E, COST = 43
+
+ID= 41
+X= 43.725002, Y= 11.100000
+#Neigh= 3
+	ID = 32, DIR = SW, COST = 105
+	ID = 28, DIR = N, COST = 69
+	ID = 46, DIR = E, COST = 11
+
+ID= 42
+X= 43.875000, Y= 21.000000
+#Neigh= 3
+	ID = 39, DIR = W, COST = 4
+	ID = 43, DIR = NE, COST = 4
+	ID = 44, DIR = SE, COST = 6
+
+ID= 43
+X= 45.000000, Y= 21.975000
+#Neigh= 1
+	ID = 42, DIR = SW, COST = 4
+
+ID= 44
+X= 45.000000, Y= 20.025002
+#Neigh= 1
+	ID = 42, DIR = N, COST = 6
+
+ID= 45
+X= 44.325001, Y= 24.300001
+#Neigh= 3
+	ID = 37, DIR = NW, COST = 33
+	ID = 39, DIR = SW, COST = 44
+	ID = 49, DIR = E, COST = 11
+
+ID= 46
+X= 44.550003, Y= 11.100000
+#Neigh= 3
+	ID = 41, DIR = W, COST = 11
+	ID = 47, DIR = NE, COST = 5
+	ID = 56, DIR = SE, COST = 57
+
+ID= 47
+X= 44.925003, Y= 11.400001
+#Neigh= 3
+	ID = 46, DIR = W, COST = 5
+	ID = 55, DIR = N, COST = 36
+	ID = 64, DIR = E, COST = 66
+
+ID= 48
+X= 45.150002, Y= 25.800001
+#Neigh= 1
+	ID = 49, DIR = S, COST = 20
+
+ID= 49
+X= 45.150002, Y= 24.300001
+#Neigh= 3
+	ID = 45, DIR = W, COST = 11
+	ID = 48, DIR = N, COST = 20
+	ID = 50, DIR = E, COST = 17
+
+ID= 50
+X= 46.425003, Y= 24.300001
+#Neigh= 3
+	ID = 49, DIR = W, COST = 17
+	ID = 60, DIR = S, COST = 17
+	ID = 59, DIR = NE, COST = 20
+
+ID= 51
+X= 46.800003, Y= 21.900002
+#Neigh= 1
+	ID = 52, DIR = S, COST = 75
+
+ID= 52
+X= 46.800003, Y= 16.275002
+#Neigh= 3
+	ID = 40, DIR = W, COST = 43
+	ID = 51, DIR = N, COST = 75
+	ID = 53, DIR = S, COST = 1
+
+ID= 53
+X= 46.800003, Y= 16.200001
+#Neigh= 3
+	ID = 52, DIR = N, COST = 1
+	ID = 54, DIR = S, COST = 26
+	ID = 63, DIR = E, COST = 27
+
+ID= 54
+X= 46.800003, Y= 14.250001
+#Neigh= 1
+	ID = 53, DIR = N, COST = 26
+
+ID= 55
+X= 46.800003, Y= 14.100000
+#Neigh= 1
+	ID = 47, DIR = S, COST = 36
+
+ID= 56
+X= 47.100002, Y= 6.825000
+#Neigh= 1
+	ID = 46, DIR = N, COST = 57
+
+ID= 57
+X= 47.175003, Y= 6.675000
+#Neigh= 1
+	ID = 58, DIR = S, COST = 1
+
+ID= 58
+X= 47.175003, Y= 6.600000
+#Neigh= 3
+	ID = 57, DIR = N, COST = 1
+	ID = 32, DIR = S, COST = 110
+	ID = 62, DIR = E, COST = 18
+
+ID= 59
+X= 47.400002, Y= 25.800001
+#Neigh= 1
+	ID = 50, DIR = S, COST = 20
+
+ID= 60
+X= 47.025002, Y= 23.475000
+#Neigh= 1
+	ID = 50, DIR = W, COST = 17
+
+ID= 61
+X= 48.525002, Y= 21.975000
+#Neigh= 1
+	ID = 63, DIR = S, COST = 66
+
+ID= 62
+X= 48.525002, Y= 6.825000
+#Neigh= 1
+	ID = 58, DIR = W, COST = 18
+
+ID= 63
+X= 48.750004, Y= 17.025002
+#Neigh= 3
+	ID = 61, DIR = N, COST = 66
+	ID = 53, DIR = S, COST = 27
+	ID = 65, DIR = E, COST = 69
+
+ID= 64
+X= 49.875004, Y= 11.325001
+#Neigh= 1
+	ID = 47, DIR = W, COST = 66
+
+ID= 65
+X= 50.175003, Y= 22.050001
+#Neigh= 1
+	ID = 63, DIR = S, COST = 6

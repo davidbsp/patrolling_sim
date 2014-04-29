@@ -1,0 +1,166 @@
+define hokuyo laser(
+  	range_max 2.6
+  	fov 270.25
+  	samples 1081  
+  	
+  	size [ 0.33 0.33 0.025 ]
+
+	block(
+		points 16
+		point[0] [ 0.225 0.000 ]
+		point[1] [ 0.208 0.086 ]
+		point[2] [ 0.159 0.159 ]
+		point[3] [ 0.086 0.208 ]
+		point[4] [ 0.000 0.225 ]
+		point[5] [ -0.086 0.208 ]
+		point[6] [ -0.159 0.159 ]
+		point[7] [ -0.208 0.086 ]
+		point[8] [ -0.225 0.000 ]
+		point[9] [ -0.208 -0.086 ]
+		point[10] [ -0.159 -0.159 ]
+		point[11] [ -0.086 -0.208 ]
+		point[12] [ -0.000 -0.225 ]
+		point[13] [ 0.086 -0.208 ]
+		point[14] [ 0.159 -0.159 ]
+		point[15] [ 0.208 -0.086 ]
+		color "gray40"
+	)
+
+)
+
+define robot position(
+  	size [0.33 0.33 0.075]
+
+  	# This block approximates a circular shape of a Robot
+  	block
+	( 
+    	points 16
+    	point[0] [ 0.225 0.000 ]
+    	point[1] [ 0.208 0.086 ]
+    	point[2] [ 0.159 0.159 ]
+    	point[3] [ 0.086 0.208 ]
+    	point[4] [ 0.000 0.225 ]
+    	point[5] [ -0.086 0.208 ]
+    	point[6] [ -0.159 0.159 ]
+    	point[7] [ -0.208 0.086 ]
+    	point[8] [ -0.225 0.000 ]
+    	point[9] [ -0.208 -0.086 ]
+    	point[10] [ -0.159 -0.159 ]
+    	point[11] [ -0.086 -0.208 ]
+    	point[12] [ -0.000 -0.225 ]
+    	point[13] [ 0.086 -0.208 ]
+    	point[14] [ 0.159 -0.159 ]
+   	point[15] [ 0.208 -0.086 ]
+        
+	color "gray50"
+  	)
+ 	
+  	hokuyo( pose [0 0 0 0] )
+  	color "gray50"
+)
+
+window( 
+  size [ 950 950 1] 		# Tamanho da janela em pixeis
+  rotate [ 0.000 0.000 ]	# Mapa não rodado
+  center [12.9 12.9 ]		# Centro da Janela no ponto central do ambiente (em metros)
+  scale 30 			# zoom da janela
+  show_data 1   
+
+)
+
+define floorplan model (
+  	# Sombre, sensible, artistic
+  	color "gray30"
+
+	# Most maps will need a bounding box
+	boundary 1
+
+	gui_nose 0
+	gui_grid 0
+	gui_move 0
+	gui_outline 0
+	gripper_return 0
+	fiducial_return 0
+	laser_return 1
+)
+
+# load an environment bitmap
+floorplan (
+  size [25.8 25.8  1]	#metros (a imagem tem 344x344pixeis => 0.075 resolução no .yaml)
+  pose [12.9 12.9 0 0]
+  bitmap "grid.pgm"
+)
+
+# throw in a robot (Penso que o 4º parametro é a rotação do robot)
+
+robot(		  
+  	# Can refer to the robot by this name
+  	name "robot0"
+	pose [ 18.525  24.375 0 90.0 ]
+
+	drive "diff"
+
+  	# Report error-free position in world coordinates
+  	localization "gps"
+  	localization_origin [ 0 0 0 0 ]
+)
+
+robot(		  
+  	# Can refer to the robot by this name
+  	name "robot1"
+	pose [ 12.825 12.975 0 90.0 ]
+
+	drive "diff"
+
+  	# Report error-free position in world coordinates
+  	localization "gps"
+  	localization_origin [ 0 0 0 0 ]
+)
+
+robot(		  
+  	# Can refer to the robot by this name
+  	name "robot2"
+	pose [ 1.425 7.275 0 90.0 ]
+
+	drive "diff"
+
+  	# Report error-free position in world coordinates
+  	localization "gps"
+  	localization_origin [ 0 0 0 0 ]
+)
+
+robot(		  
+  	# Can refer to the robot by this name
+  	name "robot3"
+	pose [ 7.125 18.675  0 90.0 ]
+
+	drive "diff"
+
+  	# Report error-free position in world coordinates
+  	localization "gps"
+  	localization_origin [ 0 0 0 0 ]
+)
+
+robot(		  
+  	# Can refer to the robot by this name
+  	name "robot4"
+	pose [ 1.425 24.375  0 90.0 ]
+
+	drive "diff"
+
+  	# Report error-free position in world coordinates
+  	localization "gps"
+  	localization_origin [ 0 0 0 0 ]
+)
+
+robot(		  
+  	# Can refer to the robot by this name
+  	name "robot5"
+	pose [ 7.125 7.275  0 90.0 ]
+
+	drive "diff"
+
+  	# Report error-free position in world coordinates
+  	localization "gps"
+  	localization_origin [ 0 0 0 0 ]
+)

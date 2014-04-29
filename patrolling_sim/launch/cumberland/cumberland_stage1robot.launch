@@ -1,0 +1,7 @@
+<launch>
+  <master auto="start"/>
+
+  <!-- <rosparam command="load" file="$(find patrolling_sim)/params/amcl/cumberland_1robot/tf_prefix.yaml"/> -->
+  <!-- Run Stage (só tirei o "-g" por trás do $)-->
+  <node name="stageros" pkg="stage" type="stageros" args="$(find patrolling_sim)/maps/cumberland/cumberland.world" output="screen"/>    
+</launch>

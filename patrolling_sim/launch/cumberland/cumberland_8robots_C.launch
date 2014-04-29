@@ -1,0 +1,62 @@
+<launch>
+  <master auto="start"/>
+
+  <!-- BEGIN ROBOT 5 -->
+  <group ns="robot_5">
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/cumberland/cumberland.yaml"/>
+
+  <!--- Run AMCL -->
+  <include file="$(find patrolling_sim)/params/amcl/cumberland_8robots/amcl_diff_robot5.launch" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/costmap_common_params_robot5.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/costmap_common_params_robot5.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/local_costmap_params_robot5.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/global_costmap_params_robot5.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/base_local_planner_params.yaml" command="load" />
+  </node>
+
+  </group>
+
+  <!-- BEGIN ROBOT 6 -->
+  <group ns="robot_6">
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/cumberland/cumberland.yaml"/>
+
+  <!--- Run AMCL -->
+  <include file="$(find patrolling_sim)/params/amcl/cumberland_8robots/amcl_diff_robot6.launch" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/costmap_common_params_robot6.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/costmap_common_params_robot6.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/local_costmap_params_robot6.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/global_costmap_params_robot6.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/base_local_planner_params.yaml" command="load" />
+  </node>
+
+  </group>
+
+
+  <!-- BEGIN ROBOT 7 -->
+  <group ns="robot_7">
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/cumberland/cumberland.yaml"/>
+
+  <!--- Run AMCL -->
+  <include file="$(find patrolling_sim)/params/amcl/cumberland_8robots/amcl_diff_robot7.launch" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/costmap_common_params_robot7.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/costmap_common_params_robot7.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/local_costmap_params_robot7.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/cumberland_8robots/global_costmap_params_robot7.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/base_local_planner_params.yaml" command="load" />
+  </node>
+
+  </group>
+
+</launch>

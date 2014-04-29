@@ -1,0 +1,12 @@
+controller_frequency: 5.0
+TrajectoryPlannerROS:
+  max_vel_x: 0.20
+  min_vel_x: 0.10
+  max_rotational_vel: 1.5
+  min_in_place_rotational_vel: 0.8
+  acc_lim_th: 0.75
+  acc_lim_x: 0.50
+  acc_lim_y: 0.50
+  holonomic_robot: true
+  yaw_goal_tolerance: 6.28 #don't care about orientation
+  xy_goal_tolerance: 0.20

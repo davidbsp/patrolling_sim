@@ -1,0 +1,94 @@
+<launch>
+  <master auto="start"/>
+
+  
+ <!-- BEGIN ROBOT 5 -->
+  <group ns="robot_5">
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/grid/grid.yaml"/>
+
+
+
+  <!--- Run AMCL -->
+  <include file="$(find patrolling_sim)/params/amcl/grid_12robots/amcl_diff_robot5.launch" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/costmap_common_params_robot5.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/costmap_common_params_robot5.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/local_costmap_params_robot5.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/global_costmap_params_robot5.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/base_local_planner_params.yaml" command="load" />
+  </node>
+
+  <!-- Run Rviz -->
+  <!-- <node pkg="rviz" type="rviz" name="rviz">  </node> -->
+ 
+
+ <!-- Run Nav_View -->
+ <!-- <include file="$(find navigation_stage)/move_base_config/nav_view.xml"/> -->
+ <!-- COMENTÁRIO -->
+
+  </group>
+
+ <!-- BEGIN ROBOT 6 -->
+  <group ns="robot_6">
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/grid/grid.yaml"/>
+
+
+
+  <!--- Run AMCL -->
+  <include file="$(find patrolling_sim)/params/amcl/grid_12robots/amcl_diff_robot6.launch" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/costmap_common_params_robot6.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/costmap_common_params_robot6.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/local_costmap_params_robot6.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/global_costmap_params_robot6.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/base_local_planner_params.yaml" command="load" />
+  </node>
+
+  <!-- Run Rviz -->
+  <!-- <node pkg="rviz" type="rviz" name="rviz">  </node> -->
+ 
+
+ <!-- Run Nav_View -->
+ <!-- <include file="$(find navigation_stage)/move_base_config/nav_view.xml"/> -->
+ <!-- COMENTÁRIO -->
+
+  </group>
+
+ <!-- BEGIN ROBOT 7 -->
+  <group ns="robot_7">
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/grid/grid.yaml"/>
+
+
+
+  <!--- Run AMCL -->
+  <include file="$(find patrolling_sim)/params/amcl/grid_12robots/amcl_diff_robot7.launch" />
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/costmap_common_params_robot7.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/costmap_common_params_robot7.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/local_costmap_params_robot7.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/grid_12robots/global_costmap_params_robot7.yaml" command="load" />
+    <rosparam file="$(find patrolling_sim)/params/amcl/base_local_planner_params.yaml" command="load" />
+  </node>
+
+  <!-- Run Rviz -->
+  <!-- <node pkg="rviz" type="rviz" name="rviz">  </node> -->
+ 
+
+ <!-- Run Nav_View -->
+ <!-- <include file="$(find navigation_stage)/move_base_config/nav_view.xml"/> -->
+ <!-- COMENTÁRIO -->
+
+  </group>
+
+ 
+
+</launch>

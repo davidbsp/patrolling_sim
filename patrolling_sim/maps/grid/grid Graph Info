@@ -1,0 +1,179 @@
+ID= 0
+X= 1.425000, Y= 24.375002
+#Neigh= 2
+	ID = 1, DIR = S, COST = 76
+	ID = 5, DIR = E, COST = 76
+
+ID= 1
+X= 1.425000, Y= 18.675001
+#Neigh= 3
+	ID = 0, DIR = N, COST = 76
+	ID = 2, DIR = S, COST = 76
+	ID = 6, DIR = E, COST = 76
+
+ID= 2
+X= 1.425000, Y= 12.975000
+#Neigh= 3
+	ID = 1, DIR = N, COST = 76
+	ID = 3, DIR = S, COST = 76
+	ID = 7, DIR = E, COST = 76
+
+ID= 3
+X= 1.425000, Y= 7.275000
+#Neigh= 3
+	ID = 2, DIR = N, COST = 76
+	ID = 4, DIR = S, COST = 76
+	ID = 8, DIR = E, COST = 76
+
+ID= 4
+X= 1.425000, Y= 1.575000
+#Neigh= 2
+	ID = 3, DIR = N, COST = 76
+	ID = 9, DIR = E, COST = 76
+
+ID= 5
+X= 7.125000, Y= 24.375002
+#Neigh= 3
+	ID = 0, DIR = W, COST = 76
+	ID = 6, DIR = S, COST = 76
+	ID = 10, DIR = E, COST = 76
+
+ID= 6
+X= 7.125000, Y= 18.675001
+#Neigh= 4
+	ID = 1, DIR = W, COST = 76
+	ID = 5, DIR = N, COST = 76
+	ID = 7, DIR = S, COST = 76
+	ID = 11, DIR = E, COST = 76
+
+ID= 7
+X= 7.125000, Y= 12.975000
+#Neigh= 4
+	ID = 2, DIR = W, COST = 76
+	ID = 6, DIR = N, COST = 76
+	ID = 8, DIR = S, COST = 76
+	ID = 12, DIR = E, COST = 76
+
+ID= 8
+X= 7.125000, Y= 7.275000
+#Neigh= 4
+	ID = 3, DIR = W, COST = 76
+	ID = 7, DIR = N, COST = 76
+	ID = 9, DIR = S, COST = 76
+	ID = 13, DIR = E, COST = 76
+
+ID= 9
+X= 7.125000, Y= 1.575000
+#Neigh= 3
+	ID = 4, DIR = W, COST = 76
+	ID = 8, DIR = N, COST = 76
+	ID = 14, DIR = E, COST = 76
+
+ID= 10
+X= 12.825001, Y= 24.375002
+#Neigh= 3
+	ID = 5, DIR = W, COST = 76
+	ID = 11, DIR = S, COST = 76
+	ID = 15, DIR = E, COST = 76
+
+ID= 11
+X= 12.825001, Y= 18.675001
+#Neigh= 4
+	ID = 6, DIR = W, COST = 76
+	ID = 10, DIR = N, COST = 76
+	ID = 12, DIR = S, COST = 76
+	ID = 16, DIR = E, COST = 76
+
+ID= 12
+X= 12.825001, Y= 12.975000
+#Neigh= 4
+	ID = 7, DIR = W, COST = 76
+	ID = 11, DIR = N, COST = 76
+	ID = 13, DIR = S, COST = 76
+	ID = 17, DIR = E, COST = 76
+
+ID= 13
+X= 12.825001, Y= 7.275000
+#Neigh= 4
+	ID = 8, DIR = W, COST = 76
+	ID = 12, DIR = N, COST = 76
+	ID = 14, DIR = S, COST = 76
+	ID = 18, DIR = E, COST = 76
+
+ID= 14
+X= 12.825001, Y= 1.575000
+#Neigh= 3
+	ID = 9, DIR = W, COST = 76
+	ID = 13, DIR = N, COST = 76
+	ID = 19, DIR = E, COST = 76
+
+ID= 15
+X= 18.525002, Y= 24.375002
+#Neigh= 3
+	ID = 10, DIR = W, COST = 76
+	ID = 16, DIR = S, COST = 76
+	ID = 20, DIR = E, COST = 76
+
+ID= 16
+X= 18.525002, Y= 18.675001
+#Neigh= 4
+	ID = 11, DIR = W, COST = 76
+	ID = 15, DIR = N, COST = 76
+	ID = 17, DIR = S, COST = 76
+	ID = 21, DIR = E, COST = 76
+
+ID= 17
+X= 18.525002, Y= 12.975000
+#Neigh= 4
+	ID = 12, DIR = W, COST = 76
+	ID = 16, DIR = N, COST = 76
+	ID = 18, DIR = S, COST = 76
+	ID = 22, DIR = E, COST = 76
+
+ID= 18
+X= 18.525002, Y= 7.275000
+#Neigh= 4
+	ID = 13, DIR = W, COST = 76
+	ID = 17, DIR = N, COST = 76
+	ID = 19, DIR = S, COST = 76
+	ID = 23, DIR = E, COST = 76
+
+ID= 19
+X= 18.525002, Y= 1.575000
+#Neigh= 3
+	ID = 14, DIR = W, COST = 76
+	ID = 18, DIR = N, COST = 76
+	ID = 24, DIR = E, COST = 76
+
+ID= 20
+X= 24.225000, Y= 24.375002
+#Neigh= 2
+	ID = 15, DIR = W, COST = 76
+	ID = 21, DIR = S, COST = 76
+
+ID= 21
+X= 24.225000, Y= 18.675001
+#Neigh= 3
+	ID = 16, DIR = W, COST = 76
+	ID = 20, DIR = N, COST = 76
+	ID = 22, DIR = S, COST = 76
+
+ID= 22
+X= 24.225000, Y= 12.975000
+#Neigh= 3
+	ID = 17, DIR = W, COST = 76
+	ID = 21, DIR = N, COST = 76
+	ID = 23, DIR = S, COST = 76
+
+ID= 23
+X= 24.225000, Y= 7.275000
+#Neigh= 3
+	ID = 18, DIR = W, COST = 76
+	ID = 22, DIR = N, COST = 76
+	ID = 24, DIR = S, COST = 76
+
+ID= 24
+X= 24.225000, Y= 1.575000
+#Neigh= 2
+	ID = 19, DIR = W, COST = 76
+	ID = 23, DIR = N, COST = 76

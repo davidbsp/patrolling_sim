@@ -1,0 +1,49 @@
+<launch>
+  <master auto="start"/>
+
+  <!-- Parameter with Initial Position Estimate [x0, y0, x1, y1, ...] -->
+  <rosparam param="initial_pos">[32.55, 27.0, 10.65, 23.40, 23.4, 6.9, 3.9, 27.6, 5.1, 3.75, 27.6, 23.1, 31.25, 9.75, 42.3, 15.15, 6.75, 8.7, 38.1, 3.9, 23.4, 12.9, 11.55, 28.5]</rosparam>
+
+ 
+  <!-- BEGIN ROBOT 0 -->
+  <group ns="robot_0">
+
+    <!-- Run the map server -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/example/example.yaml"/>
+
+    <!--- Run AMCL -->
+    <include file="$(find patrolling_sim)/params/amcl/example_12robots/amcl_diff_robot0.launch" />
+
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+      <rosparam file="$(find patrolling_sim)/params/amcl/example_12robots/costmap_common_params_robot0.yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find patrolling_sim)/params/amcl/example_12robots/costmap_common_params_robot0.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find patrolling_sim)/params/amcl/example_12robots/local_costmap_params_robot0.yaml" command="load" />
+      <rosparam file="$(find patrolling_sim)/params/amcl/example_12robots/global_costmap_params_robot0.yaml" command="load" />
+      <rosparam file="$(find patrolling_sim)/params/amcl/base_local_planner_params.yaml" command="load" />
+    </node>
+
+  </group>
+
+
+
+  <!-- BEGIN ROBOT 1 -->
+  <group ns="robot_1">
+
+    <!-- Run the map server -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/example/example.yaml"/>
+
+    <!--- Run AMCL -->
+    <include file="$(find patrolling_sim)/params/amcl/example_12robots/amcl_diff_robot1.launch" />
+
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+      <rosparam file="$(find patrolling_sim)/params/amcl/example_12robots/costmap_common_params_robot1.yaml" command="load" ns="global_costmap" />
+      <rosparam file="$(find patrolling_sim)/params/amcl/example_12robots/costmap_common_params_robot1.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find patrolling_sim)/params/amcl/example_12robots/local_costmap_params_robot1.yaml" command="load" />
+      <rosparam file="$(find patrolling_sim)/params/amcl/example_12robots/global_costmap_params_robot1.yaml" command="load" />
+      <rosparam file="$(find patrolling_sim)/params/amcl/base_local_planner_params.yaml" command="load" />
+    </node>
+
+  </group>
+
+
+</launch>
