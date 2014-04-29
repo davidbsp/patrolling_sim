@@ -1,0 +1,6 @@
+image: 1r5.pgm
+resolution: 0.05
+origin: [0.000000, 0.000000, 0.000000]
+negate: 0       #se negate=1 -> preto-free & branco-obstaculos
+occupied_thresh: 0.65
+free_thresh: 0.19

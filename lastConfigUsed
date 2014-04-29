@@ -1,0 +1,4 @@
+[Config]
+map: grid
+nrobots: 4
+algorithm: GBS

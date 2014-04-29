@@ -1,0 +1,19 @@
+include "../hokuyo.inc"
+include "../crobot.inc"
+include "../floorplan.inc"
+
+window( 
+  size [ 800 700 1]         # Tamanho da janela em pixeis
+  rotate [ 0.000 0.000 ]    # Mapa não rodado
+  center [ 25.8 18.7125]    # Centro da Janela no ponto central do ambiente (em metros)
+  scale 15          # zoom da janela
+  show_data 0
+)
+
+floorplan (
+  size [51.6 37.425  1] #metros (a imagem tem 688x499pixeis => 0.075 resolução no .yaml)
+  pose [25.8 18.7125 0 0]
+  bitmap "cumberland.pgm"
+)
+
+include "robots.inc"
