@@ -41,18 +41,17 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <nav_msgs/Odometry.h>
-#include <std_msgs/Int8MultiArray.h>
 
 
-void send_goal_result (uint current_vertex, uint next_vertex);
+void send_goal_result (uint vertex);
 
-//void send_intention (uint vertex);
+void send_intention (uint vertex);
 
 void backup();
 
-void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg);
-//void resultsCB_GBS(const geometry_msgs::PointStamped::ConstPtr& msg);
-//void resultsCB_SEBS(const geometry_msgs::PointStamped::ConstPtr& msg);
+void resultsCB(const geometry_msgs::PointStamped::ConstPtr& msg);
+void resultsCB_GBS(const geometry_msgs::PointStamped::ConstPtr& msg);
+void resultsCB_SEBS(const geometry_msgs::PointStamped::ConstPtr& msg);
 
 void initialize_node(); 
 

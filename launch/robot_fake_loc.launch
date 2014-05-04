@@ -10,9 +10,15 @@
     <!-- Run the map server -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/$(arg mapname)/$(arg mapname).yaml" />
 
-    <!--- Run AMCL -->
-    <include file="$(find patrolling_sim)/params/amcl/amcl_diff.launch" />       
-    <include file="$(find patrolling_sim)/params/amcl/$(arg robotname)_initial_pose.xml" />
+    <!--- Run Fake Localization -->
+    <node pkg="fake_localization" type="fake_localization" respawn="false" name="fake_localization" output="screen">
+      <param name="delta_x" value="0.0"/>
+      <param name="delta_y" value="0.0"/>
+      <param name="delta_yaw" value="-1.57079632679"/>
+      <param name="global_frame_id" value="map"/>     
+      <param name="odom_frame_id" value="/$(arg robotname)/odom"/>         
+      <param name="base_frame_id" value="/$(arg robotname)/base_link"/>       
+    </node>
     
     <!-- Override AMCL Frame Params to include prefix -->
     <param name="/$(arg robotname)/amcl/base_frame_id" value="$(arg robotname)/base_link"/>
@@ -29,11 +35,11 @@
 	
 	<!-- Override MOVE_BASE Frame Params to include prefix -->
 	<param name="global_costmap/laser_scan_sensor/sensor_frame" value="$(arg robotname)/base_laser_link"/>
-	<param name="global_costmap/laser_scan_sensor/topic" value="$(arg robotname)/base_scan"/>
+	<param name="global_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
 	<param name="global_costmap/robot_base_frame" value="$(arg robotname)/base_link"/>   
 	<param name="local_costmap/global_frame" value="$(arg robotname)/odom"/>
 	<param name="local_costmap/laser_scan_sensor/sensor_frame" value="$(arg robotname)/base_laser_link"/>
-	<param name="local_costmap/laser_scan_sensor/topic" value="$(arg robotname)/base_scan"/>
+	<param name="local_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
 	<param name="local_costmap/robot_base_frame" value="$(arg robotname)/base_link"/> 
     </node>
 

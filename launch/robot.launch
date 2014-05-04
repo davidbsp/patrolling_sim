@@ -1,17 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
 <launch>
   <arg name="robotname" default="robot_0" />
   <arg name="mapname" default="grid" />
 
-  <group ns="$(arg robotname)">
-    <param name="tf_prefix" value="$(arg robotname)" />
-
+  <group ns="$(arg robotname)">    
+     <!--tf_prefix is now DEPRECATED: Override all Frame params -->   
+    <!--<param name="tf_prefix" value="$(arg robotname)" />--> 
+    
     <!-- Run the map server -->
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/$(arg mapname)/$(arg mapname).yaml"/>
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/$(arg mapname)/$(arg mapname).yaml" />
 
     <!--- Run AMCL -->
-    <include file="$(find patrolling_sim)/params/amcl/amcl_diff.launch" />
+    <include file="$(find patrolling_sim)/params/amcl/amcl_diff.launch" />       
     <include file="$(find patrolling_sim)/params/amcl/$(arg robotname)_initial_pose.xml" />
-
+    
+    <!-- Override AMCL Frame Params to include prefix -->
+    <param name="/$(arg robotname)/amcl/base_frame_id" value="$(arg robotname)/base_link"/>
+    <param name="/$(arg robotname)/amcl/odom_frame_id" value="$(arg robotname)/odom"/>
+    <param name="/$(arg robotname)/amcl/global_frame_id" value="map"/> <!--common map frame for all robots -->
+    
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
         <rosparam file="$(find patrolling_sim)/params/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" />
         <rosparam file="$(find patrolling_sim)/params/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" />
@@ -19,10 +26,16 @@
         <rosparam file="$(find patrolling_sim)/params/move_base/global_costmap_params.yaml" command="load" />
         <rosparam file="$(find patrolling_sim)/params/move_base/base_local_planner_params.yaml" command="load" />
         <!-- remap from="cmd_vel" to="desired_cmd_vel" / -->
+	
+	<!-- Override MOVE_BASE Frame Params to include prefix -->
+	<param name="global_costmap/laser_scan_sensor/sensor_frame" value="$(arg robotname)/base_laser_link"/>
+	<param name="global_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
+	<param name="global_costmap/robot_base_frame" value="$(arg robotname)/base_link"/>   
+	<param name="local_costmap/global_frame" value="$(arg robotname)/odom"/>
+	<param name="local_costmap/laser_scan_sensor/sensor_frame" value="$(arg robotname)/base_laser_link"/>
+	<param name="local_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
+	<param name="local_costmap/robot_base_frame" value="$(arg robotname)/base_link"/> 
     </node>
 
-    <!-- node pkg="emergency_stop" name="emergencyStop" type="emergencyStop" args="" output="screen" / -->
-
   </group>
-
 </launch>

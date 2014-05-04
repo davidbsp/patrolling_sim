@@ -40,8 +40,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
-//#include <geometry_msgs/PointStamped.h>	
-#include <std_msgs/Int8MultiArray.h>
+#include <geometry_msgs/PointStamped.h>	
 #include <float.h>
 
 #include "getgraph.h"
@@ -86,66 +85,53 @@ void getRobotPose(int robotid, float &x, float &y, float &theta) {
 }
 
 
-void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) { // msg array: [ID,vertex,intention,interference]
-
-    std::vector<signed char>::const_iterator it = msg->data.begin();    
-
-    int p1 = *it; //data[0]
-    ++it;
-    int p2 = *it; //data[1]
-    ++it;
-    int p3 = *it; //data[2]
-    ++it;
-    int p4 = *it; //data[2]
-    ++it;  
+void resultsCB(const geometry_msgs::PointStamped::ConstPtr& msg) {	//Entra aqui sempre que recebe uma msg
+/*
+Header header
+    uint32 seq		//msg seq
+    time stamp		//time
+    string frame_id	//robot ID
+Point point
+    float64 x		//vertice (X,0,0)
+    float64 y		//interference (0,Y,0)
+    float64 z		//initialization (0,0,Z=ID)
+*/
+// 	printf("Monitor: Results callback. frame_id = %s (%f,%f,%f)\n",msg->header.frame_id.c_str(),msg->point.x,msg->point.y,msg->point.z);
+	int id_robot_int;
 	
-	if (initialize && p1==p4 && p2==-1 && p3==-1){ 
+	if (initialize){
+			
+		double id_robot_dbl = msg->point.z;
+		id_robot_int = (int) id_robot_dbl;
 		
-		int i, id_robot = p1;
-
-		if (init_robots[id_robot] == false){ 	//receive init msg: "ID,-1,-1,ID"
-			printf("Robot [ID = %d] is Active!\n", id_robot);
-			init_robots[id_robot] = true;
+		//printf("Dados:\nseq = %d\nframe_id = %s\nx = %f\ny = %f\n",msg->header.seq, msg->header.frame_id.c_str(),msg->point.x,msg->point.y);
+		
+		if (id_robot_int == -1){id_robot_int = 0;}
+		if (init_robots[id_robot_int] == false){
+			printf("Robot [ID = %d] is Active!\n",id_robot_int);
+			init_robots[id_robot_int] = true;
 			count++;
 		}
 			
 		if (count==teamsize){
-			printf("All Robots GO!\n");	//send start experiment msg: "-1,0,0,0"
+			printf("All Robots GO!\n");
 			initialize = false;
 			
 			//Clock Reset:
 			time_zero = ros::Time::now().toSec();
-			last_report_time = time_zero; 
+            last_report_time = time_zero; 
 			printf("Time zero = %f (s)\n", time_zero);
 
-			std_msgs::Int8MultiArray msg;	
-			msg.data.clear();
-			msg.data.push_back(-1);
-			msg.data.push_back(0);
-			msg.data.push_back(0);
-			msg.data.push_back(0);			
+			geometry_msgs::PointStamped msg;	
+			msg.header.frame_id = "monitor";
+			msg.point.x = 0.0;
+			msg.point.y = 0.0; 
+			msg.point.z = 0.0;
 			results_pub.publish(msg);
-			ros::spinOnce();			
+			ros::spinOnce();
 		}
 		
-	}
-	
-	if (initialize==false && p1>-1 && p2>-1 && p3>-1){ //goal sent by a robot during the experiment [ID,vertex,intention,0]
-	  
-		goal = p2;
-		ROS_INFO("Robot %d reached Goal %d.\n", p1, goal); 
-		fflush(stdout);
-		goal_reached = true;	
-	}
-	
-	if (initialize==false && p1>-1 && p2<0 && p3<-1 && p4>0){ //interference sent by a robot during the experiment [ID,-1,-2,1]
-	  
-		//ROS_INFO("Robot %d sent interference.\n", p1); 
-		//fflush(stdout);	
-		interference = true;		
-	}
-	
-	/*else{
+	}else{
 		//Interferencia ou Goal
 		double vertex = msg->point.x;
 		double interf = msg->point.y;
@@ -167,18 +153,17 @@ void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) { // msg array: [I
 			}
 			
 		}
-	}*/
+	}
 }
 
-void finish_simulation (){ //-1,1-0,0
-	std_msgs::Int8MultiArray msg;	
-	msg.data.clear();
-	msg.data.push_back(-1);
-	msg.data.push_back(1);
-	msg.data.push_back(0);
-	msg.data.push_back(0);			
+void finish_simulation (){
+	geometry_msgs::PointStamped msg;	
+	msg.header.frame_id = "monitor";
+	msg.point.x = 1.0;
+	msg.point.y = 1.0; 
+	msg.point.z = 1.0;
 	results_pub.publish(msg);
-	ros::spinOnce();	
+	ros::spinOnce();
 }
 
 // return the median value in a vector of size "dimension" floats pointed to by a
@@ -451,7 +436,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	results_sub = nh.subscribe("results", 10, resultsCB); 	
 	
 	//Publicar dados para "results"
-	results_pub = nh.advertise<std_msgs::Int8MultiArray>("results", 100);
+	results_pub = nh.advertise<geometry_msgs::PointStamped>("results", 1); //only concerned about the most recent
 	
     listener = new tf::TransformListener();
     

@@ -187,7 +187,7 @@ int main(int argc, char** argv){	//pass the .graph file to open
   }
   
   //Publicar dados para "results"
-  results_pub = nh.advertise<geometry_msgs::PointStamped>("results", 1); //only concerned about the most recent
+  results_pub = nh.advertise<std_msgs::Int8MultiArray>("results", 100);
   results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
   
   initialize_node(); //dizer q está vivo
@@ -228,10 +228,14 @@ int main(int argc, char** argv){	//pass the .graph file to open
   while(ros::ok()) {
 	  
 	if(goal_complete){  
+	  
+		/** SEND GOAL (REACHED) AND INTENTION **/
+		send_goal_result (current_vertex, next_vertex);	  
+	  
 		//printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
 		ROS_INFO("Sending goal - Vertex %d (%f,%f)", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
         sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-		goalvertex = next_vertex;
+		//goalvertex = next_vertex;
 		
 		current_vertex = next_vertex;
 		i++;
@@ -246,7 +250,7 @@ int main(int argc, char** argv){	//pass the .graph file to open
 		if(ResendGoal){
             ROS_INFO("Resending goal - Vertex %d (%f,%f)\n", current_vertex, vertex_web[current_vertex].x, vertex_web[current_vertex].y);
             sendGoal(ac,vertex_web[current_vertex].x, vertex_web[current_vertex].y);
-			goalvertex = current_vertex;
+			//goalvertex = current_vertex;
 			ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
 		}  
 		

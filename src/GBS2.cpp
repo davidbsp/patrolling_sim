@@ -206,8 +206,8 @@ int main(int argc, char** argv){	//pass the .graph file to open
   }  
   
   //Publicar dados para "results"
-  results_pub = nh.advertise<geometry_msgs::PointStamped>("results", 1); //only concerned about the most recent
-  results_sub = nh.subscribe("results", 10, resultsCB_GBS); //Subscrever "results" vindo dos robots
+  results_pub = nh.advertise<std_msgs::Int8MultiArray>("results", 100); //only concerned about the most recent
+  results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
   
   initialize_node(); //dizer q está vivo
   ros::Rate loop_rate(1); //1 segundo
@@ -268,6 +268,9 @@ int main(int argc, char** argv){	//pass the .graph file to open
 	//devolver proximo vertex tendo em conta apenas as idlenesses;
 	next_vertex = (int) greedy_bayesian_strategy(current_vertex, vertex_web, instantaneous_idleness, G1, G2, edge_min);
 	//printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+	
+	/** SEND GOAL (REACHED) AND INTENTION **/
+	send_goal_result (current_vertex, next_vertex);	
 	
 	//Send the goal to the robot (Global Map)
 	ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);

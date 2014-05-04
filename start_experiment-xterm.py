@@ -126,46 +126,55 @@ class DIP(tk.Frame):
         scenario = MAP+"_"+NROBOTS
         print scenario,'   ',self.initPoses[scenario]
         
-	os.system('gnome-terminal -e "bash -c \'roscore\'"')
+        os.system('xterm -e roscore &')
         os.system('sleep 3')
         os.system('rosparam set /use_sim_time true')
-	cmd_monitor = 'bash -c \'rosrun patrolling_sim monitor maps/'+MAP+'/'+MAP+'.graph '+ALG_SHORT+' '+NROBOTS+'\''               
+        cmd = 'rosrun patrolling_sim monitor maps/'+MAP+'/'+MAP+'.graph '+ALG_SHORT+' '+NROBOTS        
+        print cmd
+        os.system('xterm -e  "'+cmd+'" &')
+        os.system('sleep 3')
         
         cmd = './setinitposes.py '+MAP+' "'+self.initPoses[scenario]+'"'
         print cmd
         os.system(cmd)
         os.system('sleep 1')
         
-	cmd_stage= 'bash -c \'roslaunch patrolling_sim map.launch map:='+MAP+'\''
-	os.system('gnome-terminal --tab -e  "'+cmd_monitor+'" --tab -e "'+cmd_stage+'" &')
+        cmd='roslaunch patrolling_sim map.launch map:='+MAP
+        print cmd
+        os.system('xterm -e  "'+cmd+'" &')
         
         # Start robots
         gcmd = 'gnome-terminal '
         for i in range(0,int(NROBOTS)):
             print 'Run robot ',i
-            cmd = 'bash -c \'roslaunch patrolling_sim robot.launch robotname:=robot_'+str(i)+' mapname:='+MAP+'\''
-            gcmd = gcmd + '--tab -e "'+cmd+'" '
+            cmd = 'roslaunch patrolling_sim robot.launch robotname:=robot_'+str(i)+' mapname:='+MAP  #+' scenario:='+MAP+'_'+NROBOTS+'robots'
+            print cmd
+            #os.system('xterm -e  "'+cmd+'" &')
+            #os.system('sleep 1')
+            gcmd = gcmd + ' --tab -e "'+cmd+'" '
         gcmd = gcmd + '&'    
         print gcmd
         os.system(gcmd)
-        os.system('sleep 3')    
+        os.system('sleep 5')    
             
         # Start patrol behaviors
         gcmd = 'gnome-terminal '
         for i in range(0,int(NROBOTS)):
             print 'Run patrol robot ',i
             if (ALG_SHORT=='MSP'):
-		cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+str(i)+'\''
+                cmd = 'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+str(i)
             elif (ALG_SHORT=='GBS' or ALG_SHORT=='SEBS'):
-		cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' '+str(NROBOTS)+'\''
+                cmd = 'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' '+str(NROBOTS)
             else:
                 cmd = 'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)
-		cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+'\''
+            print cmd
+            #os.system('xterm -e  "'+cmd+'" &')
+            #os.system('sleep 1')
             gcmd = gcmd + ' --tab -e "'+cmd+'" '
         gcmd = gcmd + '&'    
         print gcmd
         os.system(gcmd)
-        os.system('sleep 3')
+        os.system('sleep 5')
                 
     def quit(self):
       self.parent.destroy()

@@ -50,13 +50,15 @@
 #include "actions.h"
 
 
+
 int main(int argc, char** argv){	//pass the .graph file to open
   /*
   argc=3
-  argv[0]=/.../patrolling_sim/bin/Heuristic_Conscientious_Reactive
+  argv[0]=/.../patrolling_sim/bin/GBS
   argv[1]=__name:=XXXXXX
   argv[2]=maps/1r-5-map.graph
   argv[3]=ID_ROBOT
+  argv[4]=NUMBER_OF_ROBOTS	//this is only necessary to automatically define G2
   */
   
   
@@ -82,28 +84,50 @@ int main(int argc, char** argv){	//pass the .graph file to open
   //Get the Graph info from the Graph File
   GetGraphInfo(vertex_web, dimension, graph_file);
   
-  uint j;
   
   
+  /** Define G1 and G2 **/
+  double G1 = 0.1;
   
-  /* Output Graph Data */
-  for (i=0;i<dimension;i++){
-    printf ("ID= %u\n", vertex_web[i].id);
-    printf ("X= %f, Y= %f\n", vertex_web[i].x, vertex_web[i].y);
-    printf ("#Neigh= %u\n", vertex_web[i].num_neigh);
-	
-    for (j=0;j<vertex_web[i].num_neigh; j++){
-      printf("\tID = %u, DIR = %s, COST = %u\n", vertex_web[i].id_neigh[j], vertex_web[i].dir[j], vertex_web[i].cost[j]);
-    }
+  int NUMBER_OF_ROBOTS = atoi(argv[4]);
+ 
+  //default:
+  double G2 = 100.0;
+  double edge_min = 1.0;
+  
+  if ( strcmp (graph_file,"maps/grid/grid.graph") == 0 ){  
+    if (NUMBER_OF_ROBOTS == 1){G2 = 20.54;}
+    if (NUMBER_OF_ROBOTS == 2){G2 = 17.70;}
+    if (NUMBER_OF_ROBOTS == 4){G2 = 11.15;}
+    if (NUMBER_OF_ROBOTS == 6){G2 = 10.71;}
+    if (NUMBER_OF_ROBOTS == 8){G2 = 10.29;}
+    if (NUMBER_OF_ROBOTS == 12){G2 = 9.13;}
     
-    printf("\n");	
+  }else if (strcmp (graph_file,"maps/example/example.graph") == 0 ) {
+    if (NUMBER_OF_ROBOTS == 1){G2 = 220.0;}
+    if (NUMBER_OF_ROBOTS == 2){G2 = 180.5;}
+    if (NUMBER_OF_ROBOTS == 4){G2 = 159.3;}
+    if (NUMBER_OF_ROBOTS == 6){G2 = 137.15;}
+    if (NUMBER_OF_ROBOTS == 8 || NUMBER_OF_ROBOTS == 12){G2 = 126.1;}
+    edge_min = 20.0;
+    
+  }else if (strcmp (graph_file,"maps/cumberland/cumberland.graph") == 0) {
+    if (NUMBER_OF_ROBOTS == 1){G2 = 152.0;}
+    if (NUMBER_OF_ROBOTS == 2){G2 = 100.4;}
+    if (NUMBER_OF_ROBOTS == 4){G2 = 80.74;}
+    if (NUMBER_OF_ROBOTS == 6){G2 = 77.0;}
+    if (NUMBER_OF_ROBOTS == 8 || NUMBER_OF_ROBOTS == 12){G2 = 63.5;}    
+    edge_min = 50.0;
+    
   }
   
+  printf("G1 = %f, G2 = %f\n", G1, G2);
   
   
+   
   /* Define Starting Vertex/Position (Launch File Parameters) */
 
-  ros::init(argc, argv, "hc_reactive");
+  ros::init(argc, argv, "c_reactive");
   ros::NodeHandle nh;
   double initial_x, initial_y;
   
@@ -120,9 +144,10 @@ int main(int argc, char** argv){	//pass the .graph file to open
   ROS_ASSERT(list[2*value+1].getType() == XmlRpc::XmlRpcValue::TypeDouble);
   initial_y = static_cast<double>(list[2*value+1]);
  
-//    printf("initial position: x = %f, y = %f\n", initial_x, initial_y);
-   uint current_vertex = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
-//    printf("initial vertex = %d\n\n",current_vertex);
+//   printf("initial position: x = %f, y = %f\n", initial_x, initial_y);
+  uint current_vertex = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
+//   printf("initial vertex = %d\n\n",current_vertex);  
+  
   
    //Publicar dados de "odom" para nó de posições
   odom_pub = nh.advertise<nav_msgs::Odometry>("positions", 1); //only concerned about the most recent
@@ -131,15 +156,15 @@ int main(int argc, char** argv){	//pass the .graph file to open
   odom_sub = nh.subscribe("positions", 10, positionsCB);  
   
   char string[20];
-  char string2[20];  
+  char string2[20];
   
   if(ID_ROBOT==-1){ 
     strcpy (string,"odom"); //string = "odom"
     strcpy (string2,"cmd_vel"); //string = "cmd_vel"
     TEAMSIZE = 1;
   }else{ 
-    strcpy (string,"robot_"); 
-    strcpy (string2,"robot_");     
+    strcpy (string,"robot_");
+    strcpy (string2,"robot_"); 
     char id[3];
     itoa(ID_ROBOT, id, 10);  
     strcat(string,id);
@@ -153,17 +178,17 @@ int main(int argc, char** argv){	//pass the .graph file to open
 
    //Cmd_vel to backup:
    cmd_vel_pub  = nh.advertise<geometry_msgs::Twist>(string2, 1);
-  
+   
   //Subscrever para obter dados de "odom" do robot corrente
   ros::Subscriber sub;
   sub = nh.subscribe(string, 1, odomCB); //size of the buffer = 1 (?)
-  ros::spinOnce();      
-  
+  ros::spinOnce();    
+    
   
   /* Define Goal */  
-
+  
   if(ID_ROBOT==-1){ 
-    strcpy (string,"move_base"); //string = "move_base"  
+    strcpy (string,"move_base"); //string = "move_base
   }else{ 
     strcpy (string,"robot_"); 
     char id[3];
@@ -179,13 +204,10 @@ int main(int argc, char** argv){	//pass the .graph file to open
   while(!ac.waitForServer(ros::Duration(5.0))){
      ROS_INFO("Waiting for the move_base action server to come up");
   }  
-
-  //Define Goal:
-  move_base_msgs::MoveBaseGoal goal;
-    
+  
   //Publicar dados para "results"
-  results_pub = nh.advertise<std_msgs::Int8MultiArray>("results", 100); //only concerned about the most recent
-  results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
+  results_pub = nh.advertise<geometry_msgs::PointStamped>("results", 1); //only concerned about the most recent
+  results_sub = nh.subscribe("results", 10, resultsCB_GBS); //Subscrever "results" vindo dos robots
   
   initialize_node(); //dizer q está vivo
   ros::Rate loop_rate(1); //1 segundo
@@ -194,14 +216,13 @@ int main(int argc, char** argv){	//pass the .graph file to open
   while(initialize){
 	ros::spinOnce();
 	loop_rate.sleep();
-  }  
+  }
   
   /* Set up listener for global coordinates of robots */
   listener = new tf::TransformListener();
-
-  /* Run Algorithm */
   
-  //instantaneous idleness and last visit initialized with zeros:
+  /* Run Algorithm */
+   
   double instantaneous_idleness [dimension];
   double last_visit [dimension];
   for(i=0;i<dimension;i++){ 
@@ -211,77 +232,97 @@ int main(int argc, char** argv){	//pass the .graph file to open
     if(i==current_vertex){
       last_visit[i]= 0.1; //Avoids getting back at the initial vertex
     }
-  } 
-
+  }
+  
   interference = false;
   ResendGoal = false;
   goal_complete = true;
- 
   
-  while(ros::ok()) {
-
-	if(goal_complete){
-		  
-		  if (next_vertex>-1){
-			//Update Idleness Table:
-			double now = ros::Time::now().toSec();
+  double now;
+  
+  
+  while(ros::ok()){
+	  
+    if(goal_complete){
+	    
+	    if(next_vertex>-1){
+		//Update Idleness Table:
+		now = ros::Time::now().toSec();
 			
-			for(i=0; i<dimension; i++){
+		for(i=0; i<dimension; i++){
 			if (i == next_vertex){
 				last_visit[i] = now;	
 			}	
 			instantaneous_idleness[i]= now - last_visit[i];           
-			} 
-				
-			current_vertex = next_vertex;
+		} 
+		
+		current_vertex = next_vertex;		
+	
 			
-			//Show Idleness Table:
-	/*		for (i=0; i<dimension; i++){
+		//Show Idleness Table:
+	/*	for (i=0; i<dimension; i++){
 			printf("idleness[%u] = %f\n",i,instantaneous_idleness[i]);      
-			}  
-	*/	  }
-		  
-		//devolver proximo vertex tendo em conta apenas as idlenesses individuais;
-		next_vertex = (int) heuristic_conscientious_reactive(current_vertex, vertex_web, instantaneous_idleness);
-		//printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-		
-		/** SEND GOAL (REACHED) AND INTENTION **/
-		send_goal_result (current_vertex, next_vertex);		
-		
+		} */
+	    }
+    
+	//devolver proximo vertex tendo em conta apenas as idlenesses;
+	next_vertex = (int) greedy_bayesian_strategy(current_vertex, vertex_web, instantaneous_idleness, G1, G2, edge_min);
+	//printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+	
+	//Send the goal to the robot (Global Map)
+	ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+    sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
+	
+	goal_complete = false;
+    
+    }else{
+	if (interference){
+		do_interference_behavior();
+	}	    
+	    
+	if(ResendGoal){
 		//Send the goal to the robot (Global Map)
 		ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-        sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-
-		/* if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-		ROS_INFO("Hooray, the base moved to the correct point.");
-		}else{
-		ROS_INFO("The base failed to move for some reason.");    
-		return 0;
-		}*/
-		
-		goal_complete = false;
-		
-	 }else{
-		if (interference){
-			do_interference_behavior();
-		}	    
-		
-		if(ResendGoal){
-			//Send the goal to the robot (Global Map)
-			ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-            sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-			ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
-		}
-		
-		if(end_simulation){
-			return 0;
-		}		
-		
+        sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
+		ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
 	}
+	
+	if (arrived && NUMBER_OF_ROBOTS>1){	//a different robot arrived at a vertex: update idleness table and keep track of last vertices positions of other robots.
+
+	  //printf("Robot %d reached Goal %d.\n", robot_arrived, vertex_arrived);    
+
+	  //Update Idleness Table:
+	  now = ros::Time::now().toSec();
+			  
+	  for(i=0; i<dimension; i++){
+		  if (i == vertex_arrived){
+			    //actualizar last_visit[dimension]
+			  last_visit[vertex_arrived] = now;	
+		  }			
+		  //actualizar instantaneous_idleness[dimension]
+		  instantaneous_idleness[i]= now - last_visit[i];           
+	  } 
+
+	  
+			  
+	  //Show Idleness Table:	  	
+// 	   for (i=0; i<dimension; i++){
+// 		  printf("idleness[%u] = %f\n",i,instantaneous_idleness[i]);      
+// 	  } 
+	  
+	  arrived = false;
+	}
+	
+	if(end_simulation){
+	      return 0;
+	}	
+	
+    }
     ros::Duration delay = ros::Duration(0.1);
     delay.sleep();
 
   } // while ros.ok
 
+  
   return 0; 
 }

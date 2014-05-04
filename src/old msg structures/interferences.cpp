@@ -39,7 +39,6 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <nav_msgs/Odometry.h>
-#include <std_msgs/Int8MultiArray.h>
 
 #include "globalvars.h"
 
@@ -52,7 +51,7 @@ void getRobotPose(int robotid, float &x, float &y, float &theta) {
     
     std::stringstream ss; ss << "robot_" << robotid;
     std::string robotname = ss.str();
-    std::string sframe = "/map";				//Patch David Portugal: Remember that the global map frame is "/map"
+    std::string sframe = "/" + robotname + "/map";
     std::string dframe = "/" + robotname + "/base_link";
     tf::StampedTransform transform;
 
@@ -135,18 +134,23 @@ void positionsCB(const nav_msgs::Odometry::ConstPtr& msg) {	//construir tabelas 
 
 
 void send_interference(int ID_ROBOT, ros::Publisher &results_pub){
-//interference: [ID,-1,-2,1]
-
+  /*
+  string frame_id	//robot ID
+    float64 y		//Interference (0,Y=1,0)  
+*/  	
 	printf("Send Interference: Robot %d\n",ID_ROBOT);	
+	//ros::Rate loop_rate(1); //1 segundo
 	
-	std_msgs::Int8MultiArray msg;	
-	msg.data.clear();
-	msg.data.push_back(ID_ROBOT);
-	msg.data.push_back(-1);
-	msg.data.push_back(-2);
-	msg.data.push_back(1);
-	
-	results_pub.publish(msg);	
+	geometry_msgs::PointStamped msg;	
+	char id_robot_str[3];
+	sprintf(id_robot_str, "%d", ID_ROBOT);	//integer to array
+		
+	msg.header.frame_id = id_robot_str;
+	msg.point.x = 0.0;
+	msg.point.y = 1.0; 
+	msg.point.z = 0.0;
+
+	results_pub.publish(msg);
 	ros::spinOnce();
 }
 

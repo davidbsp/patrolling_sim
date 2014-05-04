@@ -15,7 +15,7 @@ bool initialize = true;
 bool end_simulation = false;
 int next_vertex = -1;
 uint backUpCounter;
-//uint goalvertex;
+uint goalvertex;
 
 //GBS: To calculate robot's state:
 bool arrived = false;

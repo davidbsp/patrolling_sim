@@ -34,7 +34,6 @@
 *
 * Author: David Portugal, 2011
 *********************************************************************/
-
 #include <stdlib.h>
 #include <sstream>
 #include <ros/ros.h>
@@ -43,27 +42,35 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <nav_msgs/Odometry.h>
-#include <std_msgs/Int8MultiArray.h>
 
 #include "globalvars.h"
 #include "interferences.h"
 
-void send_goal_result (uint current_vertex, uint next_vertex) { //goal and intention joint together
-//goal: [ID,vertex,intention,0]
-
-	std_msgs::Int8MultiArray msg;	
-	msg.data.clear();
-	msg.data.push_back(ID_ROBOT);
-	msg.data.push_back(current_vertex);
-	msg.data.push_back(next_vertex);
-	msg.data.push_back(0);
+void send_goal_result (uint vertex) {
+  /*
+  string frame_id	//robot ID
+    float64 x		//Goal (X=vertex,0,0)  
+*/  	
+	// printf("Send Vertex %u [Goal] to Results: Robot %d\n",vertex,ID_ROBOT);	
 	
-	results_pub.publish(msg);	
-	ros::spinOnce();	
+	geometry_msgs::PointStamped msg;	
+	char id_robot_str[3];
+	sprintf(id_robot_str, "%d", ID_ROBOT);	//integer to array
+		
+	msg.header.frame_id = id_robot_str;
+	msg.point.x = float (vertex);
+	msg.point.y = 0.0; 
+	msg.point.z = 0.0;
+
+	results_pub.publish(msg);
+	ros::spinOnce();
 }
 
-/*void send_intention (uint vertex){
-    
+void send_intention (uint vertex){
+  /*
+  string frame_id   //robot ID
+    float64 x       //Goal (X=vertex,0,0)  
+*/      
     //printf("Send Intention %u [Vertex] to other robots: Robot %d\n",vertex,ID_ROBOT); 
     
     geometry_msgs::PointStamped msg;    
@@ -77,7 +84,7 @@ void send_goal_result (uint current_vertex, uint next_vertex) { //goal and inten
 
     results_pub.publish(msg);
     ros::spinOnce();
-}*/
+}
 
 void backup(){
 	
@@ -115,50 +122,9 @@ void backup(){
 	
 }
 
-void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) { 
 
-    std::vector<signed char>::const_iterator it = msg->data.begin();    
 
-    int p1 = *it; //data[0]
-    ++it;
-    int p2 = *it; //data[1]
-    ++it;
-    int p3 = *it; //data[2]
-    ++it;
-    int p4 = *it; //data[2]
-    ++it;  
-    
-      if(initialize==true && p1==-1 && p2==p3 && p3 == p4 && p4 ==0){	//"-1,0,0,0" (BEGINNING)
-	  ROS_INFO("Let's Patrol!\n");
-	  initialize = false;
-      }
-	
-      if(initialize==false && p1==-1 && p2==1 && p3 == p4 && p4 ==0){	//"-1,1,0,0" (END)
-	   ROS_INFO("The simulation is over. Let's leave");
-	   end_simulation = true;	  
-      }    
-
-      //received vertex and intention from other robot
-      if(initialize==false && p1>-1 && p2>-1 && p3>-1 && p4==0){	//ID,vertex,intention,0
-
-	if (p1 != ID_ROBOT){ //protection
-	  robot_arrived = p1;
-	  vertex_arrived = p2;
-	  arrived = true;
-	  
-	  //this will only be used by SEBS:
-	  robot_intention = p1;
-	  vertex_intention = p3;
-	  intention = true;
-	  
-	}	
-      }
-      	 
-      ros::spinOnce();
-  
-}
-
-/*void resultsCB(const geometry_msgs::PointStamped::ConstPtr& msg) { //
+void resultsCB(const geometry_msgs::PointStamped::ConstPtr& msg) { //
 	
 	if(initialize){	//em espera que o monitor a desbloquei e passe initialize para false
 		
@@ -255,31 +221,34 @@ void resultsCB_SEBS(const geometry_msgs::PointStamped::ConstPtr& msg) {
             
         }
     }
-}*/
+}
 
-void initialize_node (){ //ID,-1-1,ID
-  
-	ROS_INFO("Initialize Node: Robot %d",ID_ROBOT);	
+void initialize_node (){
+  /*
+  string frame_id	//robot ID
+    float64 z		//initialization (0,0,Z=ID)  
+*/  	
+	printf("Initialize Node: Robot %d\n",ID_ROBOT);	
+	ros::Rate loop_rate(1); //1 segundo
 	
-	std_msgs::Int8MultiArray msg;	
-	msg.data.clear();
-	msg.data.push_back(ID_ROBOT);
-	msg.data.push_back(-1);
-	msg.data.push_back(-1);
-	msg.data.push_back(ID_ROBOT);	
+	geometry_msgs::PointStamped msg;	
+	
+	char id_robot_str[3];
+	sprintf(id_robot_str, "%d", ID_ROBOT);	//integer to array
+		
+	msg.header.frame_id = id_robot_str;
+	msg.point.x = 0.0;
+	msg.point.y = 0.0; 
+	msg.point.z = (float) ID_ROBOT; //Z = ID
 	
 	int count = 0;
-	
-	//ATENÇÃO ao PUBLICADOR!
-	ros::Rate loop_rate(0.5); //meio segundo
-	
-	while (count<3){ //send activation msg 3times
+	while (count<2){
 		results_pub.publish(msg);
-		//ROS_INFO("publiquei msg: %s\n", msg.data.c_str());
 		ros::spinOnce();
+		//printf("publiquei msg.\n");
 		loop_rate.sleep();
 		count++;
-	}
+	}	
 }
 
 // GOAL
@@ -294,7 +263,7 @@ void goalDoneCallback(const actionlib::SimpleClientGoalState &state, const move_
     if(state.state_ == actionlib::SimpleClientGoalState::SUCCEEDED){
         ROS_INFO("SUCCESS");
         goal_complete = true;
-        //send_goal_result (next_vertex); //goal and intention were merged
+        send_goal_result (next_vertex);
         
     }else{
         ROS_INFO("CANCELLED or ABORTED...BACKUP & Resend Goal!");   //tentar voltar a enviar goal..
