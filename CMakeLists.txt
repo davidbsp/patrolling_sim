@@ -38,6 +38,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_add_executable(GBS src/GBS.cpp)
 #rosbuild_add_executable(SEBS src/SEBS.cpp)
 
+rosbuild_add_executable(Random src/Random.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
 rosbuild_add_executable(Conscientious_Reactive2 src/Conscientious_Reactive2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
 rosbuild_add_executable(Conscientious_Cognitive2 src/Conscientious_Cognitive2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
 rosbuild_add_executable(Heuristic_Conscientious_Reactive2 src/Heuristic_Conscientious_Reactive2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)

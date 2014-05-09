@@ -368,16 +368,21 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
 	//fprintf(file,"%i\n%i\n%i\n\n",num_nos,largura(),altura());
 	fprintf(file, "\nComplete Patrol Cycles:\t%u\n\n", complete_patrol);
 	fprintf(file, "Vertex\tAvg Idl\tStdDev Idl\t#Visits\n");
-	
-	for (i=0; i<dimension; i++){
-		fprintf(file, "%u\t%f\t%f\t%d\n", i, avg_idleness[i], stddev_idleness[i], number_of_visits[i] );
-	}
-	
-	fprintf(file,"\nWorst Avg Graph Idl\t%f\nAvg Avg Graph Idl\t%f\nMedian Avg Graph Idl\t%f\nStdDev Avg Graph Idl\t%f\nAvg StdDevGraph Idl\t%f\nWorst Idl\t%f\nInterferences\t%u\nTime Elapsed\t%f\n",
-            worst_avg_idleness,avg_graph_idl,median_graph_idl,stddev_graph_idl,avg_stddev_graph_idl,worst_idleness,interference_count,timevalue);
+
+    uint tot_visits=0;
+    for (i=0; i<dimension; i++){
+        fprintf(file, "%u\t%f\t%f\t%d\n", i, avg_idleness[i], stddev_idleness[i], number_of_visits[i] );
+        tot_visits += number_of_visits[i];
+    }
+    float avg_visits = (float)tot_visits/dimension;
+    fprintf(file,"\nWorst Avg Graph Idl\t%f\nAvg Avg Graph Idl\t%f\nMedian Avg Graph Idl\t%f\nStdDev Avg Graph Idl\t%f\nAvg StdDevGraph Idl\t%f\nWorst Idl\t%f\nInterferences\t%u\n",
+            worst_avg_idleness,avg_graph_idl,median_graph_idl,stddev_graph_idl,avg_stddev_graph_idl,worst_idleness,interference_count);
+    fprintf(file,"\nVisits\t%u\nAvg visits\t%.1f\nTime Elapsed\t%f\n",
+            tot_visits,avg_visits,timevalue);
     
-    fprintf(file,"----------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n\n");
+    fprintf(file,"%.2f\t%.2f\t%.2f\t%u\t%u\t%.2f\t%.2f\n",avg_graph_idl,avg_stddev_graph_idl,worst_idleness,interference_count,tot_visits,avg_visits,timevalue);
     
+    fprintf(file,"----------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n\n");    
     
     
 	fclose(file); /*done!*/	

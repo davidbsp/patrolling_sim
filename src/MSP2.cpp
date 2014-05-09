@@ -189,7 +189,10 @@ int main(int argc, char** argv){	//pass the .graph file to open
   //Publicar dados para "results"
   results_pub = nh.advertise<std_msgs::Int8MultiArray>("results", 100);
   results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
-  
+
+  /* Set up listener for global coordinates of robots */
+  listener = new tf::TransformListener();
+
   initialize_node(); //dizer q está vivo
   ros::Rate loop_rate(1); //1 segundo
   
@@ -198,10 +201,6 @@ int main(int argc, char** argv){	//pass the .graph file to open
 	ros::spinOnce();
 	loop_rate.sleep();
   }  
-
-  /* Set up listener for global coordinates of robots */
-  listener = new tf::TransformListener();
-
  
   //Check Route Dimension:
   uint route_dimension = get_MSP_dimension(msp_file);

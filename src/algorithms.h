@@ -51,6 +51,21 @@ typedef struct {
   bool visit;
 }s_path_mcost;
 
+
+uint random (uint current_vertex, vertex *vertex_web){
+
+  //number of neighbors of current vertex (number of existing possibilites)
+  uint num_neighs = vertex_web[current_vertex].num_neigh;
+  uint next_vertex;
+  
+  srand ( time(NULL) );
+  int i = rand() % num_neighs;
+  next_vertex = vertex_web[current_vertex].id_neigh[i];
+  
+  return next_vertex;
+}
+
+
 uint conscientious_reactive (uint current_vertex, vertex *vertex_web, double *instantaneous_idleness){
 
   //number of neighbors of current vertex (number of existing possibilites)

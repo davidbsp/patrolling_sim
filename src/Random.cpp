@@ -166,7 +166,7 @@ int main(int argc, char** argv){	//pass the .graph file to open
   }  
   
   //Publicar dados para "results"
-  results_pub = nh.advertise<geometry_msgs::PointStamped>("results", 1); //only concerned about the most recent
+  results_pub = nh.advertise<std_msgs::Int8MultiArray>("results", 100);
   results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
 
   /* Set up listener for global coordinates of robots */
