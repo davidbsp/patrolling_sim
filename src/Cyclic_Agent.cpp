@@ -53,7 +53,6 @@ private:
 public:
     virtual int compute_next_vertex();
     void initCyclic();
-    // virtual void run();
 };
 
 int Cyclic_Agent::compute_next_vertex() {
@@ -81,60 +80,6 @@ void Cyclic_Agent::initCyclic() {
     // if (path_elements>1) { i_vertex=1; next_vertex = path[i_vertex]; }
     
 }
-
-#if 0
-void Cyclic_Agent::run() {
-  
-  /* Run Algorithm */
-
-  while(ros::ok()) {
-    
-    if(goal_complete){  
-        //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-        
-        /** SEND GOAL (REACHED) AND INTENTION **/
-        send_results();
-        
-        //Send the goal to the robot (Global Map)
-        ROS_INFO("Sending goal - Vertex %d (%f,%f)", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-        sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-        //goalvertex = next_vertex;
-        
-        current_vertex = next_vertex;
-        next_vertex = compute_next_vertex();
-        /*
-        i_vertex++;
-        if ( i_vertex>=path_elements ){ i=1;}
-        next_vertex = path[i];    
-        */
-        goal_complete = false; //so volta a entrar aqui quando chegar ao goal...   
-    }
-    else {
-        if (interference){
-            do_interference_behavior();			
-        }	    
-            
-        if(ResendGoal){
-            //Send the goal to the robot (Global Map)
-            ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", current_vertex, vertex_web[current_vertex].x, vertex_web[current_vertex].y);
-            sendGoal(ac,vertex_web[next_vertex].x, vertex_web[current_vertex].y);
-            //goalvertex = current_vertex;
-            ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
-        }
-            
-        if(end_simulation){
-            return;
-        }		
-	    
-    }
-    
-    ros::Duration delay = ros::Duration(0.1);
-    delay.sleep();
-
-  } // while ros.ok
-
-}
-#endif
 
 int main(int argc, char** argv) {
   

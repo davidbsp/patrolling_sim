@@ -56,11 +56,11 @@ private:
   double G1, G2;
   double edge_min;  
   int NUMBER_OF_ROBOTS;
-      
+
 public:
     virtual void initGBS(int nrobots);
     virtual int compute_next_vertex();
-    virtual void run();
+    virtual void processEvents();
 };
 
 
@@ -106,6 +106,7 @@ void GBS_Agent::initGBS(int nrobots) {
 
 }
 
+#if 0
 void GBS_Agent::run() {
     
   /* Run Algorithm */  
@@ -176,6 +177,29 @@ void GBS_Agent::run() {
 
   } // while ros.ok
 
+}
+#endif
+
+void GBS_Agent::processEvents() {
+    
+    if (arrived && NUMBER_OF_ROBOTS>1){ //a different robot arrived at a vertex: update idleness table and keep track of last vertices positions of other robots.
+
+        //printf("Robot %d reached Goal %d.\n", robot_arrived, vertex_arrived);    
+
+        //Update Idleness Table:
+        double now = ros::Time::now().toSec();
+                
+        for(int i=0; i<dimension; i++){
+            if (i == vertex_arrived){
+                //actualizar last_visit[dimension]
+                last_visit[vertex_arrived] = now; 
+            }         
+            //actualizar instantaneous_idleness[dimension]
+            instantaneous_idleness[i] = now - last_visit[i];           
+        }
+        
+        arrived = false;
+    }
 }
 
 int GBS_Agent::compute_next_vertex() {

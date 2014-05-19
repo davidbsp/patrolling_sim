@@ -113,6 +113,7 @@ void SEBS_Agent::initSEBS(int nrobots) {
 }
 
 void SEBS_Agent::processEvents() {
+    
     if (arrived && NUMBER_OF_ROBOTS>1){ //a different robot arrived at a vertex: update idleness table and keep track of last vertices positions of other robots.
 
         //printf("Robot %d reached Goal %d.\n", robot_arrived, vertex_arrived);    

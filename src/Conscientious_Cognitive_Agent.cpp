@@ -47,49 +47,51 @@
 #include "algorithms.h"
 
 class Conscientious_Cognitive_Agent: public PatrolAgent {
-    
+private:
+    bool inpath;
+    uint *path;
+    uint elem_s_path, i_path;
 public:
-    virtual void run();
+    virtual void initCC();
     virtual int compute_next_vertex();
+    virtual void onGoalComplete();    
 };
 
-
-
-int Conscientious_Cognitive_Agent::compute_next_vertex() {
-  return 0;
+void Conscientious_Cognitive_Agent::initCC()
+{
+    inpath = false;
+    path = new uint[dimension];
+    elem_s_path=0; i_path=0; 
 }
 
-void Conscientious_Cognitive_Agent::run() {
+int Conscientious_Cognitive_Agent::compute_next_vertex() {
+  return heuristic_pathfinder_conscientious_cognitive(current_vertex, vertex_web, instantaneous_idleness, dimension, path);
+}
+
+
+void Conscientious_Cognitive_Agent::onGoalComplete()
+{
+
+    if (i_path>0) { //nao faz update no inicio
+        //Update Idleness Table:
+        update_idleness();
+        current_vertex = next_vertex;
+    }
     
-    /* Run Algorithm */
+    if (inpath){
+        //The robot is on its way to a global objective -> get NEXT_VERTEX from its path:
+        i_path++; //desde que nao passe o tamanho do path
+
+        if (i_path<elem_s_path){
+            next_vertex=path[i_path];     
+        }else{    
+            inpath = false; 
+        }
+    }
     
-    bool inpath = false;
-    uint path [dimension];
-    uint elem_s_path=0, i_path=0;
-  
-    while(ros::ok()) {
-      
-        if (goal_complete) {
-        
-            if (i_path>0) { //nao faz update no inicio
-                //Update Idleness Table:
-                update_idleness();
-                current_vertex = next_vertex;
-            }
-    
-            if (inpath){
-                //The robot is on its way to a global objective -> get NEXT_VERTEX from its path:
-                i_path++; //desde que nao passe o tamanho do path
-        
-                if (i_path<elem_s_path){
-                    next_vertex=path[i_path];     
-                }else{    
-                    inpath = false; 
-                }
-            }
-    
-            if (!inpath){
-                elem_s_path = heuristic_pathfinder_conscientious_cognitive(current_vertex, vertex_web, instantaneous_idleness, dimension, path);
+    if (!inpath){
+        elem_s_path = compute_next_vertex();
+        //heuristic_pathfinder_conscientious_cognitive(current_vertex, vertex_web, instantaneous_idleness, dimension, path);
       
 /*      printf("Path: ");
       for (i=0;i<elem_s_path;i++){
@@ -100,59 +102,33 @@ void Conscientious_Cognitive_Agent::run() {
     }
       }
 */     
-            //we have the path and the number of elements in the path
-            i_path=1;
-            next_vertex = path[i_path];
-            inpath = true;
+        //we have the path and the number of elements in the path
+        i_path=1;
+        next_vertex = path[i_path];
+        inpath = true;
 //       printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-        }
+    }
     
-        /** SEND GOAL (REACHED) AND INTENTION **/
-        send_results();
-    
-        if (inpath){
-            //Send the goal to the robot (Global Map)
-            ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-            sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-        }    
-    
-        goal_complete = false; //garantir q n volta a entrar a seguir aqui
+    /** SEND GOAL (REACHED) AND INTENTION **/
+    send_results();
+
+    if (inpath){
+        //Send the goal to the robot (Global Map)
+        ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+        sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+    }    
+
+    goal_complete = false; //garantir q n volta a entrar a seguir aqui
 //     printf("ID_ROBOT [3] = %d\n",ID_ROBOT); //-1 in the case there is only 1 robot.
     
-    }
-    else { //goal not complete (active)
-        
-        if (interference){          
-            do_interference_behavior();     
-        }       
-        
-        if(ResendGoal){
-            //Send the goal to the robot (Global Map)
-            ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-            sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
-            ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
-        }
-        
-        if (end_simulation){
-            return;
-        }
-        
-//      printf("ID_ROBOT [4] = %d\n",ID_ROBOT); //-1 in the case there is only 1 robot.
-        
-    }
-    
-    ros::Duration delay = ros::Duration(0.1);
-    delay.sleep();
-
-  } // while ros.ok
-  
-//   return 0; 
 }
+
 
 int main(int argc, char** argv) {
   
     Conscientious_Cognitive_Agent agent;
     agent.init(argc,argv);
+    agent.initCC();
     agent.run();
 
     return 0; 

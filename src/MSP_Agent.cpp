@@ -58,7 +58,6 @@ private:
 public:
     virtual void initMSP(string &msp_file);
     virtual int compute_next_vertex();
-    // virtual void run();
 };
 
 
