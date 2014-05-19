@@ -164,29 +164,11 @@ void PatrolAgent::run() {
     while(ros::ok()){
         
         if (goal_complete) {
-            
-            if(next_vertex>-1) {
-                //Update Idleness Table:
-                update_idleness();
-                
-                current_vertex = next_vertex;       
-            }
-        
-            //devolver proximo vertex tendo em conta apenas as idlenesses;
-            next_vertex = compute_next_vertex();
-            //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
 
-            /** SEND GOAL (REACHED) AND INTENTION **/
-            send_results(); 
-            
-            //Send the goal to the robot (Global Map)
-            ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-            sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
-            
-            goal_complete = false;
+            onGoalComplete();
         
         }
-        else { //goal not complete (active)
+        else { // goal not complete (active)
             if (interference) {
                 do_interference_behavior();
             }       
@@ -198,6 +180,8 @@ void PatrolAgent::run() {
                 ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
             }
             
+            processEvents();
+            
             if (end_simulation) {
                 return;
             }   
@@ -207,6 +191,33 @@ void PatrolAgent::run() {
         delay.sleep();
 
     } // while ros.ok    
+}
+
+
+void PatrolAgent::onGoalComplete()
+{
+    if(next_vertex>-1) {
+        //Update Idleness Table:
+        update_idleness();
+        current_vertex = next_vertex;       
+    }
+
+    //devolver proximo vertex tendo em conta apenas as idlenesses;
+    next_vertex = compute_next_vertex();
+    //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+
+    /** SEND GOAL (REACHED) AND INTENTION **/
+    send_results(); 
+    
+    //Send the goal to the robot (Global Map)
+    ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+    sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
+    
+    goal_complete = false;    
+}
+
+void PatrolAgent::processEvents() {
+    
 }
 
 void PatrolAgent::update_idleness() {

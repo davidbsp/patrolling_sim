@@ -61,90 +61,8 @@ private:
 public:
     virtual void initSEBS(int nrobots);
     virtual int compute_next_vertex();
-    virtual void run();
+    virtual void processEvents();
 };
-
-
-void SEBS_Agent::run() {
- 
-  /* Run Algorithm */
-  
-  while(ros::ok()){
-	  
-    if(goal_complete){
-	    
-	    if(next_vertex>-1)  {
-            //Update Idleness Table:
-            update_idleness();
-		
-            current_vertex = next_vertex;
-        }
-    
-        //devolver proximo vertex tendo em conta apenas as idlenesses;
-        next_vertex = (int) state_exchange_bayesian_strategy(current_vertex, vertex_web, instantaneous_idleness, tab_intention, NUMBER_OF_ROBOTS, G1, G2, edge_min);
-        //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-        
-        /** SEND GOAL (REACHED) AND INTENTION **/
-        send_results();
-        
-        //Send the goal to the robot (Global Map)
-        ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-        sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-        
-        
-        goal_complete = false;
-    
-    } 
-    else {
-        if (interference){
-            do_interference_behavior();
-        }	    
-	    
-        if(ResendGoal){
-            //Send the goal to the robot (Global Map)
-            ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-            sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);        
-            ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
-        }
-	
-        if (arrived && NUMBER_OF_ROBOTS>1){	//a different robot arrived at a vertex: update idleness table and keep track of last vertices positions of other robots.
-
-            //printf("Robot %d reached Goal %d.\n", robot_arrived, vertex_arrived);    
-
-            //Update Idleness Table:
-            double now = ros::Time::now().toSec();
-                    
-            for(int i=0; i<dimension; i++){
-                if (i == vertex_arrived){
-                    //actualizar last_visit[dimension]
-                    last_visit[vertex_arrived] = now;	
-                }			
-                //actualizar instantaneous_idleness[dimension]
-                instantaneous_idleness[i] = now - last_visit[i];           
-            }	  
-            
-            arrived = false;
-        }
-	
-        if (intention && NUMBER_OF_ROBOTS>1) {	  
-            tab_intention[robot_intention] = vertex_intention;
-            //printf("tab_intention[ID=%d]=%d\n",robot_intention,tab_intention[robot_intention]);
-            intention = false;
-        }
-        
-        if (end_simulation) {
-            return;
-        }	
-	
-    } // if goal complete else 
-    
-    ros::Duration delay = ros::Duration(0.1);
-    delay.sleep();
-
-  } // while ros.ok
-
-}
-
 
 
 void SEBS_Agent::initSEBS(int nrobots) {
@@ -192,6 +110,33 @@ void SEBS_Agent::initSEBS(int nrobots) {
     tab_intention[i] = -1;
   }
 
+}
+
+void SEBS_Agent::processEvents() {
+    if (arrived && NUMBER_OF_ROBOTS>1){ //a different robot arrived at a vertex: update idleness table and keep track of last vertices positions of other robots.
+
+        //printf("Robot %d reached Goal %d.\n", robot_arrived, vertex_arrived);    
+
+        //Update Idleness Table:
+        double now = ros::Time::now().toSec();
+                
+        for(int i=0; i<dimension; i++){
+            if (i == vertex_arrived){
+                //actualizar last_visit[dimension]
+                last_visit[vertex_arrived] = now;   
+            }           
+            //actualizar instantaneous_idleness[dimension]
+            instantaneous_idleness[i] = now - last_visit[i];           
+        }     
+        
+        arrived = false;
+    }
+
+    if (intention && NUMBER_OF_ROBOTS>1) {    
+        tab_intention[robot_intention] = vertex_intention;
+        //printf("tab_intention[ID=%d]=%d\n",robot_intention,tab_intention[robot_intention]);
+        intention = false;
+    }
 }
 
 int SEBS_Agent::compute_next_vertex() {

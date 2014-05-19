@@ -39,7 +39,7 @@ protected:
     int next_vertex;
     uint backUpCounter;
     vertex *vertex_web;
-    double *instantaneous_idleness;
+    double *instantaneous_idleness;  // local idleness
     double *last_visit;
 
     MoveBaseClient *ac;
@@ -74,7 +74,7 @@ public:
     
     virtual void init(int argc, char** argv);
     void initialize_node();
-    void update_idleness();
+    void update_idleness();  // local idleness
     
     virtual void run();
     
@@ -91,6 +91,10 @@ public:
     bool check_interference (int ID_ROBOT);
     void do_interference_behavior();
     void backup();
+    
+    // Events
+    virtual void onGoalComplete(); // what to do when a goal has been reached
+    virtual void processEvents();  // processes algorithm-specific events
     
     // Robot-Robot Communication
     void send_positions();
