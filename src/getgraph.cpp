@@ -8,7 +8,7 @@ float RESOLUTION;
 float WIDTH_M;
 float HEIGHT_M;
 
-uint GetGraphDimension (char* graph_file){
+uint GetGraphDimension (const char* graph_file){
   
    FILE *file;
    file = fopen (graph_file,"r");
@@ -34,7 +34,7 @@ uint GetGraphDimension (char* graph_file){
 }
 
 
-void GetGraphInfo (vertex *vertex_web, uint dimension, char* graph_file){
+void GetGraphInfo (vertex *vertex_web, uint dimension, const char* graph_file){
    
    FILE *file;
    file = fopen (graph_file,"r");

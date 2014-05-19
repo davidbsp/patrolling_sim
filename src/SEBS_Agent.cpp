@@ -85,7 +85,7 @@ void SEBS_Agent::run() {
         //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
         
         /** SEND GOAL (REACHED) AND INTENTION **/
-        send_goal_result (current_vertex, next_vertex);
+        send_results();
         
         //Send the goal to the robot (Global Map)
         ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);

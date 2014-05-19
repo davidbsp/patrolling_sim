@@ -108,7 +108,7 @@ void Conscientious_Cognitive_Agent::run() {
         }
     
         /** SEND GOAL (REACHED) AND INTENTION **/
-        send_goal_result (current_vertex, next_vertex);
+        send_results();
     
         if (inpath){
             //Send the goal to the robot (Global Map)

@@ -128,33 +128,33 @@ void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) {
     int p4 = *it; //data[2]
     ++it;  
     
-      if(initialize==true && p1==-1 && p2==p3 && p3 == p4 && p4 ==0){	//"-1,0,0,0" (BEGINNING)
+    if(initialize==true && p1==-1 && p2==p3 && p3 == p4 && p4 ==0){	//"-1,0,0,0" (BEGINNING)
 	  ROS_INFO("Let's Patrol!\n");
 	  initialize = false;
-      }
+    }
 	
-      if(initialize==false && p1==-1 && p2==1 && p3 == p4 && p4 ==0){	//"-1,1,0,0" (END)
+    if(initialize==false && p1==-1 && p2==1 && p3 == p4 && p4 ==0){	//"-1,1,0,0" (END)
 	   ROS_INFO("The simulation is over. Let's leave");
 	   end_simulation = true;	  
-      }    
+    }    
 
       //received vertex and intention from other robot
-      if(initialize==false && p1>-1 && p2>-1 && p3>-1 && p4==0){	//ID,vertex,intention,0
+    if(initialize==false && p1>-1 && p2>-1 && p3>-1 && p4==0){	//ID,vertex,intention,0
 
-	if (p1 != ID_ROBOT){ //protection
-	  robot_arrived = p1;
-	  vertex_arrived = p2;
-	  arrived = true;
-	  
-	  //this will only be used by SEBS:
-	  robot_intention = p1;
-	  vertex_intention = p3;
-	  intention = true;
-	  
-	}	
-      }
+        if (p1 != ID_ROBOT){ //protection
+            robot_arrived = p1;
+            vertex_arrived = p2;
+            arrived = true;
+            
+            //this will only be used by SEBS:
+            robot_intention = p1;
+            vertex_intention = p3;
+            intention = true;
+        
+        }	
+    }
       	 
-      ros::spinOnce();
+    ros::spinOnce();
   
 }
 

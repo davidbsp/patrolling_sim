@@ -2570,7 +2570,7 @@ void shift_cyclic_path (uint start_vertex, int *caminho_final, int elem_caminho_
   
 }
 
-uint get_MSP_dimension (char* msp_file) {
+uint get_MSP_dimension (const char* msp_file) {
 	
 	FILE *file;
 	file = fopen (msp_file,"r");
@@ -2587,7 +2587,7 @@ uint get_MSP_dimension (char* msp_file) {
 	return dimension;
 }
 
-void get_MSP_route (uint *route, uint dimension, char* msp_file) {
+void get_MSP_route (uint *route, uint dimension, const char* msp_file) {
 	
    FILE *file;
    file = fopen (msp_file,"r");

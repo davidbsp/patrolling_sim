@@ -43,48 +43,57 @@
 #include <nav_msgs/Odometry.h>
 
 #include "PatrolAgent.h"
+#include "algorithms.h"
 
 class Cyclic_Agent: public PatrolAgent {
-    
+private:
+    int *path;
+    int path_elements;
+    int i_vertex;
 public:
     virtual int compute_next_vertex();
-    virtual void run();
+    void initCyclic();
+    // virtual void run();
 };
 
 int Cyclic_Agent::compute_next_vertex() {
-  return 0;
+    i_vertex++;
+    if ( i_vertex>=path_elements ){ i_vertex=1;}
+    return path[i_vertex];    
 }
 
+void Cyclic_Agent::initCyclic() {
+    //robot's cyclic path:
+    path = new int[4*dimension];
+  
+    //get cyclic path:
+    path_elements = cyclic(dimension, vertex_web, path);
+    
+    //Shift the cyclic path to start at the current vertex:
+    shift_cyclic_path (current_vertex, path, path_elements);
+    
+    printf("\nFinal Path: ");
+    for(int i=0; i<path_elements; i++){
+        if(i==path_elements-1){ printf("%i\n", path[i]); }else{ printf("%i, ", path[i]); }
+    }
+    printf("Number of elements = %i\n", path_elements);
+    i_vertex=0;
+    // if (path_elements>1) { i_vertex=1; next_vertex = path[i_vertex]; }
+    
+}
+
+#if 0
 void Cyclic_Agent::run() {
   
   /* Run Algorithm */
-    
-  //robot's cyclic path:
-  int path [4*dimension];
-  
-  //get cyclic path:
-  int path_elements = cyclic(dimension, vertex_web, path);
-  
-  //Shift the cyclic path to start at the current vertex:
-  shift_cyclic_path (current_vertex, path, path_elements);
 
-  uint i;
-  
-  printf("\nFinal Path: ");
-  for(i=0; i<path_elements; i++){
-	if(i==path_elements-1){ printf("%i\n", path[i]); }else{ printf("%i, ", path[i]); }
-  }
-  printf("Number of elements = %i\n", path_elements);
-  
-  if(path_elements>1){ i=1; next_vertex = path[i]; }
-    
   while(ros::ok()) {
     
     if(goal_complete){  
         //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
         
         /** SEND GOAL (REACHED) AND INTENTION **/
-        send_goal_result (current_vertex, next_vertex);		
+        send_results();
         
         //Send the goal to the robot (Global Map)
         ROS_INFO("Sending goal - Vertex %d (%f,%f)", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
@@ -92,9 +101,12 @@ void Cyclic_Agent::run() {
         //goalvertex = next_vertex;
         
         current_vertex = next_vertex;
-        i++;
-        if ( i>=path_elements ){ i=1;}
+        next_vertex = compute_next_vertex();
+        /*
+        i_vertex++;
+        if ( i_vertex>=path_elements ){ i=1;}
         next_vertex = path[i];    
+        */
         goal_complete = false; //so volta a entrar aqui quando chegar ao goal...   
     }
     else {
@@ -111,7 +123,7 @@ void Cyclic_Agent::run() {
         }
             
         if(end_simulation){
-            return 0;
+            return;
         }		
 	    
     }
@@ -121,6 +133,15 @@ void Cyclic_Agent::run() {
 
   } // while ros.ok
 
+}
+#endif
+
+int main(int argc, char** argv) {
   
-  return 0; 
+    Cyclic_Agent agent;
+    agent.init(argc,argv);
+    agent.initCyclic();
+    agent.run();
+
+    return 0; 
 }

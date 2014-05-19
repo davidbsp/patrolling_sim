@@ -18,7 +18,7 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 
 class PatrolAgent {
 
-private:
+protected:
     
     int TEAMSIZE;
     int ID_ROBOT;
@@ -28,6 +28,7 @@ private:
 
     tf::TransformListener *listener;
 
+    std::string graph_file;
     uint dimension; // Graph Dimension
     uint current_vertex; // current vertex
     bool ResendGoal; // Send the same goal again (if goal failed...)
@@ -38,7 +39,11 @@ private:
     int next_vertex;
     uint backUpCounter;
     vertex *vertex_web;
+    double *instantaneous_idleness;
+    double *last_visit;
 
+    MoveBaseClient *ac;
+    
     //GBS: To calculate robot's state:
     bool arrived;
     uint vertex_arrived;
@@ -64,30 +69,40 @@ public:
         initialize = true;
         end_simulation = false;
         arrived = false;
+        ac = NULL;
     }
     
-    void init(int argc, char** argv);
+    virtual void init(int argc, char** argv);
     void initialize_node();
+    void update_idleness();
     
-    void run();
+    virtual void run();
     
     void getRobotPose(int robotid, float &x, float &y, float &theta);
     void odomCB(const nav_msgs::Odometry::ConstPtr& msg);
-    void positionsCB(const nav_msgs::Odometry::ConstPtr& msg);
-    void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg);
     
-    void sendGoal(MoveBaseClient &ac, double target_x, double target_y);
-    void send_goal_result(uint current_vertex, uint next_vertex);
+    void sendGoal(MoveBaseClient *ac, double target_x, double target_y);
+    
     void goalDoneCallback(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResultConstPtr &result);
     void goalActiveCallback();
     void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback);
 
-    void send_interference(int ID_ROBOT);
+    
     bool check_interference (int ID_ROBOT);
     void do_interference_behavior();
     void backup();
     
-    int compute_next_vertex();
+    // Robot-Robot Communication
+    void send_positions();
+    void receive_positions();
+    void send_results();
+    void receive_results(int *vres);
+    void send_interference();
+    void positionsCB(const nav_msgs::Odometry::ConstPtr& msg);
+    void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg);
+    
+    // Must be implemented by sub-classes
+    virtual int compute_next_vertex() = 0;
 
 };
 

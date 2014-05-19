@@ -12,14 +12,14 @@ import sys, time, os, glob, shutil
 from math import atan2, degrees, radians
 
 Alg_names = [ 
-        [ 'RAND',  'Random' ],
-        [ 'CR',   'Conscientious_Reactive2' ],
-        [ 'HCR',  'Heuristic_Conscientious_Reactive2' ],
-        [ 'HPCC', 'Conscientious_Cognitive2' ],
-        [ 'CGG',  'Cyclic2' ],
-        [ 'MSP',  'MSP2' ],
-        [ 'GBS',  'GBS2' ],
-        [ 'SEBS', 'SEBS2' ]
+        [ 'RAND', 'Random' ],
+        [ 'CR',   'Conscientious_Reactive' ],
+        [ 'HCR',  'Heuristic_Conscientious_Reactive' ],
+        [ 'HPCC', 'Conscientious_Cognitive' ],
+        [ 'CGG',  'Cyclic' ],
+        [ 'MSP',  'MSP' ],
+        [ 'GBS',  'GBS' ],
+        [ 'SEBS', 'SEBS' ]
      ]
 
 Map_names = ['cumberland','example','grid','1r5']   
@@ -199,7 +199,7 @@ class DIP(tk.Frame):
         for i in range(0,int(NROBOTS)):
             print 'Run patrol robot ',i
             if (ALG_SHORT=='MSP'):
-                cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+str(i)+'\''
+                cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+'\''
             elif (ALG_SHORT=='GBS' or ALG_SHORT=='SEBS'):
                 cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' '+str(NROBOTS)+'\''
             else:
