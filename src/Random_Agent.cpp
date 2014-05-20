@@ -29,6 +29,8 @@ int Random_Agent::compute_next_vertex() {
     int i = rand() % num_neighs;
     next_vertex = vertex_web[current_vertex].id_neigh[i];
     
+    ROS_INFO("Random choice: %d",next_vertex);
+    
     return next_vertex;    
 }
 

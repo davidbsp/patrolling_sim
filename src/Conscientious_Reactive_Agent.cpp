@@ -50,7 +50,8 @@ class Conscientious_Reactive_Agent: public PatrolAgent {
     
 public:
     virtual int compute_next_vertex();
-    
+    virtual void send_results();
+    virtual void receive_results();    
 };
 
 
@@ -71,20 +72,20 @@ int Conscientious_Reactive_Agent::compute_next_vertex() {
     double max_idleness= -1;
     
     for (i=0; i<num_neighs; i++){
-      neighbors[i] = vertex_web[current_vertex].id_neigh[i];        //neighbors table
-      decision_table[i] = instantaneous_idleness [ neighbors[i] ];  //corresponding idleness table
-      
-      //choose the one with maximum idleness:
-      if (decision_table[i] > max_idleness){
-    max_idleness = decision_table[i];       //maximum idleness
-
-    hits=0;
-    possibilities[hits] = neighbors[i];
-    
-      }else if(decision_table[i] == max_idleness){
-    hits ++;
-    possibilities[hits] = neighbors[i];
-      }
+        neighbors[i] = vertex_web[current_vertex].id_neigh[i];        //neighbors table
+        decision_table[i] = instantaneous_idleness [ neighbors[i] ];  //corresponding idleness table
+        //printf("   --- vertex %u -> idleness %.1f\n",neighbors[i],decision_table[i]);
+        
+        //choose the one with maximum idleness:
+        if (decision_table[i] > max_idleness){
+            max_idleness = decision_table[i];       //maximum idleness
+            hits=0;
+            possibilities[hits] = neighbors[i];    
+        } 
+        else if(decision_table[i] == max_idleness) {
+            hits ++;
+            possibilities[hits] = neighbors[i];
+        }
     }      
       
     if(hits>0){ //more than one possibility (choose at random)
@@ -95,16 +96,53 @@ int Conscientious_Reactive_Agent::compute_next_vertex() {
       next_vertex = possibilities [i];      // random vertex with higher idleness
         
       }else{
-    next_vertex = possibilities[hits];  //vertex with higher idleness
+        next_vertex = possibilities[hits];  //vertex with higher idleness
       }
     
-  }else{
-    next_vertex = vertex_web[current_vertex].id_neigh[0]; //only one possibility
-  }
+    }else{
+        next_vertex = vertex_web[current_vertex].id_neigh[0]; //only one possibility
+    }
   
-  return next_vertex;
-
+    ROS_INFO("Conscientious_Reactive choice: %d",next_vertex);
+    return next_vertex;
 }
+
+
+// FIXME Needed???
+void Conscientious_Reactive_Agent::send_results() {
+    //goal: [ID,vertex,intention,0]
+
+    std_msgs::Int8MultiArray msg;   
+    msg.data.clear();
+    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(current_vertex);
+    msg.data.push_back(next_vertex);
+    msg.data.push_back(0);
+    
+    results_pub.publish(msg);   
+    ros::spinOnce();    
+}
+
+// FIXME Needed???
+void Conscientious_Reactive_Agent::receive_results() {
+    //goal: [ID,vertex,intention,0]
+
+    //received vertex and intention from other robot
+    if(initialize==false && vresults[0]>-1 && vresults[1]>-1 && vresults[2]>-1 && vresults[3]==0){    //ID,vertex,intention,0
+
+        if (vresults[0] != ID_ROBOT){ //protection
+            robot_arrived = vresults[0];
+            vertex_arrived = vresults[1];
+            arrived = true;
+            
+            //this will only be used by SEBS:
+            robot_intention = vresults[0];
+            vertex_intention = vresults[2];
+            intention = true;
+        }   
+    } 
+}
+
 
 int main(int argc, char** argv) {
   

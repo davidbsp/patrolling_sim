@@ -51,17 +51,16 @@ private:
     int path_elements;
     int i_vertex;
 public:
+    virtual void init(int argc, char** argv);
     virtual int compute_next_vertex();
-    void initCyclic();
+    virtual void send_results();
+    virtual void receive_results();    
 };
 
-int Cyclic_Agent::compute_next_vertex() {
-    i_vertex++;
-    if ( i_vertex>=path_elements ){ i_vertex=1;}
-    return path[i_vertex];    
-}
-
-void Cyclic_Agent::initCyclic() {
+void Cyclic_Agent::init(int argc, char** argv) {
+    
+    PatrolAgent::init(argc,argv);
+    
     //robot's cyclic path:
     path = new int[4*dimension];
   
@@ -81,11 +80,52 @@ void Cyclic_Agent::initCyclic() {
     
 }
 
+int Cyclic_Agent::compute_next_vertex() {
+    i_vertex++;
+    if ( i_vertex>=path_elements ){ i_vertex=1;}
+    return path[i_vertex];    
+}
+
+// FIXME Needed???
+void Cyclic_Agent::send_results() {
+    //goal: [ID,vertex,intention,0]
+
+    std_msgs::Int8MultiArray msg;   
+    msg.data.clear();
+    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(current_vertex);
+    msg.data.push_back(next_vertex);
+    msg.data.push_back(0);
+    
+    results_pub.publish(msg);   
+    ros::spinOnce();    
+}
+
+// FIXME Needed???
+void Cyclic_Agent::receive_results() {
+    //goal: [ID,vertex,intention,0]
+
+    //received vertex and intention from other robot
+    if(initialize==false && vresults[0]>-1 && vresults[1]>-1 && vresults[2]>-1 && vresults[3]==0){    //ID,vertex,intention,0
+
+        if (vresults[0] != ID_ROBOT){ //protection
+            robot_arrived = vresults[0];
+            vertex_arrived = vresults[1];
+            arrived = true;
+            
+            //this will only be used by SEBS:
+            robot_intention = vresults[0];
+            vertex_intention = vresults[2];
+            intention = true;
+        }   
+    } 
+}
+
+
 int main(int argc, char** argv) {
   
     Cyclic_Agent agent;
     agent.init(argc,argv);
-    agent.initCyclic();
     agent.run();
 
     return 0; 

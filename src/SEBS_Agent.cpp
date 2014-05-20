@@ -59,14 +59,20 @@ private:
   int *tab_intention;
       
 public:
-    virtual void initSEBS(int nrobots);
+    virtual void init(int argc, char** argv);
     virtual int compute_next_vertex();
     virtual void processEvents();
+    virtual void send_results();
+    virtual void receive_results();    
 };
 
 
-void SEBS_Agent::initSEBS(int nrobots) {
-    
+void SEBS_Agent::init(int argc, char** argv) {
+   
+  int nrobots = atoi(argv[4]);
+   
+  PatrolAgent::init(argc,argv);
+  
   /** Define G1 and G2 **/
   G1 = 0.1;
   
@@ -112,6 +118,7 @@ void SEBS_Agent::initSEBS(int nrobots) {
 
 }
 
+// Executed at any cycle when goal is not reached
 void SEBS_Agent::processEvents() {
     
     if (arrived && NUMBER_OF_ROBOTS>1){ //a different robot arrived at a vertex: update idleness table and keep track of last vertices positions of other robots.
@@ -144,17 +151,45 @@ int SEBS_Agent::compute_next_vertex() {
     return state_exchange_bayesian_strategy(current_vertex, vertex_web, instantaneous_idleness, tab_intention, NUMBER_OF_ROBOTS, G1, G2, edge_min);
 }
 
+// FIXME Needed???
+void SEBS_Agent::send_results() {
+    //goal: [ID,vertex,intention,0]
+
+    std_msgs::Int8MultiArray msg;   
+    msg.data.clear();
+    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(current_vertex);
+    msg.data.push_back(next_vertex);
+    msg.data.push_back(0);
+    
+    results_pub.publish(msg);   
+    ros::spinOnce();    
+}
+
+// FIXME Needed???
+void SEBS_Agent::receive_results() {
+    //goal: [ID,vertex,intention,0]
+
+    //received vertex and intention from other robot
+    if(initialize==false && vresults[0]>-1 && vresults[1]>-1 && vresults[2]>-1 && vresults[3]==0){    //ID,vertex,intention,0
+
+        if (vresults[0] != ID_ROBOT){ //protection
+            robot_arrived = vresults[0];
+            vertex_arrived = vresults[1];
+            arrived = true;
+            
+            //this will only be used by SEBS:
+            robot_intention = vresults[0];
+            vertex_intention = vresults[2];
+            intention = true;
+        }   
+    } 
+}
+
 int main(int argc, char** argv) {
-     /*
-        ...
-        argv[4]=NUMBER_OF_ROBOTS  //this is only necessary to automatically define G2
-    */
-  
-    int nrobots = atoi(argv[4]);
 
     SEBS_Agent agent;
     agent.init(argc,argv);    
-    agent.initSEBS(nrobots);
     agent.run();
 
     return 0; 

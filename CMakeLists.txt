@@ -30,13 +30,6 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #target_link_libraries(example ${PROJECT_NAME})
 
 ############ ALGORITMOS: ##############
-#rosbuild_add_executable(Conscientious_Reactive src/Conscientious_Reactive.cpp)
-#rosbuild_add_executable(Heuristic_Conscientious_Reactive src/Heuristic_Conscientious_Reactive.cpp)
-#rosbuild_add_executable(Conscientious_Cognitive src/Conscientious_Cognitive.cpp)
-#rosbuild_add_executable(Cyclic src/Cyclic.cpp)
-#rosbuild_add_executable(MSP src/MSP.cpp)
-#rosbuild_add_executable(GBS src/GBS.cpp)
-#rosbuild_add_executable(SEBS src/SEBS.cpp)
 
 rosbuild_add_executable(Random src/Random_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp)
 rosbuild_add_executable(Conscientious_Reactive src/Conscientious_Reactive_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp)
@@ -46,17 +39,6 @@ rosbuild_add_executable(Cyclic src/Cyclic_Agent.cpp src/PatrolAgent.cpp src/getg
 rosbuild_add_executable(MSP src/MSP_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp src/algorithms.cpp)
 rosbuild_add_executable(GBS src/GBS_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp src/algorithms.cpp)
 rosbuild_add_executable(SEBS src/SEBS_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp src/algorithms.cpp)
-
-
-#rosbuild_add_executable(Random src/Random.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
-#rosbuild_add_executable(Conscientious_Reactive2 src/Conscientious_Reactive2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
-#rosbuild_add_executable(Conscientious_Cognitive2 src/Conscientious_Cognitive2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
-#rosbuild_add_executable(Heuristic_Conscientious_Reactive2 src/Heuristic_Conscientious_Reactive2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
-#rosbuild_add_executable(Cyclic2 src/Cyclic2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
-#rosbuild_add_executable(MSP2 src/MSP2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
-#rosbuild_add_executable(GBS2 src/GBS2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
-#rosbuild_add_executable(SEBS2 src/SEBS2.cpp src/interferences.cpp src/actions.cpp src/globalvars.cpp)
-
 
 ############ RESULTS & MONITOR NODE: ##############
 rosbuild_add_executable(monitor src/monitor.cpp src/getgraph.cpp)

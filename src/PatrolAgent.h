@@ -12,6 +12,7 @@
 #include "getgraph.h"
 
 #define NUM_MAX_ROBOTS 32
+#define RESULTS_SIZE 4
 
 typedef unsigned int uint;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
@@ -41,6 +42,7 @@ protected:
     vertex *vertex_web;
     double *instantaneous_idleness;  // local idleness
     double *last_visit;
+    int vresults[RESULTS_SIZE]; // results exchanged among robots
 
     MoveBaseClient *ac;
     
@@ -99,8 +101,8 @@ public:
     // Robot-Robot Communication
     void send_positions();
     void receive_positions();
-    void send_results();
-    void receive_results(int *vres);
+    virtual void send_results();  // when goal is completed
+    virtual void receive_results();  // asynchronous call
     void send_interference();
     void positionsCB(const nav_msgs::Odometry::ConstPtr& msg);
     void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg);

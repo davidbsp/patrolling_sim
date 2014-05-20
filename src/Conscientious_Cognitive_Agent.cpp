@@ -52,20 +52,24 @@ private:
     uint *path;
     uint elem_s_path, i_path;
 public:
-    virtual void initCC();
+    virtual void init(int argc, char** argv);
     virtual int compute_next_vertex();
     virtual void onGoalComplete();    
+    virtual void send_results();
+    virtual void receive_results();    
 };
 
-void Conscientious_Cognitive_Agent::initCC()
+void Conscientious_Cognitive_Agent::init(int argc, char** argv)
 {
+    PatrolAgent::init(argc,argv);
+    
     inpath = false;
     path = new uint[dimension];
     elem_s_path=0; i_path=0; 
 }
 
 int Conscientious_Cognitive_Agent::compute_next_vertex() {
-  return heuristic_pathfinder_conscientious_cognitive(current_vertex, vertex_web, instantaneous_idleness, dimension, path);
+    return heuristic_pathfinder_conscientious_cognitive(current_vertex, vertex_web, instantaneous_idleness, dimension, path);
 }
 
 
@@ -123,12 +127,45 @@ void Conscientious_Cognitive_Agent::onGoalComplete()
     
 }
 
+// FIXME Needed???
+void Conscientious_Cognitive_Agent::send_results() {
+    //goal: [ID,vertex,intention,0]
+
+    std_msgs::Int8MultiArray msg;   
+    msg.data.clear();
+    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(current_vertex);
+    msg.data.push_back(next_vertex);
+    msg.data.push_back(0);
+    
+    results_pub.publish(msg);   
+    ros::spinOnce();    
+}
+
+// FIXME Needed???
+void Conscientious_Cognitive_Agent::receive_results() {
+    //goal: [ID,vertex,intention,0]
+
+    //received vertex and intention from other robot
+    if(initialize==false && vresults[0]>-1 && vresults[1]>-1 && vresults[2]>-1 && vresults[3]==0){    //ID,vertex,intention,0
+
+        if (vresults[0] != ID_ROBOT){ //protection
+            robot_arrived = vresults[0];
+            vertex_arrived = vresults[1];
+            arrived = true;
+            
+            //this will only be used by SEBS:
+            robot_intention = vresults[0];
+            vertex_intention = vresults[2];
+            intention = true;
+        }   
+    } 
+}
 
 int main(int argc, char** argv) {
   
     Conscientious_Cognitive_Agent agent;
     agent.init(argc,argv);
-    agent.initCC();
     agent.run();
 
     return 0; 

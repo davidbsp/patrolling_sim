@@ -175,7 +175,7 @@ void PatrolAgent::run() {
             
             if (ResendGoal) {
                 //Send the goal to the robot (Global Map)
-                ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+                ROS_INFO("Sending goal - Vertex %d (%f,%f)", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
                 sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
                 ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
             }
@@ -511,47 +511,12 @@ void PatrolAgent::positionsCB(const nav_msgs::Odometry::ConstPtr& msg) { //const
 }
 
 
-void PatrolAgent::send_results() { //goal and intention joint together
-//goal: [ID,vertex,intention,0]
+void PatrolAgent::send_results() { 
 
-    std_msgs::Int8MultiArray msg;   
-    msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
-    msg.data.push_back(current_vertex);
-    msg.data.push_back(next_vertex);
-    msg.data.push_back(0);
-    
-    results_pub.publish(msg);   
-    ros::spinOnce();    
 }
 
-void PatrolAgent::receive_results(int *vres)
-{
-    if(initialize==true && vres[0]==-1 && vres[1]==vres[2] && vres[2] == vres[3] && vres[3] ==0){   //"-1,0,0,0" (BEGINNING)
-        ROS_INFO("Let's Patrol!\n");
-        initialize = false;
-    }
-    
-    if(initialize==false && vres[0]==-1 && vres[1]==1 && vres[2] == vres[3] && vres[3] ==0){   //"-1,1,0,0" (END)
-       ROS_INFO("The simulation is over. Let's leave");
-       end_simulation = true;     
-    }    
+void PatrolAgent::receive_results() {
 
-    //received vertex and intention from other robot
-    if(initialize==false && vres[0]>-1 && vres[1]>-1 && vres[2]>-1 && vres[3]==0){    //ID,vertex,intention,0
-
-        if (vres[0] != ID_ROBOT){ //protection
-        robot_arrived = vres[0];
-        vertex_arrived = vres[1];
-        arrived = true;
-        
-        //this will only be used by SEBS:
-        robot_intention = vres[0];
-        vertex_intention = vres[2];
-        intention = true;
-        
-        }   
-    }    
 }
 
 void PatrolAgent::send_interference(){
@@ -576,10 +541,10 @@ void PatrolAgent::send_interference(){
 void PatrolAgent::resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) { 
 
     std::vector<signed char>::const_iterator it = msg->data.begin();    
-    int vres[4];
     
-    for (int k=0; k<4; k++) {
-        vres[k] = *it; it++;
+    
+    for (int k=0; k<RESULTS_SIZE; k++) {
+        vresults[k] = *it; it++;
     }
 /*        
     int p1 = *it; //data[0]
@@ -591,7 +556,17 @@ void PatrolAgent::resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) {
     int p4 = *it; //data[2]
     ++it;  
 */   
-    receive_results(vres);
+    if(initialize==true && vresults[0]==-1 && vresults[1]==vresults[2] && vresults[2] == vresults[3] && vresults[3] ==0){   //"-1,0,0,0" (BEGINNING)
+        ROS_INFO("Let's Patrol!\n");
+        initialize = false;
+    }
+    
+    if(initialize==false && vresults[0]==-1 && vresults[1]==1 && vresults[2] == vresults[3] && vresults[3] ==0){   //"-1,1,0,0" (END)
+       ROS_INFO("The simulation is over. Let's leave");
+       end_simulation = true;     
+    }
+    
+    receive_results();
 
     ros::spinOnce();
   
