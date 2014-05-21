@@ -102,9 +102,10 @@ int MSP_Agent::compute_next_vertex() {
 
 // FIXME Needed???
 void MSP_Agent::send_results() {
-    //goal: [ID,vertex,intention,0]
+#if 0
+//goal: [ID,vertex,intention,0]
 
-    std_msgs::Int8MultiArray msg;   
+    std_msgs::Int16MultiArray msg;   
     msg.data.clear();
     msg.data.push_back(ID_ROBOT);
     msg.data.push_back(current_vertex);
@@ -113,6 +114,7 @@ void MSP_Agent::send_results() {
     
     results_pub.publish(msg);   
     ros::spinOnce();    
+#endif
 }
 
 // FIXME Needed???

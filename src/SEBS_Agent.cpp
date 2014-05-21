@@ -153,7 +153,8 @@ int SEBS_Agent::compute_next_vertex() {
 
 // FIXME Needed???
 void SEBS_Agent::send_results() {
-    //goal: [ID,vertex,intention,0]
+#if 0
+//goal: [ID,vertex,intention,0]
 
     std_msgs::Int8MultiArray msg;   
     msg.data.clear();
@@ -164,6 +165,8 @@ void SEBS_Agent::send_results() {
     
     results_pub.publish(msg);   
     ros::spinOnce();    
+#endif
+    
 }
 
 // FIXME Needed???

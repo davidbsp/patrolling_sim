@@ -108,24 +108,16 @@ int Conscientious_Reactive_Agent::compute_next_vertex() {
 }
 
 
-// FIXME Needed???
-void Conscientious_Reactive_Agent::send_results() {
-    //goal: [ID,vertex,intention,0]
 
-    std_msgs::Int8MultiArray msg;   
-    msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
-    msg.data.push_back(current_vertex);
-    msg.data.push_back(next_vertex);
-    msg.data.push_back(0);
+void Conscientious_Reactive_Agent::send_results() {
+
     
-    results_pub.publish(msg);   
-    ros::spinOnce();    
 }
 
 // FIXME Needed???
 void Conscientious_Reactive_Agent::receive_results() {
-    //goal: [ID,vertex,intention,0]
+#if 0
+//goal: [ID,vertex,intention,0]
 
     //received vertex and intention from other robot
     if(initialize==false && vresults[0]>-1 && vresults[1]>-1 && vresults[2]>-1 && vresults[3]==0){    //ID,vertex,intention,0
@@ -141,6 +133,7 @@ void Conscientious_Reactive_Agent::receive_results() {
             intention = true;
         }   
     } 
+#endif 
 }
 
 

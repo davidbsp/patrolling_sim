@@ -19,7 +19,8 @@ Alg_names = [
         [ 'CGG',  'Cyclic' ],
         [ 'MSP',  'MSP' ],
         [ 'GBS',  'GBS' ],
-        [ 'SEBS', 'SEBS' ]
+        [ 'SEBS', 'SEBS' ],
+        [ 'DTAG', 'DTAGreedy' ]
      ]
 
 Map_names = ['cumberland','example','grid','1r5']   

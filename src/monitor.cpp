@@ -41,12 +41,16 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 //#include <geometry_msgs/PointStamped.h>	
-#include <std_msgs/Int8MultiArray.h>
+#include <std_msgs/Int16MultiArray.h>
 #include <float.h>
 
 #include "getgraph.h"
 
 #define NUM_MAX_ROBOTS 32
+#define MAX_COMPLETE_PATROL 10
+#define MAX_EXPERIMENT_TIME 3600  // seconds
+
+#include "message_types.h"
 
 typedef unsigned int uint;
 
@@ -86,10 +90,22 @@ void getRobotPose(int robotid, float &x, float &y, float &theta) {
 }
 
 
-void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) { // msg array: [ID,vertex,intention,interference]
+void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [ID,vertex,intention,interference]
 
-    std::vector<signed char>::const_iterator it = msg->data.begin();    
+    std::vector<signed short>::const_iterator it = msg->data.begin();    
+    
+    std::vector<int> vresults;
+    
+    vresults.clear();
+    
+    for (int k=0; k<msg->data.size(); k++) {
+        vresults.push_back(*it); it++;
+    }
 
+    int id_robot = vresults[0];
+    int msg_type = vresults[1];
+        
+/*
     int p1 = *it; //data[0]
     ++it;
     int p2 = *it; //data[1]
@@ -98,85 +114,92 @@ void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) { // msg array: [I
     ++it;
     int p4 = *it; //data[2]
     ++it;  
-	
-	if (initialize && p1==p4 && p2==-1 && p3==-1){ 
-		
-		int i, id_robot = p1;
+*/
+    switch(msg_type) {
+        case INITIALIZE_MSG_TYPE:
+        {
+        if (initialize && vresults[2]==1){ 
+            if (init_robots[id_robot] == false){ 	//receive init msg: "ID,msg_type,1"
+                printf("Robot [ID = %d] is Active!\n", id_robot);
+                init_robots[id_robot] = true;
+                count++;
+            } 
+            if (count==teamsize){
+                printf("All Robots GO!\n");	//send start experiment msg: "-1,0,0,0"
+                initialize = false;
+                
+                //Clock Reset:
+                time_zero = ros::Time::now().toSec();
+                last_report_time = time_zero; 
+                printf("Time zero = %f (s)\n", time_zero);
 
-		if (init_robots[id_robot] == false){ 	//receive init msg: "ID,-1,-1,ID"
-			printf("Robot [ID = %d] is Active!\n", id_robot);
-			init_robots[id_robot] = true;
-			count++;
-		}
-			
-		if (count==teamsize){
-			printf("All Robots GO!\n");	//send start experiment msg: "-1,0,0,0"
-			initialize = false;
-			
-			//Clock Reset:
-			time_zero = ros::Time::now().toSec();
-			last_report_time = time_zero; 
-			printf("Time zero = %f (s)\n", time_zero);
-
-			std_msgs::Int8MultiArray msg;	
-			msg.data.clear();
-			msg.data.push_back(-1);
-			msg.data.push_back(0);
-			msg.data.push_back(0);
-			msg.data.push_back(0);			
-			results_pub.publish(msg);
-			ros::spinOnce();			
-		}
-		
-	}
+                std_msgs::Int16MultiArray msg;	// -1,msg_type,0,0,0
+                msg.data.clear();
+                msg.data.push_back(-1);
+                msg.data.push_back(INITIALIZE_MSG_TYPE);
+                msg.data.push_back(100);  // Go !!!
+                results_pub.publish(msg);
+                ros::spinOnce();			
+            }
+            
+        }
+        break;
+        }
+        
+        case TARGET_REACHED_MSG_TYPE:
+        {
+            //goal sent by a robot during the experiment [ID,msg_type,vertex,intention,0]
+            if (initialize==false){ 
+                goal = vresults[2];
+                ROS_INFO("Robot %d reached Goal %d.\n", vresults[0], goal); 
+                fflush(stdout);
+                goal_reached = true;	
+            }
+            break;
+        }
+         
+        case INTERFERENCE_MSG_TYPE:
+        {
+            //interference: [ID,msg_type]
+            if (initialize==false){ 
+                ROS_INFO("Robot %d sent interference.\n", vresults[0]); 
+                interference = true;		
+            }
 	
-	if (initialize==false && p1>-1 && p2>-1 && p3>-1){ //goal sent by a robot during the experiment [ID,vertex,intention,0]
-	  
-		goal = p2;
-		ROS_INFO("Robot %d reached Goal %d.\n", p1, goal); 
-		fflush(stdout);
-		goal_reached = true;	
-	}
-	
-	if (initialize==false && p1>-1 && p2<0 && p3<-1 && p4>0){ //interference sent by a robot during the experiment [ID,-1,-2,1]
-	  
-		//ROS_INFO("Robot %d sent interference.\n", p1); 
-		//fflush(stdout);	
-		interference = true;		
-	}
-	
-	/*else{
-		//Interferencia ou Goal
-		double vertex = msg->point.x;
-		double interf = msg->point.y;
-		double init = msg->point.z;
-		
-		if (msg->header.frame_id != "monitor"){
-			
-// 			printf("Interference or Goal! frame_id = %s (%f,%f)\n",msg->header.frame_id.c_str(),msg->point.x,msg->point.y);
-			id_robot_int = atoi( msg->header.frame_id.c_str() ); 
-			
-			if (interf == 0.0 && init == 0.0){
-				goal = (int) vertex;
-				printf("Robot %d reached Goal %d.\n", id_robot_int, goal);
-				goal_reached = true;
-			}
-			if (interf == 1.0 ){
-// 				printf("Received Interference from Robot %d.\n", id_robot_int);
-				interference = true;
-			}
-			
-		}
-	}*/
+            /*else{
+                //Interferencia ou Goal
+                double vertex = msg->point.x;
+                double interf = msg->point.y;
+                double init = msg->point.z;
+                
+                if (msg->header.frame_id != "monitor"){
+                    
+        // 			printf("Interference or Goal! frame_id = %s (%f,%f)\n",msg->header.frame_id.c_str(),msg->point.x,msg->point.y);
+                    id_robot_int = atoi( msg->header.frame_id.c_str() ); 
+                    
+                    if (interf == 0.0 && init == 0.0){
+                        goal = (int) vertex;
+                        printf("Robot %d reached Goal %d.\n", id_robot_int, goal);
+                        goal_reached = true;
+                    }
+                    if (interf == 1.0 ){
+        // 				printf("Received Interference from Robot %d.\n", id_robot_int);
+                        interference = true;
+                    }
+                    
+                }
+            }*/
+            break;
+        }
+    }
 }
 
-void finish_simulation (){ //-1,1-0,0
-	std_msgs::Int8MultiArray msg;	
+void finish_simulation (){ //-1,msg_type,1,0,0
+	std_msgs::Int16MultiArray msg;	
 	msg.data.clear();
 	msg.data.push_back(-1);
-	msg.data.push_back(1);
-	msg.data.push_back(0);
-	msg.data.push_back(0);			
+    msg.data.push_back(INITIALIZE_MSG_TYPE);
+	msg.data.push_back(999);  // end of the simulation
 	results_pub.publish(msg);
 	ros::spinOnce();	
 }
@@ -456,7 +479,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	results_sub = nh.subscribe("results", 10, resultsCB); 	
 	
 	//Publicar dados para "results"
-	results_pub = nh.advertise<std_msgs::Int8MultiArray>("results", 100);
+	results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
 	
     listener = new tf::TransformListener();
     
@@ -525,7 +548,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 			double report_time = ros::Time::now().toSec();
             //printf("report time=%.1f\n",report_time);
 			
-			if ((patrol_count == complete_patrol) || (report_time - last_report_time>3600)){ 
+			if ((patrol_count == complete_patrol) || (report_time - last_report_time>MAX_EXPERIMENT_TIME)){ 
                     //write results every time a patrolling cycle is finished.
                     //or after some time
 				previous_avg_graph_idl = avg_graph_idl; //save previous avg idleness graph value
@@ -561,6 +584,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				last_report_time = report_time;
                 
 				double tolerance = 0.025 * avg_graph_idl;	//2.5% tolerance
+				printf ("diff avg_idleness = %f\n",fabs(previous_avg_graph_idl - avg_graph_idl));
 				printf ("tolerance = %f\n",tolerance);
 				
 				//Write to File:
@@ -568,7 +592,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
                                worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, worst_idleness, 
                    interference_count, graph_file, algorithm, teamsize_str,ros::Time::now().toSec()-time_zero);
 				
-				if ((complete_patrol>=10) && abs (previous_avg_graph_idl - avg_graph_idl) <= tolerance) {
+				if ((complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance) {
 					printf ("Simulation is Over\n");
 					finish_simulation ();
 					return 0;

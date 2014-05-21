@@ -1,18 +1,20 @@
 #include <sstream>
 #include <string>
+#include <vector>
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <nav_msgs/Odometry.h>
-#include <std_msgs/Int8MultiArray.h>
+#include <std_msgs/Int16MultiArray.h>
 
 
 #include "getgraph.h"
 
 #define NUM_MAX_ROBOTS 32
-#define RESULTS_SIZE 4
+
+#include "message_types.h"
 
 typedef unsigned int uint;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
@@ -42,7 +44,7 @@ protected:
     vertex *vertex_web;
     double *instantaneous_idleness;  // local idleness
     double *last_visit;
-    int vresults[RESULTS_SIZE]; // results exchanged among robots
+    std::vector<int> vresults; // results exchanged among robots
 
     MoveBaseClient *ac;
     
@@ -90,6 +92,7 @@ public:
     void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback);
 
     
+    void send_goal_reached();
     bool check_interference (int ID_ROBOT);
     void do_interference_behavior();
     void backup();
@@ -105,7 +108,7 @@ public:
     virtual void receive_results();  // asynchronous call
     void send_interference();
     void positionsCB(const nav_msgs::Odometry::ConstPtr& msg);
-    void resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg);
+    void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg);
     
     // Must be implemented by sub-classes
     virtual int compute_next_vertex() = 0;

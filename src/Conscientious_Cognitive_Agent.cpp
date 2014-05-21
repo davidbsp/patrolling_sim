@@ -129,17 +129,6 @@ void Conscientious_Cognitive_Agent::onGoalComplete()
 
 // FIXME Needed???
 void Conscientious_Cognitive_Agent::send_results() {
-    //goal: [ID,vertex,intention,0]
-
-    std_msgs::Int8MultiArray msg;   
-    msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
-    msg.data.push_back(current_vertex);
-    msg.data.push_back(next_vertex);
-    msg.data.push_back(0);
-    
-    results_pub.publish(msg);   
-    ros::spinOnce();    
 }
 
 // FIXME Needed???

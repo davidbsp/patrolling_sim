@@ -6,7 +6,7 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <nav_msgs/Odometry.h>
-#include <std_msgs/Int8MultiArray.h>
+
 
 #include "PatrolAgent.h"
 
@@ -127,9 +127,9 @@ void PatrolAgent::init(int argc, char** argv) {
     ros::spinOnce(); 
     
     //Publicar dados para "results"
-    results_pub = nh.advertise<std_msgs::Int8MultiArray>("results", 100);
+    results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
     // results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
-    results_sub = nh.subscribe<std_msgs::Int8MultiArray>("results", 10, boost::bind(&PatrolAgent::resultsCB, this, _1) ); //Subscrever "results" vindo dos robots
+    results_sub = nh.subscribe<std_msgs::Int16MultiArray>("results", 10, boost::bind(&PatrolAgent::resultsCB, this, _1) ); //Subscrever "results" vindo dos robots
 
     initialize_node(); //dizer q está vivo
     ros::Rate loop_rate(1); //1 segundo
@@ -148,6 +148,7 @@ void PatrolAgent::init(int argc, char** argv) {
     while(!ac->waitForServer(ros::Duration(5.0))){
         ROS_INFO("Waiting for the move_base action server to come up");
     } 
+    ROS_INFO("Connected with move_base action server");
     
     /* Wait until all nodes are ready.. */
     while(initialize){
@@ -207,7 +208,8 @@ void PatrolAgent::onGoalComplete()
     //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
 
     /** SEND GOAL (REACHED) AND INTENTION **/
-    send_results(); 
+    send_goal_reached(); // Send TARGET
+    send_results();  // Algorithm specific function
     
     //Send the goal to the robot (Global Map)
     ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
@@ -223,8 +225,8 @@ void PatrolAgent::processEvents() {
 void PatrolAgent::update_idleness() {
     double now = ros::Time::now().toSec();
         
-    for(int i=0; i<dimension; i++){
-        if (i == next_vertex){
+    for(size_t i=0; i<dimension; i++){
+        if ((int)i == next_vertex){
             last_visit[i] = now;    
         }
         instantaneous_idleness[i] = now - last_visit[i];           
@@ -237,16 +239,15 @@ void PatrolAgent::update_idleness() {
 
 }
 
-void PatrolAgent::initialize_node (){ //ID,-1-1,ID
+void PatrolAgent::initialize_node (){ //ID,msg_type,1
   
     ROS_INFO("Initialize Node: Robot %d",ID_ROBOT); 
     
-    std_msgs::Int8MultiArray msg;   
+    std_msgs::Int16MultiArray msg;   
     msg.data.clear();
     msg.data.push_back(ID_ROBOT);
-    msg.data.push_back(-1);
-    msg.data.push_back(-1);
-    msg.data.push_back(ID_ROBOT);   
+    msg.data.push_back(INITIALIZE_MSG_TYPE);
+    msg.data.push_back(1);  // Robot initialized
     
     int count = 0;
     
@@ -356,6 +357,19 @@ void PatrolAgent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackCon
     interference = check_interference(ID_ROBOT);    
 }
 
+void PatrolAgent::send_goal_reached() {
+    // [ID,msg_type,vertex,intention,0]
+    std_msgs::Int16MultiArray msg;   
+    msg.data.clear();
+    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(TARGET_REACHED_MSG_TYPE);
+    msg.data.push_back(current_vertex);
+    msg.data.push_back(next_vertex);
+    msg.data.push_back(0);
+    
+    results_pub.publish(msg);   
+    ros::spinOnce();  
+}
 
 bool PatrolAgent::check_interference (int ID_ROBOT){ //verificar se os robots estao proximos
     
@@ -520,16 +534,14 @@ void PatrolAgent::receive_results() {
 }
 
 void PatrolAgent::send_interference(){
-//interference: [ID,-1,-2,1]
+    //interference: [ID,msg_type]
 
     printf("Send Interference: Robot %d\n",ID_ROBOT);   
     
-    std_msgs::Int8MultiArray msg;   
+    std_msgs::Int16MultiArray msg;   
     msg.data.clear();
     msg.data.push_back(ID_ROBOT);
-    msg.data.push_back(-1);
-    msg.data.push_back(-2);
-    msg.data.push_back(1);
+    msg.data.push_back(INTERFERENCE_MSG_TYPE);
     
     results_pub.publish(msg);   
     ros::spinOnce();
@@ -538,13 +550,14 @@ void PatrolAgent::send_interference(){
 
 
 
-void PatrolAgent::resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) { 
+void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { 
 
-    std::vector<signed char>::const_iterator it = msg->data.begin();    
+    std::vector<signed short>::const_iterator it = msg->data.begin();    
     
+    vresults.clear();
     
-    for (int k=0; k<RESULTS_SIZE; k++) {
-        vresults[k] = *it; it++;
+    for (size_t k=0; k<msg->data.size(); k++) {
+        vresults.push_back(*it); it++;
     }
 /*        
     int p1 = *it; //data[0]
@@ -556,17 +569,24 @@ void PatrolAgent::resultsCB(const std_msgs::Int8MultiArray::ConstPtr& msg) {
     int p4 = *it; //data[2]
     ++it;  
 */   
-    if(initialize==true && vresults[0]==-1 && vresults[1]==vresults[2] && vresults[2] == vresults[3] && vresults[3] ==0){   //"-1,0,0,0" (BEGINNING)
-        ROS_INFO("Let's Patrol!\n");
-        initialize = false;
+
+    int id_sender = vresults[0];
+    int msg_type = vresults[1];
+    // messages coming from the monitor
+    if (id_sender==-1 && msg_type==INITIALIZE_MSG_TYPE) {
+        if (initialize==true && vresults[2]==100) {   //"-1,msg_type,100" (BEGINNING)
+            ROS_INFO("Let's Patrol!\n");
+            initialize = false;
+        }
+        
+        if (initialize==false && vresults[2]==999) {   //"-1,msg_type,999" (END)
+            ROS_INFO("The simulation is over. Let's leave");
+            end_simulation = true;     
+        }
     }
     
-    if(initialize==false && vresults[0]==-1 && vresults[1]==1 && vresults[2] == vresults[3] && vresults[3] ==0){   //"-1,1,0,0" (END)
-       ROS_INFO("The simulation is over. Let's leave");
-       end_simulation = true;     
-    }
-    
-    receive_results();
+    if (!initialize)
+        receive_results();
 
     ros::spinOnce();
   
