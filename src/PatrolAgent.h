@@ -36,6 +36,7 @@ protected:
     uint current_vertex; // current vertex
     bool ResendGoal; // Send the same goal again (if goal failed...)
     bool interference;
+    double last_interference;
     bool goal_complete;
     bool initialize;
     bool end_simulation;
@@ -45,7 +46,8 @@ protected:
     double *instantaneous_idleness;  // local idleness
     double *last_visit;
     std::vector<int> vresults; // results exchanged among robots
-
+    bool goal_canceled_by_user;
+    
     MoveBaseClient *ac; // action client for reaching target goals
     
     //GBS: To calculate robot's state:

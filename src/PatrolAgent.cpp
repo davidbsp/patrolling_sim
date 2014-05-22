@@ -70,6 +70,8 @@ void PatrolAgent::init(int argc, char** argv) {
     interference = false;
     ResendGoal = false;
     goal_complete = true;
+    last_interference = 0;
+    goal_canceled_by_user = false;
     
     /* Define Starting Vertex/Position (Launch File Parameters) */
 
@@ -314,6 +316,8 @@ void PatrolAgent::odomCB(const nav_msgs::Odometry::ConstPtr& msg) { //colocar pr
 
 void PatrolAgent::sendGoal(int next_vertex) 
 {
+    goal_canceled_by_user = false;
+    
     double target_x = vertex_web[next_vertex].x, 
            target_y = vertex_web[next_vertex].y;
     
@@ -331,6 +335,7 @@ void PatrolAgent::sendGoal(int next_vertex)
 
 void PatrolAgent::cancelGoal() 
 {
+    goal_canceled_by_user = true;
     ac->cancelAllGoals();
 }
 
@@ -346,10 +351,13 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
         ROS_INFO("SUCCESS");
         goal_complete = true;
     }else{
-        ROS_INFO("CANCELLED or ABORTED...BACKUP & Resend Goal!");   //tentar voltar a enviar goal..
-        backUpCounter = 0;
-        backup();
-        ResendGoal = true;
+        ROS_INFO("CANCELLED or ABORTED...");   //tentar voltar a enviar goal..
+        //backUpCounter = 0;
+        //backup();
+        if (!goal_canceled_by_user) {
+            ROS_INFO("Not cancelled by the intereference... Resend Goal!");
+            ResendGoal = true;
+        }
     }
 }
 
@@ -384,6 +392,9 @@ bool PatrolAgent::check_interference (int ID_ROBOT){ //verificar se os robots es
     int i;
     double dist_quad;
     
+    if (ros::Time::now().toSec()-last_interference<10)  // seconds
+        return false; // false if within 10 seconds from the last one
+    
     /* Poderei usar TEAMSIZE para afinar */
     for (i=0; i<ID_ROBOT; i++){ //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
         
@@ -391,6 +402,7 @@ bool PatrolAgent::check_interference (int ID_ROBOT){ //verificar se os robots es
         
         if (dist_quad <= /*sqrt*/4){    //robots are 2 meter or less apart
 //          ROS_INFO("Feedback: Robots are very close. INTERFERENCE! Dist_Quad = %f", dist_quad);
+            last_interference = ros::Time::now().toSec();
             return true;
         }       
     }
@@ -436,10 +448,17 @@ void PatrolAgent::backup(){
 
 void PatrolAgent::do_interference_behavior()
 {
+    ROS_INFO("Interference detected! Executing interference behavior...\n");   
+    send_interference();  // send interference to monitor for counting
+    
+#if 1
     // Stop the robot..         
-    ROS_INFO("Interference detected!\n");   
-    send_interference();
-
+    cancelGoal();
+    ROS_INFO("Robot stopped");
+    ros::Duration delay(3); // seconds
+    delay.sleep();
+    ResendGoal = true;
+#else    
     //get own "odom" positions...
     ros::spinOnce();        
                 
@@ -450,6 +469,7 @@ void PatrolAgent::do_interference_behavior()
             interference = false;
         }
     }
+#endif
 }
 
 

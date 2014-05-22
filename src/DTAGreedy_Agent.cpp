@@ -19,7 +19,8 @@ private:
     double *global_instantaneous_idleness;  // global estimated idleness
     double last_update_idl;
     ConfigFile cf;
-    double theta_idl, theta_cost;
+    double theta_idl, theta_cost, theta_odist;
+    float origin_x, origin_y, origin_theta;
     
 public:
     DTAGreedy_Agent() : cf(CONFIG_FILENAME)
@@ -31,6 +32,7 @@ public:
     virtual void receive_results();    
     
     double compute_cost(int vertex);
+    double distanceFromOrigin(int vertex);
     double utility(int vertex);
     void update_global_idleness();
 };
@@ -49,6 +51,10 @@ void DTAGreedy_Agent::init(int argc, char** argv) {
     
     theta_idl = cf.getDParam("theta_idleness");
     theta_cost = cf.getDParam("theta_navigation");
+    theta_odist = cf.getDParam("theta_distance_from_origin");
+    
+    getRobotPose(ID_ROBOT,origin_x, origin_y, origin_theta);
+    ROS_INFO("Robot %d: Initial pose %.1f %.1f %.1f",ID_ROBOT,origin_x, origin_y, origin_theta);
     
 }
 
@@ -69,14 +75,21 @@ double DTAGreedy_Agent::compute_cost(int vertex)
     }
     
     return distance;
-}        
+}
+
+
+double DTAGreedy_Agent::distanceFromOrigin(int vertex) {
+    double x = vertex_web[vertex].x, y = vertex_web[vertex].y;           
+    return sqrt((origin_x-x)*(origin_x-x)+(origin_y-y)*(origin_y-y));
+}
         
 double DTAGreedy_Agent::utility(int vertex) {
     
     double idl = global_instantaneous_idleness[vertex];
     double cost = compute_cost(vertex);
-    double U = theta_idl * idl + theta_cost * cost;
-    printf("   -- U[%d] ( %.1f, %.1f ) = %.1f\n",vertex,idl,cost,U);
+    double odist = distanceFromOrigin(vertex);
+    double U = theta_idl * idl + theta_cost * cost + theta_odist * odist;
+    printf("   -- U[%d] ( %.1f, %.1f, %.1f ) = %.1f\n",vertex,idl,cost,odist,U);
     return U;
 }
 
