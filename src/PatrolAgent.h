@@ -46,7 +46,7 @@ protected:
     double *last_visit;
     std::vector<int> vresults; // results exchanged among robots
 
-    MoveBaseClient *ac;
+    MoveBaseClient *ac; // action client for reaching target goals
     
     //GBS: To calculate robot's state:
     bool arrived;
@@ -85,7 +85,8 @@ public:
     void getRobotPose(int robotid, float &x, float &y, float &theta);
     void odomCB(const nav_msgs::Odometry::ConstPtr& msg);
     
-    void sendGoal(MoveBaseClient *ac, double target_x, double target_y);
+    void sendGoal(int next_vertex);
+    void cancelGoal();
     
     void goalDoneCallback(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResultConstPtr &result);
     void goalActiveCallback();

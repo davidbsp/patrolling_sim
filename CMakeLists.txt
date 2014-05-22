@@ -39,7 +39,7 @@ rosbuild_add_executable(Cyclic src/Cyclic_Agent.cpp src/PatrolAgent.cpp src/getg
 rosbuild_add_executable(MSP src/MSP_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp src/algorithms.cpp)
 rosbuild_add_executable(GBS src/GBS_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp src/algorithms.cpp)
 rosbuild_add_executable(SEBS src/SEBS_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp src/algorithms.cpp)
-rosbuild_add_executable(DTAGreedy src/DTAGreedy_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp src/algorithms.cpp)
+rosbuild_add_executable(DTAGreedy src/DTAGreedy_Agent.cpp src/PatrolAgent.cpp src/getgraph.cpp src/algorithms.cpp src/config.cpp)
 
 ############ RESULTS & MONITOR NODE: ##############
 rosbuild_add_executable(monitor src/monitor.cpp src/getgraph.cpp)

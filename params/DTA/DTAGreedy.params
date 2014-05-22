@@ -1,0 +1,19 @@
+[SECTION Main]
+
+PROFILE Grid
+
+[END]
+
+[PROFILE Grid]
+
+theta_idleness      1.0
+theta_navigation    -0.5
+
+[END]
+
+[PROFILE Example]
+
+theta_idleness      1.0
+theta_navigation    -0.5
+
+[END]

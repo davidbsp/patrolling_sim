@@ -176,8 +176,8 @@ void PatrolAgent::run() {
             
             if (ResendGoal) {
                 //Send the goal to the robot (Global Map)
-                ROS_INFO("Sending goal - Vertex %d (%f,%f)", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-                sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
+                ROS_INFO("Re-Sending goal - Vertex %d (%f,%f)", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+                sendGoal(next_vertex);  
                 ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
             }
             
@@ -208,12 +208,13 @@ void PatrolAgent::onGoalComplete()
     //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
 
     /** SEND GOAL (REACHED) AND INTENTION **/
-    send_goal_reached(); // Send TARGET
+    send_goal_reached(); // Send TARGET to monitor
     send_results();  // Algorithm specific function
     
     //Send the goal to the robot (Global Map)
     ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-    sendGoal(ac,vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
+    //sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
+    sendGoal(next_vertex);  // send to move_base
     
     goal_complete = false;    
 }
@@ -311,8 +312,11 @@ void PatrolAgent::odomCB(const nav_msgs::Odometry::ConstPtr& msg) { //colocar pr
 
 
 
-void PatrolAgent::sendGoal(MoveBaseClient *ac, double target_x, double target_y) 
+void PatrolAgent::sendGoal(int next_vertex) 
 {
+    double target_x = vertex_web[next_vertex].x, 
+           target_y = vertex_web[next_vertex].y;
+    
     //Define Goal:
     move_base_msgs::MoveBaseGoal goal;
     //Send the goal to the robot (Global Map)
@@ -325,6 +329,10 @@ void PatrolAgent::sendGoal(MoveBaseClient *ac, double target_x, double target_y)
     ac->sendGoal(goal, boost::bind(&PatrolAgent::goalDoneCallback, this, _1, _2), boost::bind(&PatrolAgent::goalActiveCallback,this), boost::bind(&PatrolAgent::goalFeedbackCallback, this,_1));  
 }
 
+void PatrolAgent::cancelGoal() 
+{
+    ac->cancelAllGoals();
+}
 
 
 void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResultConstPtr &result){ //goal terminado (completo ou cancelado)
