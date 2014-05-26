@@ -2,7 +2,7 @@
 *
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2011, ISR University of Coimbra.
+*  Copyright (c) 2014, ISR University of Coimbra.
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,9 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal, 2011
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
 *********************************************************************/
+
 #include <sstream>
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
@@ -108,32 +109,14 @@ int Conscientious_Reactive_Agent::compute_next_vertex() {
 }
 
 
-
+// FIXME DONE
 void Conscientious_Reactive_Agent::send_results() {
-
-    
+  ros::spinOnce();    
 }
 
-// FIXME Needed???
+// FIXME DONE
 void Conscientious_Reactive_Agent::receive_results() {
-#if 0
-//goal: [ID,vertex,intention,0]
-
-    //received vertex and intention from other robot
-    if(initialize==false && vresults[0]>-1 && vresults[1]>-1 && vresults[2]>-1 && vresults[3]==0){    //ID,vertex,intention,0
-
-        if (vresults[0] != ID_ROBOT){ //protection
-            robot_arrived = vresults[0];
-            vertex_arrived = vresults[1];
-            arrived = true;
-            
-            //this will only be used by SEBS:
-            robot_intention = vresults[0];
-            vertex_intention = vresults[2];
-            intention = true;
-        }   
-    } 
-#endif 
+  ros::spinOnce();   
 }
 
 

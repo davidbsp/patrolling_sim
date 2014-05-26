@@ -2,7 +2,7 @@
 *
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2011, ISR University of Coimbra.
+*  Copyright (c) 2014, ISR University of Coimbra.
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal, 2011
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
 *********************************************************************/
 
 #include <ros/ros.h>
@@ -127,7 +127,7 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
                 count++;
             } 
             if (count==teamsize){
-                printf("All Robots GO!\n");	//send start experiment msg: "-1,0,0,0"
+                printf("All Robots GO!\n");
                 initialize = false;
                 
                 //Clock Reset:
@@ -155,7 +155,8 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
                 goal = vresults[2];
                 ROS_INFO("Robot %d reached Goal %d.\n", vresults[0], goal); 
                 fflush(stdout);
-                goal_reached = true;	
+                goal_reached = true;
+		ros::spinOnce();
             }
             break;
         }
@@ -165,7 +166,8 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
             //interference: [ID,msg_type]
             if (initialize==false){ 
                 ROS_INFO("Robot %d sent interference.\n", vresults[0]); 
-                interference = true;		
+                interference = true;
+		ros::spinOnce();
             }
 	
             /*else{
@@ -200,7 +202,7 @@ void finish_simulation (){ //-1,msg_type,1,0,0
 	std_msgs::Int16MultiArray msg;	
 	msg.data.clear();
 	msg.data.push_back(-1);
-    msg.data.push_back(INITIALIZE_MSG_TYPE);
+	msg.data.push_back(INITIALIZE_MSG_TYPE);
 	msg.data.push_back(999);  // end of the simulation
 	results_pub.publish(msg);
 	ros::spinOnce();	
@@ -484,14 +486,14 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	ros::NodeHandle nh;
 	
 	//Subscrever "results" vindo dos robots
-	results_sub = nh.subscribe("results", 10, resultsCB); 	
+	results_sub = nh.subscribe("results", 100, resultsCB); 	
 	
 	//Publicar dados para "results"
 	results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
 	
     listener = new tf::TransformListener();
     
- 	ros::Rate loop_rate(10); //0.1 segundos 
+ 	ros::Rate loop_rate(30); //0.033 seconds or 30Hz
 	 
 	while( ros::ok() ){
 		
@@ -506,7 +508,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				
 // 				printf("last_visit [%d] = %f\n", goal, last_visit [goal]);
 				double current_time = ros::Time::now().toSec();
-                printf("Reached goal %d (current time: %f)\n", goal, current_time);
+				printf("Reached goal %d (current time: %f)\n", goal, current_time);
                 
 				double last_visit_temp = current_time - time_zero; ; //guarda o valor corrente
 				number_of_visits [goal] ++;
@@ -613,8 +615,8 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 			}
 		}	
 		
-		ros::spinOnce();
-		loop_rate.sleep();
+		ros::spinOnce();		
+		loop_rate.sleep();		
 	}
 	fclose(outfile);
 	printf("Monitor closed.\n");
