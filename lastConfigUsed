@@ -1,0 +1,6 @@
+[Config]
+map: grid
+nrobots: 8
+algorithm: SEBS
+locmode: odom
+term: gnome-terminal
