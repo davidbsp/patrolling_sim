@@ -50,6 +50,8 @@
 #define MAX_COMPLETE_PATROL 10
 #define MAX_EXPERIMENT_TIME 3600  // seconds
 
+#define OUT_FILENAME "idleness.txt"
+
 #include "message_types.h"
 
 typedef unsigned int uint;
@@ -471,6 +473,12 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 		init_robots[i] = false;
 	}
 	
+	
+	
+	
+	FILE *outfile;
+    outfile = fopen (OUT_FILENAME,"w");
+    
 	//Wait for all robots to connect! (Exchange msgs)
 	ros::init(argc, argv, "monitor");
 	ros::NodeHandle nh;
@@ -504,18 +512,22 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				number_of_visits [goal] ++;
 				
  				printf("  number_of_visits [%d] = %d\n", goal, number_of_visits [goal]);
-				
-				current_idleness [goal] = last_visit_temp - last_visit [goal];
- 				printf("  current_idleness [%d] = %f\n", goal, current_idleness [goal]);
 
-                if (current_idleness [goal] > worst_idleness)
-                    worst_idleness=current_idleness [goal];
-                
                 if (number_of_visits [goal] == 0) {
                     avg_idleness [goal] = 0.0; stddev_idleness[goal] = 0.0;
                     total_0 [goal] = 0.0; total_1 [goal] = 0.0;  total_2 [goal] = 0.0;
                 }
-                else { // if (number_of_visits [goal] == 1) {
+                else { // if (number_of_visits [goal] > 0) {
+
+                    current_idleness [goal] = last_visit_temp - last_visit [goal];
+                    printf("  current_idleness [%d] = %f\n", goal, current_idleness [goal]);
+                
+                    if (current_idleness [goal] > worst_idleness)
+                        worst_idleness=current_idleness [goal];
+                
+                    fprintf(outfile,"%.1f\n",current_idleness [goal]);
+                    fflush(outfile);
+
 					// avg_idleness [goal] = current_idleness [goal];
                     total_0 [goal] += 1.0; total_1 [goal] += current_idleness [goal];  total_2 [goal] += current_idleness [goal]*current_idleness [goal];
                     avg_idleness [goal] = total_1[goal]/total_0[goal]; 
@@ -604,7 +616,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 		ros::spinOnce();
 		loop_rate.sleep();
 	}
-	
+	fclose(outfile);
 	printf("Monitor closed.\n");
 	usleep(100e6);
 	
