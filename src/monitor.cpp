@@ -50,7 +50,7 @@
 #define MAX_COMPLETE_PATROL 10
 #define MAX_EXPERIMENT_TIME 3600  // seconds
 
-#define OUT_FILENAME "idleness.txt"
+#define FOREVER true
 
 #include "message_types.h"
 
@@ -68,6 +68,7 @@ bool init_robots[NUM_MAX_ROBOTS];
 //State Variables:
 bool interference = false;
 bool goal_reached = false;
+int id_robot; // robot sending the message
 int goal;
 double time_zero, last_report_time;
 
@@ -104,7 +105,7 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
         vresults.push_back(*it); it++;
     }
 
-    int id_robot = vresults[0];
+    id_robot = vresults[0];
     int msg_type = vresults[1];
         
 /*
@@ -153,7 +154,7 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
             //goal sent by a robot during the experiment [ID,msg_type,vertex,intention,0]
             if (initialize==false){ 
                 goal = vresults[2];
-                ROS_INFO("Robot %d reached Goal %d.\n", vresults[0], goal); 
+                ROS_INFO("Robot %d reached Goal %d.\n", id_robot, goal); 
                 fflush(stdout);
                 goal_reached = true;
 		ros::spinOnce();
@@ -164,8 +165,8 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
         case INTERFERENCE_MSG_TYPE:
         {
             //interference: [ID,msg_type]
-            if (initialize==false){ 
-                ROS_INFO("Robot %d sent interference.\n", vresults[0]); 
+            if (initialize==false){
+                ROS_INFO("Robot %d sent interference.\n", id_robot); 
                 interference = true;
 		ros::spinOnce();
             }
@@ -347,6 +348,34 @@ uint calculate_patrol_cycle ( int *nr_visits, uint dimension ){
 	return result;	
 }
 
+void scenario_name(char* name, const char* graph_file, const char* algorithm, const char* teamsize_str)
+{
+    uint i, start_char=0, end_char = strlen(graph_file)-1;
+    
+    for (i=0; i<strlen(graph_file); i++){
+        if(graph_file[i]=='/' && i < strlen(graph_file)-1){
+            start_char = i+1;
+        }
+        
+        if(graph_file[i]=='.' && i>0){
+            end_char = i-1;
+            break;
+        }
+    }
+    
+    for (i=start_char; i<=end_char; i++){
+        name [i-start_char] = graph_file [i];
+        if (i==end_char){
+            name[i-start_char+1] = '\0';
+        }
+    }
+    
+    strcat(name,"_");
+    strcat(name,teamsize_str);
+    strcat(name,"_");
+    strcat(name,algorithm);
+}
+
 //write_results (avg_idleness, stddev_idleness, number_of_visits, worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, worst_idleness, interference_count, graph_file, algorithm, teamsize_str);
 void write_results (double *avg_idleness, double *stddev_idleness, int *number_of_visits, uint complete_patrol, uint dimension, 
                     double worst_avg_idleness, double avg_graph_idl, double median_graph_idl, double stddev_graph_idl, double avg_stddev_graph_idl, double worst_idleness, uint interference_count, 
@@ -359,32 +388,8 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
     char file_path[120];
 	char name[120];
     
-	uint i, start_char=0, end_char = strlen(graph_file)-1;
-	
-	for (i=0; i<strlen(graph_file); i++){
-		if(graph_file[i]=='/' && i < strlen(graph_file)-1){
-			start_char = i+1;
-		}
-		
-		if(graph_file[i]=='.' && i>0){
-			end_char = i-1;
-			break;
-		}
-	}
-	
-	for (i=start_char; i<=end_char; i++){
-		name [i-start_char] = graph_file [i];
-		if (i==end_char){
-			name[i-start_char+1] = '\0';
-		}
-	}
-	
-	strcat(name,"_");
-	strcat(name,algorithm);
-	strcat(name,"_");
-	strcat(name,teamsize_str);
+    scenario_name(name,graph_file,algorithm,teamsize_str);
 	strcat(name,".xls");
-		
 	
 	strcpy(file_path,"results/");
 	strcat(file_path,name);
@@ -396,7 +401,7 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
 	fprintf(file, "\nComplete Patrol Cycles:\t%u\n\n", complete_patrol);
 	fprintf(file, "Vertex\tAvg Idl\tStdDev Idl\t#Visits\n");
 
-    uint tot_visits=0;
+    uint i,tot_visits=0;
     for (i=0; i<dimension; i++){
         fprintf(file, "%u\t%f\t%f\t%d\n", i, avg_idleness[i], stddev_idleness[i], number_of_visits[i] );
         tot_visits += number_of_visits[i];
@@ -478,8 +483,16 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	
 	
 	
-	FILE *outfile;
-    outfile = fopen (OUT_FILENAME,"w");
+    // File to accumulate all the idlenesses of an experimental scenario
+    // over multiple experiments
+    char idlfilename[120];
+    char sname[80];
+    
+    scenario_name(sname,graph_file,algorithm,teamsize_str);
+    sprintf(idlfilename,"results/idl_%s.csv",sname);
+
+    FILE *idlfile;
+    idlfile = fopen (idlfilename,"a");
     
 	//Wait for all robots to connect! (Exchange msgs)
 	ros::init(argc, argv, "monitor");
@@ -527,8 +540,8 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
                     if (current_idleness [goal] > worst_idleness)
                         worst_idleness=current_idleness [goal];
                 
-                    fprintf(outfile,"%.1f\n",current_idleness [goal]);
-                    fflush(outfile);
+                    fprintf(idlfile,"%.1f;%d;%d;%.1f\n",current_time,id_robot,goal,current_idleness[goal]);
+                    fflush(idlfile);
 
 					// avg_idleness [goal] = current_idleness [goal];
                     total_0 [goal] += 1.0; total_1 [goal] += current_idleness [goal];  total_2 [goal] += current_idleness [goal]*current_idleness [goal];
@@ -606,7 +619,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
                                worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, worst_idleness, 
                    interference_count, graph_file, algorithm, teamsize_str,ros::Time::now().toSec()-time_zero);
 				
-				if ((complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance) {
+				if ((!FOREVER) && (complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance) {
 					printf ("Simulation is Over\n");
 					finish_simulation ();
 					return 0;
@@ -615,11 +628,11 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 			}
 		}	
 		
-		ros::spinOnce();		
+		ros::spinOnce();
 		loop_rate.sleep();		
 	}
-	fclose(outfile);
+	fclose(idlfile);
 	printf("Monitor closed.\n");
-	usleep(100e6);
+	usleep(1e9);
 	
 }
