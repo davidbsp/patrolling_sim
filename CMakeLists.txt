@@ -52,3 +52,4 @@ target_link_libraries(DTAGreedy PatrolAgent)
 
 ############ RESULTS & MONITOR NODE: ##############
 rosbuild_add_executable(monitor src/monitor.cpp src/getgraph.cpp)
+rosbuild_add_executable(idlHystogram src/idlHystogram.cpp)

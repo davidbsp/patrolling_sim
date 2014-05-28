@@ -35,6 +35,10 @@
 * Author: David Portugal (2011-2014), and Luca Iocchi (2014)
 *********************************************************************/
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
@@ -49,7 +53,7 @@
 #define NUM_MAX_ROBOTS 32
 #define MAX_COMPLETE_PATROL 10
 #define MAX_EXPERIMENT_TIME 3600  // seconds
-
+#define DEAD_ROBOT_TIME 100 // (seconds) time from last goal reached after which a robot is considered dead
 #define FOREVER true
 
 #include "message_types.h"
@@ -64,6 +68,7 @@ bool initialize = true;
 uint count=0;
 uint teamsize;
 bool init_robots[NUM_MAX_ROBOTS];
+double last_goal_reached[NUM_MAX_ROBOTS];
 
 //State Variables:
 bool interference = false;
@@ -420,6 +425,19 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
 	fclose(file); /*done!*/	
 }
 
+bool check_dead_robots() {
+    double current_time = ros::Time::now().toSec();
+    for (int i=0; i<teamsize; i++){
+        if (last_goal_reached[i]>0) {
+            double delta = current_time - last_goal_reached[i];
+            if (delta>DEAD_ROBOT_TIME) {
+                printf("Dead robot %d. Time from last goal reached = %.1f\n",i,delta);
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	/*
@@ -474,15 +492,33 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 		number_of_visits[i] = -1;  // first visit should not be counted for avg
 		current_idleness[i] = 0.0;
 		last_visit[i] = 0.0;
-	}	
+	}
 	
 	for (i=0; i<NUM_MAX_ROBOTS; i++){
 		init_robots[i] = false;
+        last_goal_reached[i] = -1.0;
 	}
 	
+	// TODO create directory results if does not exist
+	const char* path = "results";
+	struct stat st;
+    //int  status = 0;
 	
-	
-	
+    if (stat(path, &st) != 0)
+      mkdir(path, 0777)  ;
+#if 0
+    {
+        /* Directory does not exist. EEXIST for race condition */
+        if (mkdir(path, 0777) != 0 && errno != EEXIST)
+            //status = -1;
+    }
+    else if (!S_ISDIR(st.st_mode))
+    {
+        errno = ENOTDIR;
+        // status = -1;
+    }
+#endif
+
     // File to accumulate all the idlenesses of an experimental scenario
     // over multiple experiments
     char idlfilename[120];
@@ -521,11 +557,13 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				
 // 				printf("last_visit [%d] = %f\n", goal, last_visit [goal]);
 				double current_time = ros::Time::now().toSec();
-				printf("Reached goal %d (current time: %f)\n", goal, current_time);
+				printf("Robot %d reached goal %d (current time: %f)\n", id_robot, goal, current_time);
                 
 				double last_visit_temp = current_time - time_zero; ; //guarda o valor corrente
 				number_of_visits [goal] ++;
 				
+                last_goal_reached[id_robot] = current_time;
+                
  				printf("  number_of_visits [%d] = %d\n", goal, number_of_visits [goal]);
 
                 if (number_of_visits [goal] == 0) {
@@ -540,7 +578,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
                     if (current_idleness [goal] > worst_idleness)
                         worst_idleness=current_idleness [goal];
                 
-                    fprintf(idlfile,"%.1f;%d;%d;%.1f\n",current_time,id_robot,goal,current_idleness[goal]);
+                    fprintf(idlfile,"%.1f;%d;%d;%.1f;%d\n",current_time,id_robot,goal,current_idleness[goal],interference_count);
                     fflush(idlfile);
 
 					// avg_idleness [goal] = current_idleness [goal];
@@ -619,10 +657,13 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
                                worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, worst_idleness, 
                    interference_count, graph_file, algorithm, teamsize_str,ros::Time::now().toSec()-time_zero);
 				
-				if ((!FOREVER) && (complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance) {
+                bool dead = check_dead_robots();
+                
+				if ( (dead) || ((!FOREVER) && (complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance)) {
 					printf ("Simulation is Over\n");
 					finish_simulation ();
-					return 0;
+                    ros::spinOnce();
+					break;
 				}
 				
 			}
