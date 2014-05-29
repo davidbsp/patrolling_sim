@@ -2,6 +2,7 @@
 #include <math.h>
 #include <vector>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <cstring>
 
@@ -24,14 +25,18 @@ int main (int argc, char **argv)
     ifstream f;
     f.open(argv[1]);
     
-    double time,idleness; int robot,node; char ch;
+    double time,idleness; int robot,node,interferences; char ch;
     int sum=0;
     while (f.good()) {
-        // current_time,id_robot,goal,current_idleness[goal]);
-        f >> time; f>>ch;
-        //f >> robot; f>>ch;
-        f >> node; f>>ch;
-        f >> idleness; f>>ch;
+        char line[80];
+        f.getline(line,80);
+        stringstream ss(line);
+        // current_time, id_robot, goal, current_idleness[goal], interferences
+        ss >> time; ss>>ch;
+        ss >> robot; ss>>ch;
+        ss >> node; ss>>ch;
+        ss >> idleness; ss>>ch;
+        ss >> interferences;
         
         // cout << idleness << endl;
         
@@ -47,13 +52,19 @@ int main (int argc, char **argv)
     
     char nf[strlen(argv[1])+8];
     sprintf(nf,"%s.hyst",argv[1]);
+    char cnf[strlen(argv[1])+8];
+    sprintf(cnf,"%s.chyst",argv[1]);
     cout << "Hystogram output file: " << nf << endl;
-    ofstream of; of.open(nf);
+    ofstream of1; of1.open(nf);
+    ofstream of2; of2.open(cnf);
+    double c=0;
     for (int k=0; k<n; k++) {
-        of << (double)v[k]/sum << endl;
+        of1 << k*RESOLUTION << " " << (double)v[k]/sum << endl;
+        c += (double)v[k]/sum;
+        of2 << k*RESOLUTION << " " << c << endl;
     }
     
-    of.close();
+    of1.close();   of2.close();
     
 }
 
