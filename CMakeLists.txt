@@ -49,6 +49,8 @@ rosbuild_add_executable(SEBS src/SEBS_Agent.cpp)
 target_link_libraries(SEBS PatrolAgent)
 rosbuild_add_executable(DTAGreedy src/DTAGreedy_Agent.cpp)
 target_link_libraries(DTAGreedy PatrolAgent)
+rosbuild_add_executable(DTASSI src/DTASSI_Agent.cpp)
+target_link_libraries(DTASSI PatrolAgent)
 
 ############ RESULTS & MONITOR NODE: ##############
 rosbuild_add_executable(monitor src/monitor.cpp src/getgraph.cpp)

@@ -11,6 +11,8 @@ import numpy as np
 import sys, time, os, glob, shutil
 from math import atan2, degrees, radians
 
+import datetime
+
 Alg_names = [ 
         [ 'RAND', 'Random' ],
         [ 'CR',   'Conscientious_Reactive' ],
@@ -20,7 +22,8 @@ Alg_names = [
         [ 'MSP',  'MSP' ],
         [ 'GBS',  'GBS' ],
         [ 'SEBS', 'SEBS' ],
-        [ 'DTAG', 'DTAGreedy' ]
+        [ 'DTAG', 'DTAGreedy' ],
+        [ 'DTAS', 'DTASSI' ]
      ]
 
 Map_names = ['cumberland','example','grid','1r5']   
@@ -204,6 +207,9 @@ class DIP(tk.Frame):
             elif (ALG_SHORT=='GBS' or ALG_SHORT=='SEBS'):
                 cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' '+str(NROBOTS)+'\''
             else:
+                now = datetime.datetime.now()
+ 		dateString = now.strftime("%Y-%m-%d-%H:%M")
+# FOR DEBUG                cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
                 cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+'\''
             print cmd
             #os.system('xterm -e  "'+cmd+'" &')
