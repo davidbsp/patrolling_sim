@@ -2,7 +2,7 @@
 *
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2011, ISR University of Coimbra.
+*  Copyright (c) 2014, ISR University of Coimbra.
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,9 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal, 2011
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
 *********************************************************************/
+
 #include <sstream>
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
@@ -114,10 +115,8 @@ void GBS_Agent::init(int argc, char** argv) {
 
 // Executed at any cycle when goal is not reached
 void GBS_Agent::processEvents() {
-    
+      
     if (arrived && NUMBER_OF_ROBOTS>1){ //a different robot arrived at a vertex: update idleness table and keep track of last vertices positions of other robots.
-
-        //printf("Robot %d reached Goal %d.\n", robot_arrived, vertex_arrived);    
 
         //Update Idleness Table:
         double now = ros::Time::now().toSec();
@@ -126,55 +125,40 @@ void GBS_Agent::processEvents() {
             if (i == vertex_arrived){
                 //actualizar last_visit[dimension]
                 last_visit[vertex_arrived] = now; 
+		//ROS_INFO("Just updated idleness of vertex %d", i);		
             }         
             //actualizar instantaneous_idleness[dimension]
-            instantaneous_idleness[i] = now - last_visit[i];           
+            instantaneous_idleness[i] = now - last_visit[i];
         }
         
         arrived = false;
     }
+    
+    ros::spinOnce();
 }
 
 int GBS_Agent::compute_next_vertex() {
     return greedy_bayesian_strategy(current_vertex, vertex_web, instantaneous_idleness, G1, G2, edge_min);
 }
 
-// FIXME Needed???
-void GBS_Agent::send_results() {
-#if 0
-//goal: [ID,vertex,intention,0]
-
-    std_msgs::Int16MultiArray msg;   
-    msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
-    msg.data.push_back(current_vertex);
-    msg.data.push_back(next_vertex);
-    msg.data.push_back(0);
-    
-    results_pub.publish(msg);   
-    ros::spinOnce();    
-#endif
-    
+// FIXME DONE
+void GBS_Agent::send_results() {   
+  ros::spinOnce();
 }
 
-// FIXME Needed???
+// FIXME DONE
 void GBS_Agent::receive_results() {
-    //goal: [ID,vertex,intention,0]
-
+  
     //received vertex and intention from other robot
-    if(initialize==false && vresults[0]>-1 && vresults[1]>-1 && vresults[2]>-1 && vresults[3]==0){    //ID,vertex,intention,0
+    if(initialize==false && vresults[0]>-1 && vresults[1]==TARGET_REACHED_MSG_TYPE && vresults[2]>-1 && vresults[3]>-1){    //ID,MSG_TYPE,CUR_VERT,NEXT_VERT
 
         if (vresults[0] != ID_ROBOT){ //protection
             robot_arrived = vresults[0];
-            vertex_arrived = vresults[1];
+            vertex_arrived = vresults[2];
             arrived = true;
-            
-            //this will only be used by SEBS:
-            robot_intention = vresults[0];
-            vertex_intention = vresults[2];
-            intention = true;
         }   
-    } 
+    }  
+    ros::spinOnce();
 }
 
 int main(int argc, char** argv) {

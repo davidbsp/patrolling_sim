@@ -1,3 +1,40 @@
+/*********************************************************************
+*
+* Software License Agreement (BSD License)
+*
+*  Copyright (c) 2014, ISR University of Coimbra.
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions
+*  are met:
+*
+*   * Redistributions of source code must retain the above copyright
+*     notice, this list of conditions and the following disclaimer.
+*   * Redistributions in binary form must reproduce the above
+*     copyright notice, this list of conditions and the following
+*     disclaimer in the documentation and/or other materials provided
+*     with the distribution.
+*   * Neither the name of the ISR University of Coimbra nor the names of its
+*     contributors may be used to endorse or promote products derived
+*     from this software without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+*  POSSIBILITY OF SUCH DAMAGE.
+*
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
+*********************************************************************/
+
 #include <sstream>
 #include <string>
 #include <ros/ros.h>
@@ -54,19 +91,7 @@ void PatrolAgent::init(int argc, char** argv) {
         printf("\n");   
     }
 #endif
-    
-    //instantaneous idleness and last visit initialized with zeros:
-    instantaneous_idleness = new double[dimension];
-    last_visit = new double[dimension];
-    for(size_t i=0; i<dimension; i++){ 
-        instantaneous_idleness[i]= 0.0; 
-        last_visit[i]= 0.0; 
-        
-        if (i==current_vertex){
-            last_visit[i]= 0.1; //Avoids getting back at the initial vertex
-        }
-    }
-    
+      
     interference = false;
     ResendGoal = false;
     goal_complete = true;
@@ -98,6 +123,19 @@ void PatrolAgent::init(int argc, char** argv) {
     //   printf("initial vertex = %d\n\n",current_vertex);  
     
     
+    //instantaneous idleness and last visit initialized with zeros:
+    instantaneous_idleness = new double[dimension];
+    last_visit = new double[dimension];
+    for(size_t i=0; i<dimension; i++){ 
+        instantaneous_idleness[i]= 0.0; 
+        last_visit[i]= 0.0; 
+        
+        if (i==current_vertex){
+            last_visit[i]= 0.1; //Avoids getting back at the initial vertex
+        }
+        //ROS_INFO("last_visit[%d]=%f", i, last_visit[i]);
+    }
+        
     //Publicar dados de "odom" para nó de posições
     positions_pub = nh.advertise<nav_msgs::Odometry>("positions", 1); //only concerned about the most recent
         
@@ -131,7 +169,7 @@ void PatrolAgent::init(int argc, char** argv) {
     //Publicar dados para "results"
     results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
     // results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
-    results_sub = nh.subscribe<std_msgs::Int16MultiArray>("results", 10, boost::bind(&PatrolAgent::resultsCB, this, _1) ); //Subscrever "results" vindo dos robots
+    results_sub = nh.subscribe<std_msgs::Int16MultiArray>("results", 100, boost::bind(&PatrolAgent::resultsCB, this, _1) ); //Subscrever "results" vindo dos robots
 
     initialize_node(); //dizer q está vivo
     ros::Rate loop_rate(1); //1 segundo
@@ -164,6 +202,8 @@ void PatrolAgent::run() {
     
     /* Run Algorithm */ 
     
+    ros::Rate loop_rate(30); //0.033 seconds or 30Hz
+    
     while(ros::ok()){
         
         if (goal_complete) {
@@ -190,8 +230,12 @@ void PatrolAgent::run() {
             }   
         
         }
-        ros::Duration delay = ros::Duration(0.1);
-        delay.sleep();
+        
+        //ros::Duration delay = ros::Duration(0.1);
+        //delay.sleep();
+        
+	ros::spinOnce();           
+	loop_rate.sleep(); //David Portugal: I believe this is more correct to guarantee that the loop takes exactly 0.1 secs            
 
     } // while ros.ok    
 }
@@ -233,13 +277,10 @@ void PatrolAgent::update_idleness() {
             last_visit[i] = now;    
         }
         instantaneous_idleness[i] = now - last_visit[i];           
-    } 
-
-    //Show Idleness Table:
-    /*  for (i=0; i<dimension; i++){
-        printf("idleness[%u] = %f\n",i,instantaneous_idleness[i]);      
-    } */
-
+	
+	//Show Idleness Table:
+	//ROS_INFO("idleness[%u] = %f",i,instantaneous_idleness[i]);
+    }
 }
 
 void PatrolAgent::initialize_node (){ //ID,msg_type,1
@@ -381,7 +422,7 @@ void PatrolAgent::send_goal_reached() {
     msg.data.push_back(TARGET_REACHED_MSG_TYPE);
     msg.data.push_back(current_vertex);
     msg.data.push_back(next_vertex);
-    msg.data.push_back(0);
+    msg.data.push_back(0); //David Portugal: is this necessary?
     
     results_pub.publish(msg);   
     ros::spinOnce();  

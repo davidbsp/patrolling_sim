@@ -2,7 +2,7 @@
 *
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2011, ISR University of Coimbra.
+*  Copyright (c) 2014, ISR University of Coimbra.
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,15 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal, 2011
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
 *********************************************************************/
+
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
+#include <float.h>
 
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
@@ -42,13 +49,14 @@
 #include <tf/transform_listener.h>
 //#include <geometry_msgs/PointStamped.h>	
 #include <std_msgs/Int16MultiArray.h>
-#include <float.h>
 
 #include "getgraph.h"
 
 #define NUM_MAX_ROBOTS 32
 #define MAX_COMPLETE_PATROL 10
 #define MAX_EXPERIMENT_TIME 3600  // seconds
+#define DEAD_ROBOT_TIME 120 // (seconds) time from last goal reached after which a robot is considered dead
+#define FOREVER true
 
 #include "message_types.h"
 
@@ -62,10 +70,12 @@ bool initialize = true;
 uint count=0;
 uint teamsize;
 bool init_robots[NUM_MAX_ROBOTS];
+double last_goal_reached[NUM_MAX_ROBOTS];
 
 //State Variables:
 bool interference = false;
 bool goal_reached = false;
+int id_robot; // robot sending the message
 int goal;
 double time_zero, last_report_time;
 
@@ -102,7 +112,7 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
         vresults.push_back(*it); it++;
     }
 
-    int id_robot = vresults[0];
+    id_robot = vresults[0];
     int msg_type = vresults[1];
         
 /*
@@ -125,7 +135,7 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
                 count++;
             } 
             if (count==teamsize){
-                printf("All Robots GO!\n");	//send start experiment msg: "-1,0,0,0"
+                printf("All Robots GO!\n");
                 initialize = false;
                 
                 //Clock Reset:
@@ -151,9 +161,10 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
             //goal sent by a robot during the experiment [ID,msg_type,vertex,intention,0]
             if (initialize==false){ 
                 goal = vresults[2];
-                ROS_INFO("Robot %d reached Goal %d.\n", vresults[0], goal); 
+                ROS_INFO("Robot %d reached Goal %d.\n", id_robot, goal); 
                 fflush(stdout);
-                goal_reached = true;	
+                goal_reached = true;
+		ros::spinOnce();
             }
             break;
         }
@@ -161,9 +172,10 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
         case INTERFERENCE_MSG_TYPE:
         {
             //interference: [ID,msg_type]
-            if (initialize==false){ 
-                ROS_INFO("Robot %d sent interference.\n", vresults[0]); 
-                interference = true;		
+            if (initialize==false){
+                ROS_INFO("Robot %d sent interference.\n", id_robot); 
+                interference = true;
+		ros::spinOnce();
             }
 	
             /*else{
@@ -198,7 +210,7 @@ void finish_simulation (){ //-1,msg_type,1,0,0
 	std_msgs::Int16MultiArray msg;	
 	msg.data.clear();
 	msg.data.push_back(-1);
-    msg.data.push_back(INITIALIZE_MSG_TYPE);
+	msg.data.push_back(INITIALIZE_MSG_TYPE);
 	msg.data.push_back(999);  // end of the simulation
 	results_pub.publish(msg);
 	ros::spinOnce();	
@@ -343,56 +355,48 @@ uint calculate_patrol_cycle ( int *nr_visits, uint dimension ){
 	return result;	
 }
 
+void scenario_name(char* name, const char* graph_file, const char* teamsize_str)
+{
+    uint i, start_char=0, end_char = strlen(graph_file)-1;
+    
+    for (i=0; i<strlen(graph_file); i++){
+        if(graph_file[i]=='/' && i < strlen(graph_file)-1){
+            start_char = i+1;
+        }
+        
+        if(graph_file[i]=='.' && i>0){
+            end_char = i-1;
+            break;
+        }
+    }
+    
+    for (i=start_char; i<=end_char; i++){
+        name [i-start_char] = graph_file [i];
+        if (i==end_char){
+            name[i-start_char+1] = '\0';
+        }
+    }
+    
+    strcat(name,"_");
+    strcat(name,teamsize_str);
+}
+
 //write_results (avg_idleness, stddev_idleness, number_of_visits, worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, worst_idleness, interference_count, graph_file, algorithm, teamsize_str);
 void write_results (double *avg_idleness, double *stddev_idleness, int *number_of_visits, uint complete_patrol, uint dimension, 
                     double worst_avg_idleness, double avg_graph_idl, double median_graph_idl, double stddev_graph_idl, double avg_stddev_graph_idl, double worst_idleness, uint interference_count, 
-                    char* graph_file, char* algorithm, char* teamsize_str, double timevalue){
+                    char* graph_file, char* algorithm, char* teamsize_str, double timevalue, const char *filename){
 	FILE *file;
 	
-    printf("writing to file \n");
-    printf("graph file %s\n",graph_file);
-    
-    char file_path[120];
-	char name[120];
-    
-	uint i, start_char=0, end_char = strlen(graph_file)-1;
-	
-	for (i=0; i<strlen(graph_file); i++){
-		if(graph_file[i]=='/' && i < strlen(graph_file)-1){
-			start_char = i+1;
-		}
-		
-		if(graph_file[i]=='.' && i>0){
-			end_char = i-1;
-			break;
-		}
-	}
-	
-	for (i=start_char; i<=end_char; i++){
-		name [i-start_char] = graph_file [i];
-		if (i==end_char){
-			name[i-start_char+1] = '\0';
-		}
-	}
-	
-	strcat(name,"_");
-	strcat(name,algorithm);
-	strcat(name,"_");
-	strcat(name,teamsize_str);
-	strcat(name,".xls");
-		
-	
-	strcpy(file_path,"results/");
-	strcat(file_path,name);
-	
-	printf("FILE: %s\n", file_path);	
-	file = fopen (file_path,"a");
+    printf("writing to file %s\n",filename);
+    // printf("graph file %s\n",graph_file);
+        
+	file = fopen (filename,"a");
 	
 	//fprintf(file,"%i\n%i\n%i\n\n",num_nos,largura(),altura());
 	fprintf(file, "\nComplete Patrol Cycles:\t%u\n\n", complete_patrol);
 	fprintf(file, "Vertex\tAvg Idl\tStdDev Idl\t#Visits\n");
 
-    uint tot_visits=0;
+    uint i,tot_visits=0;
     for (i=0; i<dimension; i++){
         fprintf(file, "%u\t%f\t%f\t%d\n", i, avg_idleness[i], stddev_idleness[i], number_of_visits[i] );
         tot_visits += number_of_visits[i];
@@ -411,6 +415,19 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
 	fclose(file); /*done!*/	
 }
 
+bool check_dead_robots() {
+    double current_time = ros::Time::now().toSec();
+    for (int i=0; i<teamsize; i++){
+        if (last_goal_reached[i]>0) {
+            double delta = current_time - last_goal_reached[i];
+            if (delta>DEAD_ROBOT_TIME) {
+                printf("Dead robot %d. Time from last goal reached = %.1f\n",i,delta);
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	/*
@@ -450,6 +467,15 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	uint dimension = GetGraphDimension(graph_file);
 	printf("Dimension: %u\n",dimension);
    
+    char hostname[80];
+    
+    int r = gethostname(hostname,80);
+    if (r<0)
+        strcpy(hostname,"default");
+    
+    printf("Host name: %s\n",hostname);
+   
+    
 	/* ESTRUTURAS DE DADOS A CALCULAR */
 	double last_visit [dimension], current_idleness [dimension], avg_idleness [dimension], stddev_idleness [dimension];
     double total_0 [dimension], total_1 [dimension],  total_2[dimension];
@@ -465,25 +491,73 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 		number_of_visits[i] = -1;  // first visit should not be counted for avg
 		current_idleness[i] = 0.0;
 		last_visit[i] = 0.0;
-	}	
+	}
 	
 	for (i=0; i<NUM_MAX_ROBOTS; i++){
 		init_robots[i] = false;
+        last_goal_reached[i] = -1.0;
 	}
-	
+
+    
+    
+    // Scenario name (to be used in file and directory names)
+    char sname[80];
+    scenario_name(sname,graph_file,teamsize_str);
+    
+
+    // Create directory results if does not exist
+    const char* path1 = "results";
+    char path2[100],path3[150],path4[200];
+    sprintf(path2,"%s/%s",path1,sname);
+    sprintf(path3,"%s/%s",path2,algorithm);
+    sprintf(path4,"%s/%s",path3,hostname);
+    
+    struct stat st;
+    
+    if (stat(path1, &st) != 0)
+      mkdir(path1, 0777);
+    if (stat(path2, &st) != 0)
+      mkdir(path2, 0777);
+    if (stat(path3, &st) != 0)
+      mkdir(path3, 0777);
+    if (stat(path4, &st) != 0)
+      mkdir(path4, 0777);
+
+    printf("Path experimental results: %s\n",path4);
+    
+    // Local time (real clock time)
+    time_t rawtime;
+    struct tm * timeinfo;
+    char strnow[80];
+    
+    time (&rawtime);
+    timeinfo = localtime(&rawtime);
+    sprintf(strnow,"%d_%02d_%02d_%02d_%02d_%02d",  timeinfo->tm_year+1900,timeinfo->tm_mon+1,timeinfo->tm_mday,timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
+    printf("Date-time of the experiment: %s\n",strnow);
+    
+    // File to log all the idlenesses of an experimental scenario
+
+    char idlfilename[240],resultsfilename[240];
+    sprintf(idlfilename,"%s/idleness_%s.csv",path4,strnow);
+    sprintf(resultsfilename,"%s/results_%s.csv",path4,strnow);
+    
+    // Idleness file
+    FILE *idlfile;
+    idlfile = fopen (idlfilename,"a");
+    
 	//Wait for all robots to connect! (Exchange msgs)
 	ros::init(argc, argv, "monitor");
 	ros::NodeHandle nh;
 	
 	//Subscrever "results" vindo dos robots
-	results_sub = nh.subscribe("results", 10, resultsCB); 	
+	results_sub = nh.subscribe("results", 100, resultsCB); 	
 	
 	//Publicar dados para "results"
 	results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
 	
     listener = new tf::TransformListener();
     
- 	ros::Rate loop_rate(10); //0.1 segundos 
+ 	ros::Rate loop_rate(30); //0.033 seconds or 30Hz
 	 
 	while( ros::ok() ){
 		
@@ -498,24 +572,30 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				
 // 				printf("last_visit [%d] = %f\n", goal, last_visit [goal]);
 				double current_time = ros::Time::now().toSec();
-                printf("Reached goal %d (current time: %f)\n", goal, current_time);
+				printf("Robot %d reached goal %d (current time: %f)\n", id_robot, goal, current_time);
                 
 				double last_visit_temp = current_time - time_zero; ; //guarda o valor corrente
 				number_of_visits [goal] ++;
 				
- 				printf("  number_of_visits [%d] = %d\n", goal, number_of_visits [goal]);
-				
-				current_idleness [goal] = last_visit_temp - last_visit [goal];
- 				printf("  current_idleness [%d] = %f\n", goal, current_idleness [goal]);
-
-                if (current_idleness [goal] > worst_idleness)
-                    worst_idleness=current_idleness [goal];
+                last_goal_reached[id_robot] = current_time;
                 
+ 				printf("  number_of_visits [%d] = %d\n", goal, number_of_visits [goal]);
+
                 if (number_of_visits [goal] == 0) {
                     avg_idleness [goal] = 0.0; stddev_idleness[goal] = 0.0;
                     total_0 [goal] = 0.0; total_1 [goal] = 0.0;  total_2 [goal] = 0.0;
                 }
-                else { // if (number_of_visits [goal] == 1) {
+                else { // if (number_of_visits [goal] > 0) {
+
+                    current_idleness [goal] = last_visit_temp - last_visit [goal];
+                    printf("  current_idleness [%d] = %f\n", goal, current_idleness [goal]);
+                
+                    if (current_idleness [goal] > worst_idleness)
+                        worst_idleness=current_idleness [goal];
+                
+                    fprintf(idlfile,"%.1f;%d;%d;%.1f;%d\n",current_time,id_robot,goal,current_idleness[goal],interference_count);
+                    fflush(idlfile);
+
 					// avg_idleness [goal] = current_idleness [goal];
                     total_0 [goal] += 1.0; total_1 [goal] += current_idleness [goal];  total_2 [goal] += current_idleness [goal]*current_idleness [goal];
                     avg_idleness [goal] = total_1[goal]/total_0[goal]; 
@@ -590,22 +670,25 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				//Write to File:
 				write_results (avg_idleness, stddev_idleness, number_of_visits, complete_patrol, dimension, 
                                worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, worst_idleness, 
-                   interference_count, graph_file, algorithm, teamsize_str,ros::Time::now().toSec()-time_zero);
+                   interference_count, graph_file, algorithm, teamsize_str,ros::Time::now().toSec()-time_zero,resultsfilename);
 				
-				if ((complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance) {
+                bool dead = check_dead_robots();
+                
+				if ( (dead) || ((!FOREVER) && (complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance)) {
 					printf ("Simulation is Over\n");
 					finish_simulation ();
-					return 0;
+                    ros::spinOnce();
+					break;
 				}
 				
 			}
 		}	
 		
 		ros::spinOnce();
-		loop_rate.sleep();
+		loop_rate.sleep();		
 	}
-	
+	fclose(idlfile);
 	printf("Monitor closed.\n");
-	usleep(100e6);
+	usleep(1e9);
 	
 }

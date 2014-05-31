@@ -2,7 +2,7 @@
 *
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2011, ISR University of Coimbra.
+*  Copyright (c) 2014, ISR University of Coimbra.
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,9 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal, 2011
+* Author: David Portugal (2011-2014)
 *********************************************************************/
+
 #include <ctime>
 #include <climits>
 #include <cmath>
@@ -348,7 +349,7 @@ uint state_exchange_bayesian_strategy (uint current_vertex, vertex *vertex_web, 
       if (count>0){	//There is a robot who intends to go to this vertex! -> Update State
 	
 	//printf("COUNT = %d\n",count);
-	printf("Vertex [%d]; PP (without state exchange) = %f\n", vertex_web[current_vertex].id_neigh[i], posterior_probability[i]);
+	//printf("Vertex [%d]; PP (without state exchange) = %f\n", vertex_web[current_vertex].id_neigh[i], posterior_probability[i]);
 	double P_gain_state = ( pow(2,nr_robots-count) ) / ( pow(2,nr_robots) - 1.0);	
 	posterior_probability[i] *= P_gain_state;
 	//printf("Vertex [%d]; PP (depois) = %f\n", vertex_web[current_vertex].id_neigh[i], posterior_probability[i]);

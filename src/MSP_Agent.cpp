@@ -2,7 +2,7 @@
 *
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2011, ISR University of Coimbra.
+*  Copyright (c) 2014, ISR University of Coimbra.
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,9 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal, 2011
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
 *********************************************************************/
+
 #include <string>
 #include <sstream>
 #include <ros/ros.h>
@@ -100,41 +101,14 @@ int MSP_Agent::compute_next_vertex() {
     return route[i_vertex];
 }
 
-// FIXME Needed???
+// FIXME DONE
 void MSP_Agent::send_results() {
-#if 0
-//goal: [ID,vertex,intention,0]
-
-    std_msgs::Int16MultiArray msg;   
-    msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
-    msg.data.push_back(current_vertex);
-    msg.data.push_back(next_vertex);
-    msg.data.push_back(0);
-    
-    results_pub.publish(msg);   
-    ros::spinOnce();    
-#endif
+    ros::spinOnce();
 }
 
-// FIXME Needed???
+// FIXME DONE
 void MSP_Agent::receive_results() {
-    //goal: [ID,vertex,intention,0]
-
-    //received vertex and intention from other robot
-    if(initialize==false && vresults[0]>-1 && vresults[1]>-1 && vresults[2]>-1 && vresults[3]==0){    //ID,vertex,intention,0
-
-        if (vresults[0] != ID_ROBOT){ //protection
-            robot_arrived = vresults[0];
-            vertex_arrived = vresults[1];
-            arrived = true;
-            
-            //this will only be used by SEBS:
-            robot_intention = vresults[0];
-            vertex_intention = vresults[2];
-            intention = true;
-        }   
-    } 
+  ros::spinOnce();
 }
 
 int main(int argc, char** argv) {
