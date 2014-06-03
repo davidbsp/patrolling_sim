@@ -41,6 +41,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <float.h>
+#include <fstream>
+#include <iostream>
 
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
@@ -57,8 +59,14 @@
 #define MAX_EXPERIMENT_TIME 3600  // seconds
 #define DEAD_ROBOT_TIME 120 // (seconds) time from last goal reached after which a robot is considered dead
 #define FOREVER true
+// For hystograms
+#define RESOLUTION 5.0 // seconds
+#define MAXIDLENESS 500.0 // seconds
 
 #include "message_types.h"
+
+using std::cout;
+using std::endl;
 
 typedef unsigned int uint;
 
@@ -545,6 +553,13 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
     FILE *idlfile;
     idlfile = fopen (idlfilename,"a");
     
+    
+    
+    // Vector fot hystograms
+    int hn = (int)(MAXIDLENESS/RESOLUTION)+1;
+    int hv[hn]; for (int k=0; k<hn; k++) hv[k]=0;
+    int hsum=0;
+    
 	//Wait for all robots to connect! (Exchange msgs)
 	ros::init(argc, argv, "monitor");
 	ros::NodeHandle nh;
@@ -596,6 +611,10 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
                     fprintf(idlfile,"%.1f;%d;%d;%.1f;%d\n",current_time,id_robot,goal,current_idleness[goal],interference_count);
                     fflush(idlfile);
 
+                    // for hystograms
+                    int b = (int)(current_idleness[goal]/RESOLUTION);
+                    hv[b]++; hsum++;
+            
 					// avg_idleness [goal] = current_idleness [goal];
                     total_0 [goal] += 1.0; total_1 [goal] += current_idleness [goal];  total_2 [goal] += current_idleness [goal]*current_idleness [goal];
                     avg_idleness [goal] = total_1[goal]/total_0[goal]; 
@@ -687,7 +706,26 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 		ros::spinOnce();
 		loop_rate.sleep();		
 	}
+	
 	fclose(idlfile);
+    
+    
+    // Hystogram files
+    char hfilename[240],chfilename[240];
+    sprintf(hfilename, "%s/idleness_%s.hist", path4,strnow);
+    sprintf(chfilename,"%s/idleness_%s.chist",path4,strnow);
+
+    cout << "Histogram output files: " << hfilename << endl;
+    std::ofstream of1; of1.open(hfilename);
+    std::ofstream of2; of2.open(chfilename);
+    double c=0;
+    for (int k=0; k<hn; k++) {
+        of1 << k*RESOLUTION << " " << (double)hv[k]/hsum << endl;
+        c += (double)hv[k]/hsum;
+        of2 << k*RESOLUTION << " " << c << endl;
+    }
+    of1.close();   of2.close();
+        
 	printf("Monitor closed.\n");
 	usleep(1e9);
 	
