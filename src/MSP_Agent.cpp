@@ -59,8 +59,8 @@ private:
 public:
     virtual void init(int argc, char** argv);
     virtual int compute_next_vertex();
-    virtual void send_results();
-    virtual void receive_results();    
+    //virtual void send_results();
+    //virtual void receive_results();    
 };
 
 
@@ -101,6 +101,7 @@ int MSP_Agent::compute_next_vertex() {
     return route[i_vertex];
 }
 
+#if 0
 // FIXME DONE
 void MSP_Agent::send_results() {
     ros::spinOnce();
@@ -110,6 +111,7 @@ void MSP_Agent::send_results() {
 void MSP_Agent::receive_results() {
   ros::spinOnce();
 }
+#endif
 
 int main(int argc, char** argv) {
     

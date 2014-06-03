@@ -171,7 +171,6 @@ void PatrolAgent::init(int argc, char** argv) {
     // results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
     results_sub = nh.subscribe<std_msgs::Int16MultiArray>("results", 100, boost::bind(&PatrolAgent::resultsCB, this, _1) ); //Subscrever "results" vindo dos robots
 
-    initialize_node(); //dizer q está vivo
     ros::Rate loop_rate(1); //1 segundo
     
     /* Define Goal */
@@ -189,6 +188,8 @@ void PatrolAgent::init(int argc, char** argv) {
         ROS_INFO("Waiting for the move_base action server to come up");
     } 
     ROS_INFO("Connected with move_base action server");
+
+    initialize_node(); //dizer q está vivo
     
     /* Wait until all nodes are ready.. */
     while(initialize){
@@ -200,6 +201,11 @@ void PatrolAgent::init(int argc, char** argv) {
 
 void PatrolAgent::run() {
     
+    // Asynch spinner (non-blocking)
+    ros::AsyncSpinner spinner(2); // Use n threads
+    spinner.start();
+//     ros::waitForShutdown();
+
     /* Run Algorithm */ 
     
     ros::Rate loop_rate(30); //0.033 seconds or 30Hz
@@ -234,7 +240,7 @@ void PatrolAgent::run() {
         //ros::Duration delay = ros::Duration(0.1);
         //delay.sleep();
         
-	ros::spinOnce();           
+	// ros::spinOnce();           
 	loop_rate.sleep(); //David Portugal: I believe this is more correct to guarantee that the loop takes exactly 0.1 secs            
 
     } // while ros.ok    

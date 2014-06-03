@@ -192,7 +192,7 @@ void DTAGreedy_Agent::send_results() {
     //printf(",%d]\n",next_vertex);
     
     results_pub.publish(msg);   
-    ros::spinOnce();    
+    //ros::spinOnce();    
 }
 
 

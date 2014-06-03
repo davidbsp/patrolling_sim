@@ -56,8 +56,8 @@ public:
     virtual void init(int argc, char** argv);
     virtual int compute_next_vertex();
     virtual void onGoalComplete();    
-    virtual void send_results();
-    virtual void receive_results();    
+    //virtual void send_results();
+    //virtual void receive_results();    
 };
 
 void Conscientious_Cognitive_Agent::init(int argc, char** argv)
@@ -130,6 +130,7 @@ void Conscientious_Cognitive_Agent::onGoalComplete()
     
 }
 
+#if 0
 // FIXME DONE
 void Conscientious_Cognitive_Agent::send_results() {
   ros::spinOnce();
@@ -139,6 +140,7 @@ void Conscientious_Cognitive_Agent::send_results() {
 void Conscientious_Cognitive_Agent::receive_results() {
     ros::spinOnce();
 }
+#endif
 
 int main(int argc, char** argv) {
   

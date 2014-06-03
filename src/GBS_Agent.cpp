@@ -141,10 +141,12 @@ int GBS_Agent::compute_next_vertex() {
     return greedy_bayesian_strategy(current_vertex, vertex_web, instantaneous_idleness, G1, G2, edge_min);
 }
 
-// FIXME DONE
+
+// FIXME Explicit sending a message with intention
 void GBS_Agent::send_results() {   
-  ros::spinOnce();
+  
 }
+
 
 // FIXME DONE
 void GBS_Agent::receive_results() {
@@ -158,8 +160,9 @@ void GBS_Agent::receive_results() {
             arrived = true;
         }   
     }  
-    ros::spinOnce();
+    // ros::spinOnce();
 }
+
 
 int main(int argc, char** argv) {
 

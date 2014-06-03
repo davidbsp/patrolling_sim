@@ -54,8 +54,8 @@ private:
 public:
     virtual void init(int argc, char** argv);
     virtual int compute_next_vertex();
-    virtual void send_results();
-    virtual void receive_results();    
+    //virtual void send_results();
+    //virtual void receive_results();    
 };
 
 void Cyclic_Agent::init(int argc, char** argv) {
@@ -87,6 +87,7 @@ int Cyclic_Agent::compute_next_vertex() {
     return path[i_vertex];    
 }
 
+#if 0
 // FIXME DONE
 void Cyclic_Agent::send_results() {
   ros::spinOnce();   
@@ -96,6 +97,7 @@ void Cyclic_Agent::send_results() {
 void Cyclic_Agent::receive_results() {
   ros::spinOnce();   
 }
+#endif
 
 
 int main(int argc, char** argv) {

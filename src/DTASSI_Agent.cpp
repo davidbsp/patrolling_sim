@@ -112,7 +112,7 @@ private:
 
     void bid_msg_handler(std::vector<int>::const_iterator it, int sender_id);
 
-    //wait for a given ampunt of time by using micro sleeps and calling ros::spinOnce (used to receive message while waiting)	
+    //wait for a given amount of time by using micro sleeps and calling ros::spinOnce (used to receive message while waiting)	
     void wait(int timeSteps);	
 
     //pointer to the log file
@@ -374,7 +374,7 @@ void DTASSI_Agent::force_bid(int nv,double bv,int rid){
 void DTASSI_Agent::wait(int ts){
         double micro_timeout = timeout/ts;
 	for (int i=0;i<ts;i++){
-		ros::spinOnce();
+		// ros::spinOnce();
 	        ros::Duration delay = ros::Duration(micro_timeout);
 	        delay.sleep();	
 	}
@@ -517,7 +517,7 @@ void DTASSI_Agent::send_results() {
     printf(",%d]\n",next_vertex);
     
     results_pub.publish(msg);   
-    ros::spinOnce();    
+    // ros::spinOnce();    
 }
 
 void DTASSI_Agent::update_bids(int nv, double bv, int senderId){

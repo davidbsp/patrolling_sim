@@ -51,8 +51,8 @@ class Conscientious_Reactive_Agent: public PatrolAgent {
     
 public:
     virtual int compute_next_vertex();
-    virtual void send_results();
-    virtual void receive_results();    
+    //virtual void send_results();
+    //virtual void receive_results();    
 };
 
 
@@ -108,17 +108,16 @@ int Conscientious_Reactive_Agent::compute_next_vertex() {
     return next_vertex;
 }
 
-
-// FIXME DONE
+#if 0
+// FIXME Not needed at all, right?
 void Conscientious_Reactive_Agent::send_results() {
   ros::spinOnce();    
 }
 
-// FIXME DONE
 void Conscientious_Reactive_Agent::receive_results() {
   ros::spinOnce();   
 }
-
+#endif
 
 int main(int argc, char** argv) {
   

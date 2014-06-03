@@ -50,14 +50,15 @@ class Heuristic_Conscientious_Reactive_Agent: public PatrolAgent {
     
 public:
     virtual int compute_next_vertex();
-    virtual void send_results();
-    virtual void receive_results();    
+    //virtual void send_results();
+    //virtual void receive_results();    
 };
 
 int Heuristic_Conscientious_Reactive_Agent::compute_next_vertex() {
     return heuristic_conscientious_reactive(current_vertex, vertex_web, instantaneous_idleness);
 }
 
+#if 0
 // FIXME DONE
 void Heuristic_Conscientious_Reactive_Agent::send_results() {
   ros::spinOnce();
@@ -67,6 +68,7 @@ void Heuristic_Conscientious_Reactive_Agent::send_results() {
 void Heuristic_Conscientious_Reactive_Agent::receive_results() {
   ros::spinOnce();
 }
+#endif
 
 int main(int argc, char** argv) {
   

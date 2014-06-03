@@ -147,19 +147,18 @@ void SEBS_Agent::processEvents() {
         //printf("tab_intention[ID=%d]=%d\n",robot_intention,tab_intention[robot_intention]);
         intention = false;
     }
-  ros::spinOnce();    
+    // ros::spinOnce();    
 }
 
 int SEBS_Agent::compute_next_vertex() {
     return state_exchange_bayesian_strategy(current_vertex, vertex_web, instantaneous_idleness, tab_intention, NUMBER_OF_ROBOTS, G1, G2, edge_min);
 }
 
-// FIXME DONE
+// FIXME Explicit sending a message with intention
 void SEBS_Agent::send_results() {   
-   ros::spinOnce(); 
+
 }
 
-// FIXME DONE
 void SEBS_Agent::receive_results() {
  
     //received vertex and intention from other robot
@@ -176,7 +175,7 @@ void SEBS_Agent::receive_results() {
             intention = true;
         }   
     } 
-  ros::spinOnce();    
+    //ros::spinOnce();    
 }
 
 int main(int argc, char** argv) {
