@@ -50,11 +50,13 @@ int main (int argc, char **argv)
     }
     f.close();
     
-    char nf[strlen(argv[1])+8];
-    sprintf(nf,"%s.hyst",argv[1]);
-    char cnf[strlen(argv[1])+8];
-    sprintf(cnf,"%s.chyst",argv[1]);
-    cout << "Hystogram output file: " << nf << endl;
+    char nf[strlen(argv[1])+8], cnf[strlen(argv[1])+8];
+    strcpy(nf,argv[1]);
+    nf[strlen(nf)-4]='\0';
+    strcpy(cnf,nf);
+    strcat(nf,".hist");
+    strcat(cnf,".chist");
+    cout << "Histogram output file: " << nf << endl;
     ofstream of1; of1.open(nf);
     ofstream of2; of2.open(cnf);
     double c=0;

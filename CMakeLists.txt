@@ -54,4 +54,4 @@ target_link_libraries(DTASSI PatrolAgent)
 
 ############ RESULTS & MONITOR NODE: ##############
 rosbuild_add_executable(monitor src/monitor.cpp src/getgraph.cpp)
-rosbuild_add_executable(idlHystogram src/idlHystogram.cpp)
+rosbuild_add_executable(idlHistogram src/idlHistogram.cpp)
