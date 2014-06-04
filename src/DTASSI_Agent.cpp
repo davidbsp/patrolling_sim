@@ -113,7 +113,7 @@ private:
     void bid_msg_handler(std::vector<int>::const_iterator it, int sender_id);
 
     //wait for a given amount of time by using micro sleeps and calling ros::spinOnce (used to receive message while waiting)	
-    void wait(int timeSteps);	
+    void wait();	
 
     //pointer to the log file
 //    FILE* logfile;
@@ -218,7 +218,7 @@ double DTASSI_Agent::compute_cost(int vertex)
 double DTASSI_Agent::compute_distance(int vertex)
 {
 
-    printf("TODO: implemente a function that gives geometric distance from current robot position to vertex"); 	
+    //printf("TODO: implemente a function that gives geometric distance from current robot position to vertex"); 	
 
     uint elem_s_path;
     int *shortest_path = new int[dimension]; 
@@ -266,7 +266,7 @@ double DTASSI_Agent::utility(int vertex) {
     double idl = global_instantaneous_idleness[vertex];
     double cost = compute_cost(vertex);
     double U = theta_idl * idl + theta_cost * cost;
-    printf("   -- U[%d] ( %.1f, %.1f ) = %.1f\n",vertex,idl,cost,U);
+    //printf("   -- U[%d] ( %.1f, %.1f ) = %.1f\n",vertex,idl,cost,U);
     return U;
 }
 
@@ -320,22 +320,22 @@ double DTASSI_Agent::compute_bid(int nv){
 
 	//local copy of task list for computing the bid, put as selected the ones I do not want to consider 
 	bool* my_tasks = new bool[dimension];
-	printf("current tasks [");
+	//printf("current tasks [");
 	for (size_t i = 0; i<dimension; i++){
-		printf(" %d, ",tasks[i]);
+	//	printf(" %d, ",tasks[i]);
 		my_tasks[i] = !tasks[i];
 	} 
-	printf(" ] \n");
+	//printf(" ] \n");*/
 
 	//add nv to my_tasks (regardless of whether this was my responsibility already)
 	my_tasks[nv] = false;
 
-	printf("my tasks [");
+/*	printf("my tasks [");
 	for (size_t i = 0; i<dimension; i++){
 		printf(" %d, ",my_tasks[i]);
 	} 
 	printf(" ] \n");
-
+*/
 	//accumulator for total path cost
 	double path_cost = 0.;
 
@@ -356,7 +356,7 @@ double DTASSI_Agent::compute_bid(int nv){
 		int ni = select_next_vertex(my_tasks);
 		path_cost += compute_cost(ci,ni);
 		printf("[while loop] pathcost from %d to %d : %.2f \n",ci,ni,path_cost);
-		ni=ci;
+		ci=ni;
 	}
 	printf("total cost = %.2f \n",path_cost);
 
@@ -366,18 +366,21 @@ double DTASSI_Agent::compute_bid(int nv){
 }
 
 void DTASSI_Agent::force_bid(int nv,double bv,int rid){
-	printf("forcing bid for vertex %d with value %.2f from robot %d \n",nv,bv,rid);
+	//printf("forcing bid for vertex %d with value %.2f from robot %d \n",nv,bv,rid);
 	bids[nv].bidValue = bv;
 	bids[nv].robotId = rid;
 }
 
-void DTASSI_Agent::wait(int ts){
-        double micro_timeout = timeout/ts;
+void DTASSI_Agent::wait(){
+	        ros::Duration delay = ros::Duration(timeout); //asynchronous version
+	        delay.sleep();	
+/*        double micro_timeout = timeout/ts; //synchronous version
 	for (int i=0;i<ts;i++){
 		// ros::spinOnce();
 	        ros::Duration delay = ros::Duration(micro_timeout);
 	        delay.sleep();	
 	}
+*/
 }
 
 // current_vertex (goal just reached)
@@ -386,15 +389,16 @@ int DTASSI_Agent::compute_next_vertex() {
     update_global_idleness();
     global_instantaneous_idleness[current_vertex] = 0.0;
 
-    reset_selected_vertices(selected_vertices);	
+    reset_selected_vertices(selected_vertices);
+    if (current_vertex >= 0 && current_vertex < dimension){
+	selected_vertices[current_vertex] = true; //do not consider current vertex as possible goal 
+    } 	
     int nv = select_next_vertex(selected_vertices);	
     double bidvalue = compute_bid(nv); 
     force_bid(nv,bidvalue,ID_ROBOT); 
     send_target(nv,bidvalue);
     printf("cnv: waiting for bids (%.2f seconds) \n",timeout);
-//    ros::Duration delay = ros::Duration(timeout);
-//    delay.sleep();	
-    wait(10);	
+    wait();	
     printf("current target %d current value for target %.2f \n tasks [",nv,bidvalue);
     for (size_t i = 0; i<dimension;i++){
 	printf(" %d, ",tasks[i]);	
@@ -403,7 +407,7 @@ int DTASSI_Agent::compute_next_vertex() {
     while (true){
       if (best_bid(nv)){ //if I am in the best position to go to nv 
 	update_tasks();
-	force_bid(nv,0,ID_ROBOT);
+	//force_bid(nv,0,ID_ROBOT); TODO: check
 	return nv;
       } else {
         nv = select_next_vertex(selected_vertices);	
@@ -411,9 +415,7 @@ int DTASSI_Agent::compute_next_vertex() {
 	force_bid(nv,bidvalue,ID_ROBOT); 
 	send_target(nv,bidvalue);
 	printf("waiting for bids (%.2f seconds)",timeout);
-//	ros::Duration delay = ros::Duration(timeout);
-//	delay.sleep();
-	wait(10);
+	wait();
 	printf("current target %d current value for target %.2f tasks [",nv,bidvalue);
         for (size_t i = 0; i<dimension;i++){
 	    printf(" %d, ",tasks[i]);	
@@ -424,7 +426,7 @@ int DTASSI_Agent::compute_next_vertex() {
 }
 
 void DTASSI_Agent::update_tasks(){
-    	printf("updating tasks: before: tasks [");
+    	/*printf("updating tasks: before: tasks [");
         for (size_t i = 0; i<dimension; i++){
 	    printf(" %d, ",tasks[i]);	
         }
@@ -435,17 +437,17 @@ void DTASSI_Agent::update_tasks(){
 	    printf(" <%.2f,%d>, ",bids[i].bidValue,bids[i].robotId);	
         }
         printf("] \n"); 
-
+*/
 	for (size_t i = 0; i< dimension; i++){
 		tasks[i] = (bids[i].robotId == ID_ROBOT);
 	}
-
+/*
     	printf("after [");
         for (size_t i = 0; i<dimension; i++){
 	    printf(" %d, ",tasks[i]);	
         }
         printf("] \n"); 
-
+*/
 }
 
 void DTASSI_Agent::send_target(int nv,double bv) {
@@ -483,12 +485,12 @@ void DTASSI_Agent::send_bid(int nv,double bv) {
 bool DTASSI_Agent::best_bid(int nv){
 	printf("computing whether I hold the best bid for %d, result: %d \n",nv,(bids[nv].robotId==ID_ROBOT));
 
-    	printf("bids [");
+/*    	printf("bids [");
         for (size_t i = 0; i<dimension; i++){
 	    printf(" <%.2f,%d>, ",bids[i].bidValue,bids[i].robotId);	
         }
         printf("] \n"); 
-
+*/
 
 	return (bids[nv].robotId==ID_ROBOT);	
 }
