@@ -75,7 +75,7 @@ private:
 	
     //select the next best vertex (used to select which task should be auctioned);
     //mark vertex that have been selected to avoid selecting them in the same alg step	
-    int select_next_vertex(bool* sv);
+    int select_next_vertex(int currv, bool* sv);
  
     //compute minimum path cost considering all tasks (tasks) and the next vertex (nv). 
     //The first room is always the current goal (if any), then rooms are visited in decreasing order of utility. 
@@ -130,7 +130,7 @@ public:
 //    virtual void onGoalComplete();	    
 
     double compute_cost(int vertex);
-    double utility(int vertex);
+    double utility(int currentv, int nextv);
     void update_global_idleness();
 };
 
@@ -262,9 +262,9 @@ double DTASSI_Agent::compute_cost(int cv, int nv)
 }        
 
 
-double DTASSI_Agent::utility(int vertex) {
-    double idl = global_instantaneous_idleness[vertex];
-    double cost = compute_cost(vertex);
+double DTASSI_Agent::utility(int cv,int nv) {
+    double idl = global_instantaneous_idleness[nv];
+    double cost = compute_cost(cv,nv);
     double U = theta_idl * idl + theta_cost * cost;
     //printf("   -- U[%d] ( %.1f, %.1f ) = %.1f\n",vertex,idl,cost,U);
     return U;
@@ -283,7 +283,7 @@ void DTASSI_Agent::update_global_idleness()
     last_update_idl = now;
 }
 
-int DTASSI_Agent::select_next_vertex(bool* sv){
+int DTASSI_Agent::select_next_vertex(int cv,bool* sv){
     
     double maxUtility = -1e9;
     int i_maxUtility = 0;
@@ -295,7 +295,7 @@ int DTASSI_Agent::select_next_vertex(bool* sv){
     }
     for(size_t i=0; i<dimension; i++){
         
-        double U = utility(i);
+        double U = utility(cv,i);
         if (U > maxUtility && !sv[i]){
             maxUtility = U;
             i_maxUtility = i;
@@ -345,15 +345,15 @@ double DTASSI_Agent::compute_bid(int nv){
 		ci = next_vertex;
 		path_cost = compute_distance(ci);//this should give the geometric distance from robot position to destination 
 		my_tasks[ci] = true; //remove this task from the list
-		printf("[Target Set] Pathcost to %d : %.2f \n",ci,path_cost);
+		printf("[Target Set] Pathcost from %d to %d : %.2f \n",current_vertex,ci,path_cost);
 	} else { 
-		ci = select_next_vertex(my_tasks);
+		ci = select_next_vertex(current_vertex,my_tasks);
 		path_cost = compute_cost(ci);
-		printf("[Target NOT Set] Pathcost to %d : %.2f \n",ci,path_cost);
+		printf("[Target NOT Set] Pathcost from %d to %d : %.2f \n",current_vertex,ci,path_cost);
 	}
 	//handle remaining locations in reverse utility order
 	while (!all_selected(my_tasks)){
-		int ni = select_next_vertex(my_tasks);
+		int ni = select_next_vertex(ci,my_tasks);
 		path_cost += compute_cost(ci,ni);
 		printf("[while loop] pathcost from %d to %d : %.2f \n",ci,ni,path_cost);
 		ci=ni;
@@ -393,7 +393,7 @@ int DTASSI_Agent::compute_next_vertex() {
     if (current_vertex >= 0 && current_vertex < dimension){
 	selected_vertices[current_vertex] = true; //do not consider current vertex as possible goal 
     } 	
-    int nv = select_next_vertex(selected_vertices);	
+    int nv = select_next_vertex(current_vertex,selected_vertices);	
     double bidvalue = compute_bid(nv); 
     force_bid(nv,bidvalue,ID_ROBOT); 
     send_target(nv,bidvalue);
@@ -410,7 +410,7 @@ int DTASSI_Agent::compute_next_vertex() {
 	//force_bid(nv,0,ID_ROBOT); TODO: check
 	return nv;
       } else {
-        nv = select_next_vertex(selected_vertices);	
+        nv = select_next_vertex(current_vertex,selected_vertices);	
 	bidvalue = compute_bid(nv); 
 	force_bid(nv,bidvalue,ID_ROBOT); 
 	send_target(nv,bidvalue);
@@ -523,7 +523,7 @@ void DTASSI_Agent::send_results() {
 }
 
 void DTASSI_Agent::update_bids(int nv, double bv, int senderId){
-	if (bids[nv].bidValue > (1 + hist)*bv) { //using histeresis to avoid switching when there is no clear benefit
+	if (bids[nv].bidValue >= (1 + hist)*bv) { //using histeresis to avoid switching when there is no clear benefit
 		bids[nv].bidValue = bv;
 		bids[nv].robotId = senderId;
 	}
@@ -571,7 +571,7 @@ void DTASSI_Agent::task_request_msg_handler(std::vector<int>::const_iterator it,
 	taskRequests[nv] = now;
 	double my_bidValue = compute_bid(nv); 
 	update_bids(nv,bv,senderId);
-	if (my_bidValue<bv){
+	if (my_bidValue<bv*(1+hist)){
 		send_bid(nv,my_bidValue);
 	}
 }
