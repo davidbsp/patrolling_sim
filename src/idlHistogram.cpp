@@ -8,7 +8,7 @@
 
 using namespace std;
 
-#define RESOLUTION 5.0 // seconds
+#define RESOLUTION 1.0 // seconds
 
 #define MAXIDLENESS 500.0 // seconds
 

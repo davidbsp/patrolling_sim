@@ -55,12 +55,12 @@
 #include "getgraph.h"
 
 #define NUM_MAX_ROBOTS 32
-#define MAX_COMPLETE_PATROL 10
-#define MAX_EXPERIMENT_TIME 3600  // seconds
-#define DEAD_ROBOT_TIME 120 // (seconds) time from last goal reached after which a robot is considered dead
+#define MAX_COMPLETE_PATROL 100
+#define MAX_EXPERIMENT_TIME 86400  // seconds
+#define DEAD_ROBOT_TIME 180 // (seconds) time from last goal reached after which a robot is considered dead
 #define FOREVER true
 // For hystograms
-#define RESOLUTION 5.0 // seconds
+#define RESOLUTION 1.0 // seconds
 #define MAXIDLENESS 500.0 // seconds
 
 #include "message_types.h"
@@ -428,6 +428,7 @@ bool check_dead_robots() {
     for (int i=0; i<teamsize; i++){
         if (last_goal_reached[i]>0) {
             double delta = current_time - last_goal_reached[i];
+            printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,last_goal_reached[i],delta);
             if (delta>DEAD_ROBOT_TIME) {
                 printf("Dead robot %d. Time from last goal reached = %.1f\n",i,delta);
                 return true;
@@ -573,7 +574,9 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
     listener = new tf::TransformListener();
     
  	ros::Rate loop_rate(30); //0.033 seconds or 30Hz
-	 
+	
+    nh.setParam("/simulation_runnning", true);
+    
 	while( ros::ok() ){
 		
 		if (!initialize){	//check if msg is goal or interference -> compute necessary results.
@@ -690,18 +693,31 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				write_results (avg_idleness, stddev_idleness, number_of_visits, complete_patrol, dimension, 
                                worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, worst_idleness, 
                    interference_count, graph_file, algorithm, teamsize_str,ros::Time::now().toSec()-time_zero,resultsfilename);
-				
-                bool dead = check_dead_robots();
                 
-				if ( (dead) || ((!FOREVER) && (complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance)) {
-					printf ("Simulation is Over\n");
-					finish_simulation ();
-                    ros::spinOnce();
-					break;
-				}
-				
+                // if ((complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance)) {
+                //    ... simulation is over... 
+                // }
 			}
-		}	
+			
+			// Check if simulation must be terminated
+			bool dead = check_dead_robots();
+                
+            bool simrun = true;
+            std::string psimrun;
+            if (nh.getParam("/simulation_runnning", psimrun))
+                if (psimrun=="false")
+                    simrun = false;
+            
+            if ( (dead) || (!simrun) ) {
+                printf ("Simulation is Over\n");                    
+                nh.setParam("/simulation_runnning", false);
+                finish_simulation ();
+                ros::spinOnce();
+                break;
+            }
+
+
+        }	
 		
 		ros::spinOnce();
 		loop_rate.sleep();		

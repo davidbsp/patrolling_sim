@@ -26,7 +26,7 @@ Alg_names = [
         [ 'DTAS', 'DTASSI' ]
      ]
 
-Map_names = ['cumberland','example','grid','1r5']   
+Map_names = ['cumberland','example','grid','1r5','DISlabs']   
 
 NRobots_list = ['1','2','4','6','8','12']
 
@@ -34,6 +34,7 @@ LocalizationMode_list = ['odom','GPS']
 
 Terminal_list = ['gnome-terminal','xterm']
 
+initPoses = {}
 
 # return long name of the algorithm
 def findAlgName(alg):
@@ -44,6 +45,97 @@ def findAlgName(alg):
     return r
 
 
+def loadInitPoses():
+  try:
+    ConfigIP = ConfigParser.ConfigParser()
+    ConfigIP.read("params/initial_poses.txt")
+    for option in ConfigIP.options("InitialPoses"):
+      initPoses[option] = ConfigIP.get("InitialPoses", option)
+  except:
+    print "Could not load initial poses file"
+
+
+def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM):
+    ALG = findAlgName(ALG_SHORT)
+    print 'Run the experiment'
+    print 'Loading map ',MAP
+    print 'N. robot ',NROBOTS
+    print 'Algorithm ',ALG,'  ',ALG_SHORT
+    print 'Localization Mode ',LOC_MODE
+    print 'Terminal ',TERM
+
+    loadInitPoses()
+
+    scenario = MAP+"_"+NROBOTS
+    print scenario,'   ',initPoses[scenario]
+    
+    if (TERM == 'xterm'):
+        os.system('xterm -e roscore &')
+    else:
+        os.system('gnome-terminal -e "bash -c \'roscore\'" &')
+    os.system('sleep 3')
+    os.system('rosparam set /use_sim_time true')
+
+    cmd = './setinitposes.py '+MAP+' "'+initPoses[scenario]+'"'
+    print cmd
+    os.system(cmd)
+    os.system('sleep 1')
+
+    cmd_monitor = 'rosrun patrolling_sim monitor maps/'+MAP+'/'+MAP+'.graph '+ALG_SHORT+' '+NROBOTS        
+    cmd_stage = 'roslaunch patrolling_sim map.launch map:='+MAP
+    print cmd_monitor
+    print cmd_stage
+    if (TERM == 'xterm'):
+        os.system('xterm -e  "'+cmd_monitor+'" &') 
+        os.system('xterm -e  "'+cmd_stage+'" &')
+    else:
+        os.system('gnome-terminal --tab -e  "bash -c \''+cmd_monitor+'\'" --tab -e "bash -c \''+cmd_stage+'\'" &')
+    
+    os.system('sleep 3')
+    
+    # Start robots
+    if (LOC_MODE == 'odom'):
+        robot_launch = 'robot.launch'
+    else:
+        robot_launch = 'robot_fake_loc.launch'
+    
+    gcmd = 'gnome-terminal '
+    for i in range(0,int(NROBOTS)):
+        print 'Run robot ',i
+        cmd = 'bash -c \'roslaunch patrolling_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+'\''
+        print cmd
+        #os.system('xterm -e  "'+cmd+'" &')
+        #os.system('sleep 1')
+        gcmd = gcmd + ' --tab -e "'+cmd+'" '
+    gcmd = gcmd + '&'    
+    print gcmd
+    os.system(gcmd)
+    os.system('sleep 5')    
+        
+    # Start patrol behaviors
+    gcmd = 'gnome-terminal '
+    for i in range(0,int(NROBOTS)):
+        print 'Run patrol robot ',i
+        if (ALG_SHORT=='MSP'):
+            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+'\''
+        elif (ALG_SHORT=='GBS' or ALG_SHORT=='SEBS'):
+            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' '+str(NROBOTS)+'\''
+        else:
+            now = datetime.datetime.now()
+            dateString = now.strftime("%Y-%m-%d-%H:%M")
+# FOR DEBUG                cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
+            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+'\''
+        print cmd
+        #os.system('xterm -e  "'+cmd+'" &')
+        #os.system('sleep 1')
+        gcmd = gcmd + ' --tab -e "'+cmd+'" '
+    gcmd = gcmd + '&'    
+    print gcmd
+    os.system(gcmd)
+    os.system('sleep 5')
+
+
+
 class DIP(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent) 
@@ -52,7 +144,7 @@ class DIP(tk.Frame):
         
     def initUI(self):
         self.loadOldConfig()
-        self.loadInitPoses()
+        
         
         self.parent.title("MRP Experiment Launcher")
         self.style = Style()
@@ -138,88 +230,10 @@ class DIP(tk.Frame):
         
     
     def launch_script(self):
-        MAP = self.map_ddm.get()
-        NROBOTS = self.robots_ddm.get()
-        ALG_SHORT = self.alg_ddm.get()
-        ALG = findAlgName(ALG_SHORT)
-        LOC_MODE = self.locmode_ddm.get()
-        TERM = self.term_ddm.get()
-        print 'Launch script'
-        print 'Loading map ',MAP
-        print 'N. robot ',NROBOTS
-        print 'Algorithm ',ALG,"  ",ALG_SHORT
-        print 'Localization Mode ',LOC_MODE
-        print 'Terminal ',TERM
-        
-        self.saveConfigFile()
-        scenario = MAP+"_"+NROBOTS
-        print scenario,'   ',self.initPoses[scenario]
-        
-        if (TERM == 'xterm'):
-            os.system('xterm -e roscore &')
-        else:
-            os.system('gnome-terminal -e "bash -c \'roscore\'" &')
-        os.system('sleep 3')
-        os.system('rosparam set /use_sim_time true')
+        self.saveConfigFile();
+        run_experiment(self.map_ddm.get(),self.robots_ddm.get(),self.alg_ddm.get(),self.locmode_ddm.get(),self.term_ddm.get())
 
-        cmd = './setinitposes.py '+MAP+' "'+self.initPoses[scenario]+'"'
-        print cmd
-        os.system(cmd)
-        os.system('sleep 1')
-
-        cmd_monitor = 'rosrun patrolling_sim monitor maps/'+MAP+'/'+MAP+'.graph '+ALG_SHORT+' '+NROBOTS        
-        cmd_stage = 'roslaunch patrolling_sim map.launch map:='+MAP
-        print cmd_monitor
-        print cmd_stage
-        if (TERM == 'xterm'):
-            os.system('xterm -e  "'+cmd_monitor+'" &') 
-            os.system('xterm -e  "'+cmd_stage+'" &')
-        else:
-            os.system('gnome-terminal --tab -e  "bash -c \''+cmd_monitor+'\'" --tab -e "bash -c \''+cmd_stage+'\'" &')
-        
-        os.system('sleep 3')
-        
-        # Start robots
-        if (LOC_MODE == 'odom'):
-            robot_launch = 'robot.launch'
-        else:
-            robot_launch = 'robot_fake_loc.launch'
-        
-        gcmd = 'gnome-terminal '
-        for i in range(0,int(NROBOTS)):
-            print 'Run robot ',i
-            cmd = 'bash -c \'roslaunch patrolling_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+'\''  #+' scenario:='+MAP+'_'+NROBOTS+'robots'
-            print cmd
-            #os.system('xterm -e  "'+cmd+'" &')
-            #os.system('sleep 1')
-            gcmd = gcmd + ' --tab -e "'+cmd+'" '
-        gcmd = gcmd + '&'    
-        print gcmd
-        os.system(gcmd)
-        os.system('sleep 5')    
-            
-        # Start patrol behaviors
-        gcmd = 'gnome-terminal '
-        for i in range(0,int(NROBOTS)):
-            print 'Run patrol robot ',i
-            if (ALG_SHORT=='MSP'):
-                cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+'\''
-            elif (ALG_SHORT=='GBS' or ALG_SHORT=='SEBS'):
-                cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' '+str(NROBOTS)+'\''
-            else:
-                now = datetime.datetime.now()
- 		dateString = now.strftime("%Y-%m-%d-%H:%M")
-# FOR DEBUG                cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
-                cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+'\''
-            print cmd
-            #os.system('xterm -e  "'+cmd+'" &')
-            #os.system('sleep 1')
-            gcmd = gcmd + ' --tab -e "'+cmd+'" '
-        gcmd = gcmd + '&'    
-        print gcmd
-        os.system(gcmd)
-        os.system('sleep 5')
-                
+    
     def quit(self):
       self.parent.destroy()
       
@@ -248,24 +262,61 @@ class DIP(tk.Frame):
       except:
         print "Could not load config file"
 
-    def loadInitPoses(self):
-      try:
-        self.initPoses = {}
-        self.ConfigIP = ConfigParser.ConfigParser()
-        self.ConfigIP.read("params/initial_poses.txt")
-        for option in self.ConfigIP.options("InitialPoses"):
-          self.initPoses[option] = self.ConfigIP.get("InitialPoses", option)
-      except:
-        print "Could not load initial poses file"
+
+        
+def getROStime():
+    os.system("rostopic echo -n 1 /clock > rostime.txt")
+    f = open('rostime.txt','r')
+    t = 0
+    for line in f:
+        if (line[2:6]=='secs'):
+            t = int(line[8:])
+    f.close()
+    return t
+
+
+def getSimulationRunning():
+    os.system("rosparam get /simulation_runnning > simrun.txt")
+    f = open('simrun.txt','r')
+    t = True
+    line = f.readline();
+    if (line[0:5]=='false'):
+        t = False
+    f.close()
+    return t
+    
 
 
 def main():
 
+  if (len(sys.argv)==1):
     root = tk.Tk()
     DIP(root)
     root.geometry("300x240+0+0")
     root.mainloop()  
+  elif (len(sys.argv)==7):
+    MAP = sys.argv[1]
+    NROBOTS = sys.argv[2]
+    ALG_SHORT = sys.argv[3]
+    LOC_MODE = sys.argv[4]
+    TERM = sys.argv[5]
+    TIMEOUT = int(sys.argv[6])
+    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM)
+    run = True
+    while (run):
+        t = getROStime()
+        #print "Elapsed time: ",t," secs."
+        if (t>TIMEOUT or (not getSimulationRunning())):
+            run = False;
+        os.system('sleep 10')
+    os.system("./stop_experiment.sh")
+  else:
+    print "Use: ",sys.argv[0]
+    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <term> <timeout>'
+  
+
 
 
 if __name__ == '__main__':
     main()
+
