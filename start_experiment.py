@@ -231,7 +231,7 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        self.run_experiment(self.map_ddm.get(),self.robots_ddm.get(),self.alg_ddm.get(),self.locmode_ddm.get(),self.term_ddm.get())
+        run_experiment(self.map_ddm.get(),self.robots_ddm.get(),self.alg_ddm.get(),self.locmode_ddm.get(),self.term_ddm.get())
 
     
     def quit(self):
@@ -263,6 +263,17 @@ class DIP(tk.Frame):
         print "Could not load config file"
 
 
+        
+def getROStime(filename):
+    f = open(filename,'r')
+    t = 0
+    for line in f:
+        if (line[2:6]=='secs'):
+            t = int(line[8:])
+    f.close()
+    return t
+
+    
 
 def main():
 
@@ -271,15 +282,26 @@ def main():
     DIP(root)
     root.geometry("300x240+0+0")
     root.mainloop()  
-  elif (len(sys.argv)==6):
+  elif (len(sys.argv)==7):
     MAP = sys.argv[1]
     NROBOTS = sys.argv[2]
     ALG_SHORT = sys.argv[3]
     LOC_MODE = sys.argv[4]
     TERM = sys.argv[5]
+    TIMEOUT = int(sys.argv[6])
     run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM)
+    run = True
+    while (run):
+        os.system("rostopic echo -n 1 /clock > rostime.txt")
+        t = getROStime('rostime.txt')
+        #print "Elapsed time: ",t," secs."
+        if (t>TIMEOUT):
+            run = False;
+        os.system('sleep 10')
+    os.system("./stop_experiment.sh")
   else:
-    print "Use: ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <term>'
+    print "Use: ",sys.argv[0]
+    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <term> <timeout>'
   
 
 
