@@ -26,7 +26,7 @@ Alg_names = [
         [ 'DTAS', 'DTASSI' ]
      ]
 
-Map_names = ['cumberland','example','grid','1r5']   
+Map_names = ['cumberland','example','grid','1r5','DISlabs']   
 
 NRobots_list = ['1','2','4','6','8','12']
 
@@ -264,8 +264,9 @@ class DIP(tk.Frame):
 
 
         
-def getROStime(filename):
-    f = open(filename,'r')
+def getROStime():
+    os.system("rostopic echo -n 1 /clock > rostime.txt")
+    f = open('rostime.txt','r')
     t = 0
     for line in f:
         if (line[2:6]=='secs'):
@@ -273,7 +274,18 @@ def getROStime(filename):
     f.close()
     return t
 
+
+def getSimulationRunning():
+    os.system("rosparam get /simulation_runnning > simrun.txt")
+    f = open('simrun.txt','r')
+    t = True
+    line = f.readline();
+    if (line[0:5]=='false'):
+        t = False
+    f.close()
+    return t
     
+
 
 def main():
 
@@ -292,10 +304,9 @@ def main():
     run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM)
     run = True
     while (run):
-        os.system("rostopic echo -n 1 /clock > rostime.txt")
-        t = getROStime('rostime.txt')
+        t = getROStime()
         #print "Elapsed time: ",t," secs."
-        if (t>TIMEOUT):
+        if (t>TIMEOUT or (not getSimulationRunning())):
             run = False;
         os.system('sleep 10')
     os.system("./stop_experiment.sh")
