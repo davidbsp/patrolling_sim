@@ -428,7 +428,7 @@ bool check_dead_robots() {
     for (int i=0; i<teamsize; i++){
         if (last_goal_reached[i]>0) {
             double delta = current_time - last_goal_reached[i];
-            printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,last_goal_reached[i],delta);
+            // printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,last_goal_reached[i],delta);
             if (delta>DEAD_ROBOT_TIME) {
                 printf("Dead robot %d. Time from last goal reached = %.1f\n",i,delta);
                 return true;
@@ -507,6 +507,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
         last_goal_reached[i] = -1.0;
 	}
 
+	bool dead = false; // check if there is a dead robot
     
     
     // Scenario name (to be used in file and directory names)
@@ -547,8 +548,8 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
     // File to log all the idlenesses of an experimental scenario
 
     char idlfilename[240],resultsfilename[240];
-    sprintf(idlfilename,"%s/idleness_%s.csv",path4,strnow);
-    sprintf(resultsfilename,"%s/results_%s.csv",path4,strnow);
+    sprintf(idlfilename,"%s/%s_idleness.csv",path4,strnow);
+    sprintf(resultsfilename,"%s/%s_results.csv",path4,strnow);
     
     // Idleness file
     FILE *idlfile;
@@ -577,6 +578,8 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	
     nh.setParam("/simulation_runnning", true);
     
+    double current_time = ros::Time::now().toSec();
+    
 	while( ros::ok() ){
 		
 		if (!initialize){	//check if msg is goal or interference -> compute necessary results.
@@ -589,7 +592,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 			if (goal_reached){
 				
 // 				printf("last_visit [%d] = %f\n", goal, last_visit [goal]);
-				double current_time = ros::Time::now().toSec();
+				current_time = ros::Time::now().toSec();
 				printf("Robot %d reached goal %d (current time: %f)\n", id_robot, goal, current_time);
                 
 				double last_visit_temp = current_time - time_zero; ; //guarda o valor corrente
@@ -700,7 +703,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 			}
 			
 			// Check if simulation must be terminated
-			bool dead = check_dead_robots();
+			dead = check_dead_robots();
                 
             bool simrun = true;
             std::string psimrun;
@@ -728,8 +731,8 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
     
     // Hystogram files
     char hfilename[240],chfilename[240];
-    sprintf(hfilename, "%s/idleness_%s.hist", path4,strnow);
-    sprintf(chfilename,"%s/idleness_%s.chist",path4,strnow);
+    sprintf(hfilename, "%s/%s.hist", path4,strnow);
+    sprintf(chfilename,"%s/%s.chist",path4,strnow);
 
     cout << "Histogram output files: " << hfilename << endl;
     std::ofstream of1; of1.open(hfilename);
@@ -741,7 +744,16 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
         of2 << k*RESOLUTION << " " << c << endl;
     }
     of1.close();   of2.close();
-        
+    
+    char infofilename[240];
+    sprintf(infofilename,"%s/%s_info.csv",path4,strnow);
+
+    FILE *infofile;
+    infofile = fopen (infofilename,"w");
+    fprintf(infofile,"%s;%s;%s;%s;%s;%.1f;%d;%s\n",graph_file,teamsize_str,algorithm,hostname,
+            strnow,current_time,interference_count,(dead?"FAIL":"TIMEOUT"));
+    fclose(infofile);
+    
 	printf("Monitor closed.\n");
 	usleep(1e9);
 	

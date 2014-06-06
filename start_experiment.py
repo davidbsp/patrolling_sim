@@ -4,6 +4,7 @@
 import Tkinter as tk
 import tkMessageBox
 import ConfigParser
+import thread
 from Tkinter import *
 from ttk import *
 import Image, tkFileDialog
@@ -50,12 +51,13 @@ def loadInitPoses():
     ConfigIP = ConfigParser.ConfigParser()
     ConfigIP.read("params/initial_poses.txt")
     for option in ConfigIP.options("InitialPoses"):
-      initPoses[option] = ConfigIP.get("InitialPoses", option)
+        #print option
+        initPoses[option] = ConfigIP.get("InitialPoses", option)
   except:
     print "Could not load initial poses file"
 
 
-def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM):
+def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT):
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
     print 'Loading map ',MAP
@@ -67,7 +69,8 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM):
     loadInitPoses()
 
     scenario = MAP+"_"+NROBOTS
-    print scenario,'   ',initPoses[scenario]
+    iposes = initPoses[scenario.lower()]
+    print scenario,'   ',iposes
     
     if (TERM == 'xterm'):
         os.system('xterm -e roscore &')
@@ -76,7 +79,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM):
     os.system('sleep 3')
     os.system('rosparam set /use_sim_time true')
 
-    cmd = './setinitposes.py '+MAP+' "'+initPoses[scenario]+'"'
+    cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
     print cmd
     os.system(cmd)
     os.system('sleep 1')
@@ -133,7 +136,15 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM):
     print gcmd
     os.system(gcmd)
     os.system('sleep 5')
-
+    # wait for termination
+    run = True
+    while (run):
+        t = getROStime()
+        #print "Elapsed time: ",t," secs."
+        if ((TIMEOUT>0 and t>TIMEOUT) or (not getSimulationRunning())):
+            run = False;
+        os.system('sleep 1')
+    os.system("./stop_experiment.sh")
 
 
 class DIP(tk.Frame):
@@ -231,14 +242,14 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        run_experiment(self.map_ddm.get(),self.robots_ddm.get(),self.alg_ddm.get(),self.locmode_ddm.get(),self.term_ddm.get())
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(),self.robots_ddm.get(),self.alg_ddm.get(),self.locmode_ddm.get(),self.term_ddm.get(),0) )
 
     
     def quit(self):
       self.parent.destroy()
       
     def kill_demo(self):
-      os.system("./stop_experiment.sh")
+      os.system("rosparam set /simulation_runnning false")
       
       
     def saveConfigFile(self):
@@ -301,15 +312,7 @@ def main():
     LOC_MODE = sys.argv[4]
     TERM = sys.argv[5]
     TIMEOUT = int(sys.argv[6])
-    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM)
-    run = True
-    while (run):
-        t = getROStime()
-        #print "Elapsed time: ",t," secs."
-        if (t>TIMEOUT or (not getSimulationRunning())):
-            run = False;
-        os.system('sleep 10')
-    os.system("./stop_experiment.sh")
+    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT)
   else:
     print "Use: ",sys.argv[0]
     print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <term> <timeout>'
