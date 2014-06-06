@@ -7,7 +7,7 @@ PROFILE Standard
 [PROFILE Standard]
 
 timeout	1
-theta_idleness      1.0
+theta_idleness      0.5
 theta_navigation    -0.01
 threshold	0.0			
 hist	0.0

@@ -345,17 +345,17 @@ double DTASSI_Agent::compute_bid(int nv){
 		ci = next_vertex;
 		path_cost = compute_distance(ci);//this should give the geometric distance from robot position to destination 
 		my_tasks[ci] = true; //remove this task from the list
-		printf("[Target Set] Pathcost from %d to %d : %.2f \n",current_vertex,ci,path_cost);
+		//printf("[Target Set] Pathcost from %d to %d : %.2f \n",current_vertex,ci,path_cost);
 	} else { 
 		ci = select_next_vertex(current_vertex,my_tasks);
 		path_cost = compute_cost(ci);
-		printf("[Target NOT Set] Pathcost from %d to %d : %.2f \n",current_vertex,ci,path_cost);
+		//printf("[Target NOT Set] Pathcost from %d to %d : %.2f \n",current_vertex,ci,path_cost);
 	}
 	//handle remaining locations in reverse utility order
 	while (!all_selected(my_tasks)){
 		int ni = select_next_vertex(ci,my_tasks);
 		path_cost += compute_cost(ci,ni);
-		printf("[while loop] pathcost from %d to %d : %.2f \n",ci,ni,path_cost);
+		//printf("[while loop] pathcost from %d to %d : %.2f \n",ci,ni,path_cost);
 		ci=ni;
 	}
 	printf("total cost = %.2f \n",path_cost);
