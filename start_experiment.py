@@ -45,7 +45,7 @@ def findAlgName(alg):
             r = Alg_names[i][1]
     return r
 
-
+# load initial poses from configuration file
 def loadInitPoses():
   try:
     ConfigIP = ConfigParser.ConfigParser()
@@ -57,6 +57,31 @@ def loadInitPoses():
     print "Could not load initial poses file"
 
 
+# get ROS time from /clock topic
+def getROStime():
+    os.system("rostopic echo -n 1 /clock > rostime.txt")
+    f = open('rostime.txt','r')
+    t = 0
+    for line in f:
+        if (line[2:6]=='secs'):
+            t = int(line[8:])
+    f.close()
+    return t
+
+# get running simulation flag from /simulation_runnning param
+def getSimulationRunning():
+    os.system("rosparam get /simulation_runnning > simrun.txt")
+    f = open('simrun.txt','r')
+    t = True
+    line = f.readline();
+    if (line[0:5]=='false'):
+        t = False
+    f.close()
+    return t
+
+# Run the experiment with the given arguments
+# Terminates if simulation is stopped (/simulation_runnning param is false)
+# or if timeout is reached (if this is >0)
 def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT):
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
@@ -65,6 +90,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT):
     print 'Algorithm ',ALG,'  ',ALG_SHORT
     print 'Localization Mode ',LOC_MODE
     print 'Terminal ',TERM
+    print 'Timeout ',TIMEOUT
 
     loadInitPoses()
 
@@ -143,7 +169,8 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT):
         #print "Elapsed time: ",t," secs."
         if ((TIMEOUT>0 and t>TIMEOUT) or (not getSimulationRunning())):
             run = False;
-        os.system('sleep 1')
+        else:
+            os.system('sleep 1')
     os.system("./stop_experiment.sh")
 
 
@@ -274,27 +301,6 @@ class DIP(tk.Frame):
         print "Could not load config file"
 
 
-        
-def getROStime():
-    os.system("rostopic echo -n 1 /clock > rostime.txt")
-    f = open('rostime.txt','r')
-    t = 0
-    for line in f:
-        if (line[2:6]=='secs'):
-            t = int(line[8:])
-    f.close()
-    return t
-
-
-def getSimulationRunning():
-    os.system("rosparam get /simulation_runnning > simrun.txt")
-    f = open('simrun.txt','r')
-    t = True
-    line = f.readline();
-    if (line[0:5]=='false'):
-        t = False
-    f.close()
-    return t
     
 
 
