@@ -23,6 +23,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 #common commands for building c++ executables and libraries
 rosbuild_add_library(PatrolAgent src/PatrolAgent.cpp src/getgraph.cpp src/algorithms.cpp src/config.cpp)
+rosbuild_add_library(SSIPatrolAgent src/SSIPatrolAgent.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_add_boost_directories()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
@@ -50,7 +51,9 @@ target_link_libraries(SEBS PatrolAgent)
 rosbuild_add_executable(DTAGreedy src/DTAGreedy_Agent.cpp)
 target_link_libraries(DTAGreedy PatrolAgent)
 rosbuild_add_executable(DTASSI src/DTASSI_Agent.cpp)
-target_link_libraries(DTASSI PatrolAgent)
+target_link_libraries(DTASSI PatrolAgent SSIPatrolAgent)
+rosbuild_add_executable(DTASSIPart src/DTASSIPart_Agent.cpp)
+target_link_libraries(DTASSIPart PatrolAgent SSIPatrolAgent)
 
 ############ RESULTS & MONITOR NODE: ##############
 rosbuild_add_executable(monitor src/monitor.cpp src/getgraph.cpp)

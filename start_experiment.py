@@ -24,7 +24,8 @@ Alg_names = [
         [ 'GBS',  'GBS' ],
         [ 'SEBS', 'SEBS' ],
         [ 'DTAG', 'DTAGreedy' ],
-        [ 'DTAS', 'DTASSI' ]
+        [ 'DTAS', 'DTASSI' ],
+        [ 'DTAP', 'DTASSIPart' ]
      ]
 
 Map_names = ['cumberland','example','grid','1r5','DISlabs']   
