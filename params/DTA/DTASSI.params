@@ -6,7 +6,7 @@ PROFILE DISlabs
 
 [PROFILE DISlabs]
 
-timeout	1
+timeout	0.5
 theta_idleness      0.5
 theta_navigation    -0.01
 threshold	0.0			
