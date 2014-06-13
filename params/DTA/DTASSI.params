@@ -1,6 +1,16 @@
 [SECTION Main]
 
-PROFILE Standard
+PROFILE DISlabs
+
+[END]
+
+[PROFILE DISlabs]
+
+timeout	1
+theta_idleness      0.5
+theta_navigation    -0.01
+threshold	0.0			
+hist	0.0
 
 [END]
 
