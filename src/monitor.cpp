@@ -572,13 +572,18 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	//Publicar dados para "results"
 	results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
 	
-    listener = new tf::TransformListener();
+  listener = new tf::TransformListener();
     
  	ros::Rate loop_rate(30); //0.033 seconds or 30Hz
 	
-    nh.setParam("/simulation_runnning", true);
+  nh.setParam("/simulation_runnning", true);
     
-    double current_time = ros::Time::now().toSec();
+  double current_time = ros::Time::now().toSec();
+
+	for (i=0; i<NUM_MAX_ROBOTS; i++) {		
+      last_goal_reached[i] = current_time;
+	}
+
     
 	while( ros::ok() ){
 		
