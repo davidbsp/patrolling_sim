@@ -68,7 +68,7 @@ protected:
 
     tf::TransformListener *listener;
 
-    std::string graph_file;
+    std::string graph_file, mapname;
     uint dimension; // Graph Dimension
     uint current_vertex; // current vertex
     bool ResendGoal; // Send the same goal again (if goal failed...)

@@ -90,6 +90,11 @@ void DTAGreedy_Agent::init(int argc, char** argv) {
     theta_cost = cf.getDParam("theta_navigation");
     theta_odist = cf.getDParam("theta_distance_from_origin");
     
+    std::stringstream paramss;
+    paramss << theta_idl << "," << theta_cost << "," << theta_odist;
+
+    ros::param::set("/algorithm_params",paramss.str());
+
     getRobotPose(ID_ROBOT,origin_x, origin_y, origin_theta);
     ROS_INFO("Robot %d: Initial pose %.1f %.1f %.1f",ID_ROBOT,origin_x, origin_y, origin_theta);
     
@@ -126,7 +131,7 @@ double DTAGreedy_Agent::utility(int vertex) {
     double cost = compute_cost(vertex);
     double odist = distanceFromOrigin(vertex);
     double U = theta_idl * idl + theta_cost * cost + theta_odist * odist;
-    printf("   -- U[%d] ( %.1f, %.1f, %.1f ) = %.1f\n",vertex,idl,cost,odist,U);
+    printf("   -- U[%d] ( %.1f, %.1f, %.1f ) = ( %.1f, %.1f, %.1f ) = %.1f\n",vertex,idl,cost,odist,theta_idl*idl,theta_cost*cost,theta_odist*odist,U);
     return U;
 }
 

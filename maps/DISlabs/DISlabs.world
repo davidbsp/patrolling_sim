@@ -3,7 +3,7 @@ include "../crobot.inc"
 include "../floorplan.inc"
 
 window( 
-  size   [ 600 600 1 ]         
+  size   [ 600 500 1 ]         
   rotate [ 0.000 0.000 ]    
   center [ 25.0 20.0 ]   
   scale 10

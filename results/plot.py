@@ -75,6 +75,12 @@ def findAll(sdir,ext):
 
 if __name__ == '__main__':
 
+  # Read params from command line
+  if (len(sys.argv)>1):
+    MAP = sys.argv[1]
+  if (len(sys.argv)>2):
+    NROBOTS = int(sys.argv[2])
+
   # To generate a tar file with all the plots
   tarstr = 'tar czvf %s_%d.tgz ' %(MAP,NROBOTS)
 
@@ -91,9 +97,4 @@ if __name__ == '__main__':
   print tarstr
   os.system(tarstr)
 
-
-#    if (len(sys.argv)<3):
-#        sys.exit(0)
-#    mapname = sys.argv[1]
-#    vip = sys.argv[2]
 

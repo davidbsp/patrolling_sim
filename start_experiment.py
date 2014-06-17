@@ -111,7 +111,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT):
     os.system(cmd)
     os.system('sleep 1')
 
-    cmd_monitor = 'rosrun patrolling_sim monitor maps/'+MAP+'/'+MAP+'.graph '+ALG_SHORT+' '+NROBOTS        
+    cmd_monitor = 'rosrun patrolling_sim monitor '+MAP+' '+ALG_SHORT+' '+NROBOTS        
     cmd_stage = 'roslaunch patrolling_sim map.launch map:='+MAP
     print cmd_monitor
     print cmd_stage
@@ -147,14 +147,14 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT):
     for i in range(0,int(NROBOTS)):
         print 'Run patrol robot ',i
         if (ALG_SHORT=='MSP'):
-            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+'\''
+            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+'\''
         elif (ALG_SHORT=='GBS' or ALG_SHORT=='SEBS'):
-            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' '+str(NROBOTS)+'\''
+            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' '+str(NROBOTS)+'\''
         else:
             now = datetime.datetime.now()
             dateString = now.strftime("%Y-%m-%d-%H:%M")
-# FOR DEBUG            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
-            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' maps/'+MAP+'/'+MAP+'.graph '+str(i)+'\''
+# FOR DEBUG            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
+            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+'\''
         print cmd
         #os.system('xterm -e  "'+cmd+'" &')
         #os.system('sleep 1')

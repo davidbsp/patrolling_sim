@@ -53,7 +53,7 @@ void PatrolAgent::init(int argc, char** argv) {
         /*
             argv[0]=/.../patrolling_sim/bin/GBS
             argv[1]=__name:=XXXXXX
-            argv[2]=maps/1r-5-map.graph
+            argv[2]=grid
             argv[3]=ID_ROBOT
         */
         
@@ -66,7 +66,8 @@ void PatrolAgent::init(int argc, char** argv) {
         //printf("ID_ROBOT = %d\n",ID_ROBOT); //-1 in the case there is only 1 robot.
     }
 
-    graph_file = string(argv[2]);
+    mapname = string(argv[2]);
+    graph_file = "maps/"+mapname+"/"+mapname+".graph";
     
     //Check Graph Dimension:
     dimension = GetGraphDimension(graph_file.c_str());
