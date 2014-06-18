@@ -430,7 +430,7 @@ bool check_dead_robots() {
     double current_time = ros::Time::now().toSec();
     for (int i=0; i<teamsize; i++) {        
       double delta = current_time - last_goal_reached[i];
-      printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,last_goal_reached[i],delta);
+      // printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,last_goal_reached[i],delta);
       if (delta>DEAD_ROBOT_TIME) {
           // printf("Dead robot %d. Time from last goal reached = %.1f\n",i,delta);
           return true;
@@ -543,7 +543,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
     
     time (&rawtime);
     timeinfo = localtime(&rawtime);
-    sprintf(strnow,"%d_%02d_%02d_%02d_%02d_%02d",  timeinfo->tm_year+1900,timeinfo->tm_mon+1,timeinfo->tm_mday,timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
+    sprintf(strnow,"%d%02d%02d%02d%02d%02d",  timeinfo->tm_year+1900,timeinfo->tm_mon+1,timeinfo->tm_mday,timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
     printf("Date-time of the experiment: %s\n",strnow);
     
     // File to log all the idlenesses of an experimental scenario

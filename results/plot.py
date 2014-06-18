@@ -4,7 +4,7 @@
 # Make a copy and edit the copy.
 #
 # Maps: grid, example, cumberland, DISlabs
-# Alg: RAND,CR,HCR,HPCC,CGG,MSP,GBS,SEBS,DTAG,DTAS
+# Alg: RAND,CR,HCR,HPCC,CGG,MSP,GBS,SEBS,DTAG,DTAS,DTAP
 # Loc mode: odom, GPS
 # Term: gnome-terminal,xterm
 
