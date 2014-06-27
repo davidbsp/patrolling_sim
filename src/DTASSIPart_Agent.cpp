@@ -58,13 +58,13 @@ double DTASSIPart_Agent::compute_bid(int nv){
 
 	printf("computing bid for vertex %d (using dynamic partition) \n ",nv);
 
-	if (nv==next_vertex){
+	if (nv==next_vertex || nv==next_next_vertex){
 		printf("already going to %d sending 0 (current target: %d)",nv,next_vertex);
 		return 0.;
 	}
 
 	double bid_value = compute_cost(nv,current_center_location);
-	printf("bid for %d (current center %d): %.2f \n",nv,current_center_location,bid_value);
+	printf("bid for %d (current center %zu): %.2f \n",nv,current_center_location,bid_value);
 
 	return bid_value;
 

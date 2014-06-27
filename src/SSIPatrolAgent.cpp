@@ -2,6 +2,54 @@
 
 using namespace std;
 
+
+
+void SSIPatrolAgent::onGoalComplete()
+{
+
+    if (first_vertex){
+		printf("computing next vertex FOR THE FIRST TIME:\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+	    next_vertex = compute_next_vertex(current_vertex,next_vertex);
+		printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+		first_vertex = false;
+    } else {
+		printf("updating next vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+        //Update Idleness Table:
+        update_global_idleness();
+		//update current vertex
+        current_vertex = next_vertex;
+		//update next vertex based on previous decision
+		next_vertex = next_next_vertex;
+		//update global idleness of next vertex to avoid conflicts
+		if (next_vertex>=0 && next_vertex< dimension){
+			global_instantaneous_idleness[next_vertex] = 0.0;   
+		}
+		printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+   }
+
+
+
+    /** SEND GOAL (REACHED) AND INTENTION **/
+    send_goal_reached(); // Send TARGET to monitor
+    send_results();  // Algorithm specific function
+    
+    //Send the goal to the robot (Global Map)
+    ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+    //sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
+    sendGoal(next_vertex);  // send to move_base
+
+    goal_complete = false;    
+
+	//compute next next vertex
+	printf("computing next_next_vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+	next_next_vertex = compute_next_vertex(next_vertex,next_next_vertex); 
+	   
+	printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+
+
+}
+
+
 bool* SSIPatrolAgent::create_selected_vertices(){
 	bool* sv = new bool[dimension];
 	for(size_t i=0; i<dimension; i++) {
@@ -12,16 +60,19 @@ bool* SSIPatrolAgent::create_selected_vertices(){
 
 void SSIPatrolAgent::reset_selected_vertices(bool* sv){
 	for(size_t i=0; i<dimension; i++) {
-	        sv[i] = false;
-    	}
+		sv[i] = false;
+    }
+    if (current_vertex >= 0 && current_vertex < dimension){
+		selected_vertices[current_vertex] = true; //do not consider next vertex as possible goal 
+    } 	
 }
 
 bool SSIPatrolAgent::all_selected(bool* sv){
 	for(size_t i=0; i<dimension; i++) {
-	        if (!sv[i]){ 
+	    if (!sv[i]){ 
 			return false;		
 		}	
-    	}
+    }
 	return true;
 }
 
@@ -38,6 +89,10 @@ void SSIPatrolAgent::init(int argc, char** argv) {
 //    fflush(logfile);
 
     //initialize structures
+
+	next_vertex = -1; 
+	next_next_vertex = -1;
+
     taskRequests = new int[dimension];	
     tasks = new bool[dimension];	
     bids = new bid_tuple[dimension]; 
@@ -52,6 +107,8 @@ void SSIPatrolAgent::init(int argc, char** argv) {
         global_instantaneous_idleness[i]=BIG_NUMBER;  // start with a high value    
     }
     last_update_idl = ros::Time::now().toSec();
+
+    first_vertex = true;	
 
 //    fprintf(logfile,"here2 \n");
 //    fflush(logfile);
@@ -91,10 +148,8 @@ double SSIPatrolAgent::compute_cost(int vertex)
         
 
 //TODO this should give the geometric distance from robot position to next vertex, and not path cost from current_vertex to next_vertex
-double SSIPatrolAgent::compute_distance(int vertex)
+/*double SSIPatrolAgent::compute_distance(int vertex)
 {
-
-    //printf("TODO: implemente a function that gives geometric distance from current robot position to vertex"); 	
 
     uint elem_s_path;
     int *shortest_path = new int[dimension]; 
@@ -114,7 +169,7 @@ double SSIPatrolAgent::compute_distance(int vertex)
     
     return distance;
 }        
-
+*/
 
 double SSIPatrolAgent::compute_cost(int cv, int nv)
 {
@@ -142,7 +197,7 @@ double SSIPatrolAgent::utility(int cv,int nv) {
     double idl = global_instantaneous_idleness[nv];
     double cost = compute_cost(cv,nv);
     double U = theta_idl * idl + theta_cost * cost;
-    //printf("   -- U[%d] ( %.1f, %.1f ) = %.1f\n",vertex,idl,cost,U);
+    printf("  cv: %d -- U[%d] ( %.1f, %.1f ) = %.1f\n",cv,nv,idl,cost,U);
     return U;
 }
 
@@ -156,6 +211,10 @@ void SSIPatrolAgent::update_global_idleness()
         global_instantaneous_idleness[i] += (now-last_update_idl);  // update value    
     }
     
+	if (current_vertex>=0 && current_vertex<dimension){
+		global_instantaneous_idleness[current_vertex] = 0.0;
+	}
+
     last_update_idl = now;
 }
 
@@ -167,7 +226,7 @@ int SSIPatrolAgent::select_next_vertex(int cv,bool* sv){
 
     //check if there are vertices not selected, if not reset all to false	
     if (all_selected(selected_vertices)) {
-	reset_selected_vertices(sv);
+		reset_selected_vertices(sv);
     }
     for(size_t i=0; i<dimension; i++){
         
@@ -189,8 +248,8 @@ double SSIPatrolAgent::compute_bid(int nv){
 
 	printf("computing bid for vertex %d \n",nv);
 
-	if (nv==next_vertex){
-		printf("already going to %d sending 0 (current target: %d)",nv,next_vertex);
+	if (nv==next_vertex || nv==next_next_vertex){
+		printf("already going to %d sending 0 (current target: %d, current next target: %d)",nv,next_vertex,next_next_vertex);
 		return 0.;
 	}
 
@@ -219,7 +278,7 @@ double SSIPatrolAgent::compute_bid(int nv){
 	int ci = -1;
 	if (next_vertex != -1){
 		ci = next_vertex;
-		path_cost = compute_distance(ci);//this should give the geometric distance from robot position to destination 
+		path_cost = compute_cost(ci);//this should give the geometric distance from robot position to destination 
 		my_tasks[ci] = true; //remove this task from the list
 		//printf("[Target Set] Pathcost from %d to %d : %.2f \n",current_vertex,ci,path_cost);
 	} else { 
@@ -259,45 +318,53 @@ void SSIPatrolAgent::wait(){
 */
 }
 
-// current_vertex (goal just reached)
+
 int SSIPatrolAgent::compute_next_vertex() {
+	
+}
+
+// current_vertex (goal just reached)
+int SSIPatrolAgent::compute_next_vertex(int cv, int nv) {
 
     update_global_idleness();
-    global_instantaneous_idleness[current_vertex] = 0.0;
 
     reset_selected_vertices(selected_vertices);
-    if (current_vertex >= 0 && current_vertex < dimension){
-	selected_vertices[current_vertex] = true; //do not consider current vertex as possible goal 
+    if (cv >= 0 && cv < dimension){
+		selected_vertices[cv] = true; //do not consider current vertex as possible goal 
     } 	
-    int nv = select_next_vertex(current_vertex,selected_vertices);	
-    double bidvalue = compute_bid(nv); 
-    force_bid(nv,bidvalue,ID_ROBOT); 
-    send_target(nv,bidvalue);
+    if (nv >= 0 && nv < dimension){
+		selected_vertices[nv] = true; //do not consider next vertex as possible goal 
+    }
+ 	
+    int mnv = select_next_vertex(cv,selected_vertices);	
+    double bidvalue = compute_bid(mnv); 
+    force_bid(mnv,bidvalue,ID_ROBOT); 
+    send_target(mnv,bidvalue);
     printf("cnv: waiting for bids (%.2f seconds) \n",timeout);
     wait();	
-    printf("current target %d current value for target %.2f \n tasks [",nv,bidvalue);
+    printf("current target %d current value for target %.2f \n tasks [",mnv,bidvalue);
     for (size_t i = 0; i<dimension;i++){
-	printf(" %d, ",tasks[i]);	
+		printf(" %d, ",tasks[i]);	
     }
     printf("] \n"); 
     while (true){
-      if (best_bid(nv)){ //if I am in the best position to go to nv 
-	update_tasks();
-	//force_bid(nv,0,ID_ROBOT); TODO: check
-	return nv;
-      } else {
-        nv = select_next_vertex(current_vertex,selected_vertices);	
-	bidvalue = compute_bid(nv); 
-	force_bid(nv,bidvalue,ID_ROBOT); 
-	send_target(nv,bidvalue);
-	printf("waiting for bids (%.2f seconds)",timeout);
-	wait();
-	printf("current target %d current value for target %.2f tasks [",nv,bidvalue);
-        for (size_t i = 0; i<dimension;i++){
-	    printf(" %d, ",tasks[i]);	
-        }
-        printf("] \n");
-      } 			
+    	if (best_bid(mnv)){ //if I am in the best position to go to mnv 
+			update_tasks();
+			//force_bid(mnv,0,ID_ROBOT); TODO: check
+			return mnv;
+      	} else {
+        	mnv = select_next_vertex(cv,selected_vertices);	
+			bidvalue = compute_bid(mnv); 
+			force_bid(mnv,bidvalue,ID_ROBOT); 
+			send_target(mnv,bidvalue);
+			printf("waiting for bids (%.2f seconds)",timeout);
+			wait();
+			printf("current target %d current value for target %.2f tasks [",mnv,bidvalue);
+		    for (size_t i = 0; i<dimension;i++){
+				printf(" %d, ",tasks[i]);	
+		    }
+		    printf("] \n");
+		 } 			
     }     
 }
 
@@ -392,7 +459,7 @@ void SSIPatrolAgent::send_results() {
         msg.data.push_back(ms);
     }
     msg.data.push_back(next_vertex);
-    printf(",%d]\n",next_vertex);
+    printf("%d]\n",next_vertex);
     
     results_pub.publish(msg);   
     // ros::spinOnce();    
@@ -411,13 +478,13 @@ void SSIPatrolAgent::idleness_msg_handler(std::vector<int>::const_iterator it){
     double now = ros::Time::now().toSec();
 
     for(size_t i=0; i<dimension; i++) {
-	int ms = *it; it++; // received value
-	// printf("  ** received from %d remote-GII[%lu] = %.1f\n",id_sender,i,ms);
-	printf("%d, ",ms);
-	double rgi = (double)ms/100.0; // convert back in seconds
-	global_instantaneous_idleness[i] = std::min(
-	    global_instantaneous_idleness[i]+(now-last_update_idl), rgi);
-	// printf("   ++ GII[%lu] = %.1f (r=%.1f)\n",i,global_instantaneous_idleness[i],rgi);
+		int ms = *it; it++; // received value
+		// printf("  ** received from %d remote-GII[%lu] = %.1f\n",id_sender,i,ms);
+		printf("%d, ",ms);
+		double rgi = (double)ms/100.0; // convert back in seconds
+		global_instantaneous_idleness[i] = std::min(
+			global_instantaneous_idleness[i]+(now-last_update_idl), rgi);
+		// printf("   ++ GII[%lu] = %.1f (r=%.1f)\n",i,global_instantaneous_idleness[i],rgi);
     }
     last_update_idl = now;
 

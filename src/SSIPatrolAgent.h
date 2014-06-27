@@ -29,6 +29,15 @@ typedef struct bid_tuple {
 class SSIPatrolAgent: public PatrolAgent {
 
 protected:
+
+	//true if I am selecting the first vertex to go to	
+    bool first_vertex; 
+
+	//the goal I will go when I reach the current goal 
+    //required to avoid that the robot waits idle after completing each goal
+	int next_next_vertex;    
+
+
     double *global_instantaneous_idleness;  // global estimated idleness
     double last_update_idl;
 
@@ -100,7 +109,7 @@ protected:
     double compute_distance(int vertex);
 
     //return path cost from vertex cv to vertex nv 
-    double compute_cost(int cv, int nv);
+    double compute_cost(int cv, int nv);	
 
     virtual void update_bids(int next_vertex, double bid_value, int senderId);
 
@@ -112,11 +121,8 @@ protected:
 
     void bid_msg_handler(std::vector<int>::const_iterator it, int sender_id);
 
-    //wait for a given amount of time by using micro sleeps and calling ros::spinOnce (used to receive message while waiting)	
     void wait();	
 
-    //pointer to the log file
-    FILE* logfile;
 
 public:
 
@@ -124,10 +130,12 @@ public:
     {}
 
     virtual void init(int argc, char** argv);
+	virtual void onGoalComplete();    
     virtual int compute_next_vertex();
     virtual void send_results();
     virtual void receive_results();    
 
+	int compute_next_vertex(int cv, int nv);
     double compute_cost(int vertex);
     double utility(int currentv, int nextv);
     void update_global_idleness();
