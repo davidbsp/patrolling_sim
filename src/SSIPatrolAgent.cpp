@@ -9,7 +9,7 @@ void SSIPatrolAgent::onGoalComplete()
 
     if (first_vertex){
 		printf("computing next vertex FOR THE FIRST TIME:\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
-	    next_vertex = compute_next_vertex(current_vertex,next_vertex);
+	    next_vertex = compute_next_vertex(current_vertex);
 		printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
 		first_vertex = false;
     } else {
@@ -42,7 +42,7 @@ void SSIPatrolAgent::onGoalComplete()
 
 	//compute next next vertex
 	printf("computing next_next_vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
-	next_next_vertex = compute_next_vertex(next_vertex,next_next_vertex); 
+	next_next_vertex = compute_next_vertex(next_vertex); 
 	   
 	printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
 
@@ -65,6 +65,26 @@ void SSIPatrolAgent::reset_selected_vertices(bool* sv){
     if (current_vertex >= 0 && current_vertex < dimension){
 		selected_vertices[current_vertex] = true; //do not consider next vertex as possible goal 
     } 	
+}
+
+void SSIPatrolAgent::select_faraway_vertices(bool* sv, int cv){
+	for(size_t i=0; i<dimension; i++) {
+		sv[i] = true;
+    }
+	uint num_neighs = vertex_web[cv].num_neigh;
+    for (size_t i=0; i<num_neighs; i++){
+      size_t neighbor = vertex_web[cv].id_neigh[i];
+	  sv[neighbor] = false; 	
+	}
+    if (current_vertex >= 0 && current_vertex < dimension){
+		selected_vertices[current_vertex] = true; //do not consider next vertex as possible goal 
+    } 	
+	//print farway vertices
+	printf("FARAWAY \n [ ");
+	for(size_t i=0; i<dimension; i++) {
+		printf("%d ",sv[i]);
+    }
+	printf("]\n");
 }
 
 bool SSIPatrolAgent::all_selected(bool* sv){
@@ -324,17 +344,20 @@ int SSIPatrolAgent::compute_next_vertex() {
 }
 
 // current_vertex (goal just reached)
-int SSIPatrolAgent::compute_next_vertex(int cv, int nv) {
+int SSIPatrolAgent::compute_next_vertex(int cv) {
 
     update_global_idleness();
 
-    reset_selected_vertices(selected_vertices);
+
+	//consider all possible vertices as next target (i.e., set all vertices to false)	
+//    reset_selected_vertices(selected_vertices);
+
+	//consider only neighbouring vertices for next_vertex selection (i.e., set to false only neighbouring vertices)
+	//NOTE: if none of the neighbouring vertices is assigned to the agent all other vertices will be considered (see reset_selected_vertices() called in select_next_vertex(...))
+	select_faraway_vertices(selected_vertices,cv);	
     if (cv >= 0 && cv < dimension){
 		selected_vertices[cv] = true; //do not consider current vertex as possible goal 
     } 	
-    if (nv >= 0 && nv < dimension){
-		selected_vertices[nv] = true; //do not consider next vertex as possible goal 
-    }
  	
     int mnv = select_next_vertex(cv,selected_vertices);	
     double bidvalue = compute_bid(mnv); 

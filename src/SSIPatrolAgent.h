@@ -76,8 +76,11 @@ protected:
     //allocate an array of bool one for each vertex, set all to false
     bool* create_selected_vertices();
 
-    //put all selected vertices to false
+    //set all selected vertices to false, set current_vertex to true (avoid considering current_vertex as next target)
     void reset_selected_vertices(bool* sv);
+
+	//set all selected vertices to true, set neighbouring vertices to false (consider only neighbouring vertices as next target)
+	void select_faraway_vertices(bool* selected_vertices, int cv);
 
     //check if all vertices have been selected
     bool all_selected(bool* sv);
@@ -135,7 +138,7 @@ public:
     virtual void send_results();
     virtual void receive_results();    
 
-	int compute_next_vertex(int cv, int nv);
+	int compute_next_vertex(int cv);
     double compute_cost(int vertex);
     double utility(int currentv, int nextv);
     void update_global_idleness();
