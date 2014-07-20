@@ -3,6 +3,9 @@ patrolling_sim
 
 patrolling_sim for ROS Groovy
 
+Authors: David Portugal (2011-2014), Luca Iocchi (2014), Alessandro Farinelli (2014)
+
+
 This package contains the implementation of several algorithms for multi-robot patrolling
 and a general structure of a PatrolAgent that can be extended to implement other ones.
 
