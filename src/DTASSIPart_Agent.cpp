@@ -22,6 +22,12 @@ protected:
     void compute_center_location();	
 
     double compute_sum_distance(int cv);
+	
+	//compute number of hops to nv from cv
+	size_t compute_hops(int cv, int nv);
+
+	//compute utility considering number of hops instead of distance
+	double utility(int cv,int nv);
 
 
 public:
@@ -63,12 +69,53 @@ double DTASSIPart_Agent::compute_bid(int nv){
 		return 0.;
 	}
 
-	double bid_value = compute_cost(nv,current_center_location);
-	printf("bid for %d (current center %zu): %.2f \n",nv,current_center_location,bid_value);
+	size_t num_tasks = 1;
+    for (size_t i = 0; i<dimension ; i++){
+		if (tasks[i]){
+			num_tasks++;
+		}
+    }
+	
+//	size_t cv = current_vertex;
+//	if (next_vertex >= 0 && next_vertex <dimension){
+//		cv = next_vertex;
+//	}
+	double bid_value = compute_cost(nv,current_center_location)*num_tasks; 
+	printf("bid for %d (current center %zu, num task %zu): %.2f \n",nv,current_center_location,num_tasks,bid_value);
 
 	return bid_value;
 
 
+}
+
+size_t DTASSIPart_Agent::compute_hops(int cv, int nv)
+{
+    uint elem_s_path;
+    int *shortest_path = new int[dimension]; 
+    int id_neigh;
+    
+    dijkstra( cv, nv, shortest_path, elem_s_path, vertex_web, dimension); //structure with normal costs
+    size_t hops = 0;
+    
+    for(uint j=0; j<elem_s_path; j++){
+//        printf("path[%u] = %d\n",j,shortest_path[j]);
+        
+        if (j<elem_s_path-1){
+            id_neigh = is_neigh(shortest_path[j], shortest_path[j+1], vertex_web, dimension);
+			hops++;
+        }       
+    }
+    
+    return hops;
+}        
+
+
+double DTASSIPart_Agent::utility(int cv,int nv) {
+    double idl = global_instantaneous_idleness[nv];
+    size_t hops = compute_hops(cv,nv);
+    double U = theta_idl * idl + theta_hop * hops;
+    printf("  cv: %d -- U[%d] ( %.1f, %zu ) = %.1f\n",cv,nv,idl,hops,U);
+    return U;
 }
 
 void DTASSIPart_Agent::compute_center_location(){
@@ -97,10 +144,10 @@ double DTASSIPart_Agent::compute_sum_distance(int cv){
 	}
 	double sum = 0.;
         for (size_t i = 0; i<dimension ; i++){
-		if (tasks[i]){
-//			printf("sum: %2.f \n",sum);
-			sum+= compute_cost(cv,i);
-		}
+			if (tasks[i]){
+	//			printf("sum: %2.f \n",sum);
+				sum+= compute_cost(cv,i);
+			}
         }
 	return sum;
 }

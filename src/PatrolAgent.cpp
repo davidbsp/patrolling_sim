@@ -396,6 +396,9 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
     //if(state.state_ == actionlib::SimpleClientGoalState::ABORTED) needToBackUp = true;    
     
     if(state.state_ == actionlib::SimpleClientGoalState::SUCCEEDED){
+	    ROS_INFO("Robot visiting");
+	    ros::Duration delay(3); // seconds
+	    delay.sleep();
         ROS_INFO("SUCCESS");
         goal_complete = true;
     }else{

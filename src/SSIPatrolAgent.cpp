@@ -137,6 +137,7 @@ void SSIPatrolAgent::init(int argc, char** argv) {
     timeout = cf.getDParam("timeout");
     theta_idl = cf.getDParam("theta_idleness");
     theta_cost = cf.getDParam("theta_navigation");
+	theta_hop = cf.getDParam("theta_hop");	
     threshold = cf.getDParam("threshold");			
     hist = cf.getDParam("hist");
 
@@ -350,11 +351,11 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 
 
 	//consider all possible vertices as next target (i.e., set all vertices to false)	
-//    reset_selected_vertices(selected_vertices);
+    reset_selected_vertices(selected_vertices);
 
 	//consider only neighbouring vertices for next_vertex selection (i.e., set to false only neighbouring vertices)
 	//NOTE: if none of the neighbouring vertices is assigned to the agent all other vertices will be considered (see reset_selected_vertices() called in select_next_vertex(...))
-	select_faraway_vertices(selected_vertices,cv);	
+	//select_faraway_vertices(selected_vertices,cv);	
     if (cv >= 0 && cv < dimension){
 		selected_vertices[cv] = true; //do not consider current vertex as possible goal 
     } 	

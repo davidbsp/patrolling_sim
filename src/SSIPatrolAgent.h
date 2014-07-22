@@ -67,6 +67,9 @@ protected:
     //parameter to weight navigation cost in the util computation
     double theta_cost;
 
+    //parameter to weight hop cost in the util computation
+    double theta_hop;
+
     //increase the value of a bid when received to avoid switching when there is no real gain, put this to zero to avoid using histeresys 
     //0 -> less interferences, high stddev
     double hist;
@@ -140,7 +143,7 @@ public:
 
 	int compute_next_vertex(int cv);
     double compute_cost(int vertex);
-    double utility(int currentv, int nextv);
+    virtual double utility(int currentv, int nextv);
     void update_global_idleness();
 };
 
