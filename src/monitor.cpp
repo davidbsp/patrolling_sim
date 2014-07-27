@@ -392,9 +392,10 @@ void scenario_name(char* name, const char* graph_file, const char* teamsize_str)
     strcat(name,teamsize_str);
 }
 
-//write_results (avg_idleness, stddev_idleness, number_of_visits, worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, worst_idleness, interference_cnt, graph_file, algorithm, teamsize_str);
+//write_results (avg_idleness, stddev_idleness, number_of_visits, worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, min_idleness, gavg, gstddev, max_idleness, interference_cnt, graph_file, algorithm, teamsize_str);
 void write_results (double *avg_idleness, double *stddev_idleness, int *number_of_visits, uint complete_patrol, uint dimension, 
-                    double worst_avg_idleness, double avg_graph_idl, double median_graph_idl, double stddev_graph_idl, double avg_stddev_graph_idl, double worst_idleness, uint interference_cnt, 
+                    double worst_avg_idleness, double avg_graph_idl, double median_graph_idl, double stddev_graph_idl, double avg_stddev_graph_idl, 
+   double min_idleness, double gavg, double gstddev, double max_idleness, uint interference_cnt, 
                     const char* graph_file, const char* algorithm, const char* teamsize_str, double timevalue, const char *filename){
 	FILE *file;
 	
@@ -413,12 +414,16 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
         tot_visits += number_of_visits[i];
     }
     float avg_visits = (float)tot_visits/dimension;
-    fprintf(file,"\nWorst Avg Graph Idl\t%f\nAvg Avg Graph Idl\t%f\nMedian Avg Graph Idl\t%f\nStdDev Avg Graph Idl\t%f\nAvg StdDevGraph Idl\t%f\nWorst Idl\t%f\nInterferences\t%u\n",
-            worst_avg_idleness,avg_graph_idl,median_graph_idl,stddev_graph_idl,avg_stddev_graph_idl,worst_idleness,interference_cnt);
-    fprintf(file,"\nVisits\t%u\nAvg visits\t%.1f\nTime Elapsed\t%f\n",
-            tot_visits,avg_visits,timevalue);
+    fprintf(file,"\nWorst Avg Graph Idl\t%f\nAvg Avg Graph Idl\t%f\nMedian Avg Graph Idl\t%f\nStdDev Avg Graph Idl\t%f\nAvg StdDevGraph Idl\t%f\nWorst Idl\t%f\n",
+    worst_avg_idleness,avg_graph_idl,median_graph_idl,stddev_graph_idl,avg_stddev_graph_idl,max_idleness);
     
-    fprintf(file,"%.2f\t%.2f\t%.2f\t%u\t%u\t%.2f\t%.2f\n",avg_graph_idl,avg_stddev_graph_idl,worst_idleness,interference_cnt,tot_visits,avg_visits,timevalue);
+    fprintf(file,"\nGlobal Idleness\nAvg\t%.2f\nStddev\t%.2f\nMax\t%.2f\nMin\t%.2f\n",
+    gavg,gstddev,max_idleness,min_idleness);
+
+    fprintf(file,"\nInterferences\t%u\nVisits\t%u\nAvg visits\t%.1f\nTime Elapsed\t%f\n",
+            interference_cnt,tot_visits,avg_visits,timevalue);
+    
+    //fprintf(file,"%.2f\t%.2f\t%.2f\t%u\t%u\t%.2f\t%.2f\n",avg_graph_idl,avg_stddev_graph_idl,max_idleness,interference_cnt,tot_visits,avg_visits,timevalue);
     
     fprintf(file,"----------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n\n");    
     
@@ -492,7 +497,11 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 	int number_of_visits [dimension];
 	
 	double worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, previous_avg_graph_idl = DBL_MAX;
-    double worst_idleness = 0.0;
+  // global measures
+  double min_idleness = 0.0, max_idleness = 0.0;
+  double gavg, gstddev;
+  double gT0=0.0, gT1=0.0, gT2=0.0;
+
 	uint interference_cnt = 0;
 	uint complete_patrol = 0;
 	uint patrol_cnt = 1;
@@ -613,8 +622,13 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
                     current_idleness [goal] = last_visit_temp - last_visit [goal];
                     printf("  current_idleness [%d] = %f\n", goal, current_idleness [goal]);
                 
-                    if (current_idleness [goal] > worst_idleness)
-                        worst_idleness=current_idleness [goal];
+                    if (current_idleness [goal] > max_idleness)
+                        max_idleness=current_idleness [goal];
+                    if (current_idleness [goal] < min_idleness || min_idleness<0.1)
+                        min_idleness=current_idleness [goal];
+                    // global stats
+                    gT0++; gT1 += current_idleness[goal]; gT2 += current_idleness[goal]*current_idleness[goal];
+
                 
                     fprintf(idlfile,"%.1f;%d;%d;%.1f;%d\n",current_time,id_robot,goal,current_idleness[goal],interference_cnt);
                     fflush(idlfile);
@@ -638,7 +652,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				}*/
 				
  				printf("  avg_idleness [%d] = %f, stddev_idleness [%d] = %f \n", goal, avg_idleness [goal], goal, stddev_idleness[goal]);
-                printf("  worst_idleness = %f\n", worst_idleness);
+                printf("  max_idleness = %f\n", max_idleness);
                 printf("  interferences = %d\n", interference_cnt);
                 
 				last_visit [goal] = last_visit_temp;
@@ -664,29 +678,42 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				worst_avg_idleness = 0.0;
 				avg_graph_idl = 0.0;
 				stddev_graph_idl = 0.0;
-                avg_stddev_graph_idl = 0.0;
+        avg_stddev_graph_idl = 0.0;
                 
-                double T0=0.0,T1=0.0,T2=0.0,S1=0.0;
+        double T0=0.0,T1=0.0,T2=0.0,S1=0.0;
 				for (i=0; i<dimension; i++){	//escrever avg_idle[vertex] e #visits
 					T0++; T1+=avg_idleness[i]; T2+=avg_idleness[i]*avg_idleness[i];
                     S1+=stddev_idleness[i];
 					if ( avg_idleness[i] > worst_avg_idleness ){
 						worst_avg_idleness = avg_idleness[i];
 					}
-                }
+        }
                 
 				avg_graph_idl = T1/T0;
-                stddev_graph_idl = 1.0/T0 * sqrt(T0*T2-T1*T1);
-                avg_stddev_graph_idl = S1/T0;
+        stddev_graph_idl = 1.0/T0 * sqrt(T0*T2-T1*T1);
+        avg_stddev_graph_idl = S1/T0;
+        // global stats
+        gavg = gT1/gT0;
+        gstddev = 1.0/gT0 * sqrt(gT0*gT2-gT1*gT1);
 
-				printf("worst_avg_idleness (graph) = %f\n", worst_avg_idleness);
-				printf("avg_idleness (graph) = %f\n", avg_graph_idl);
+        printf("Node idleness\n");
+				printf("   worst_avg_idleness (graph) = %f\n", worst_avg_idleness);
+				printf("   avg_idleness (graph) = %f\n", avg_graph_idl);
 				median_graph_idl = Median (avg_idleness, dimension);
-                printf("median_idleness (graph) = %f\n", median_graph_idl);
-                printf("stddev_idleness (graph) = %f\n", stddev_graph_idl);
-                printf("worst_idleness (nodes) = %f\n", worst_idleness);
-				printf("interferences = %d\n\n", interference_cnt);
+        printf("   median_idleness (graph) = %f\n", median_graph_idl);
+        printf("   stddev_idleness (graph) = %f\n", stddev_graph_idl);
+
+        printf("Global idleness\n");
+        printf("   min = %.1f\n", min_idleness);
+        printf("   avg = %.1f\n", gavg);
+        printf("   stddev = %.1f\n", gstddev);
+        printf("   max = %.1f\n", max_idleness);
+
+				printf("Interferences = %d\n\n", interference_cnt);
 				
+
+        
+
 				patrol_cnt++;
 				last_report_time = report_time;
                 
@@ -696,7 +723,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				
 				//Write to File:
 				write_results (avg_idleness, stddev_idleness, number_of_visits, complete_patrol, dimension, 
-                               worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, worst_idleness, 
+                               worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl, min_idleness, gavg, gstddev, max_idleness,
                    interference_cnt, graph_file.c_str(), algorithm, teamsize_str,ros::Time::now().toSec()-time_zero,resultsfilename);
                 
                 // if ((complete_patrol>=MAX_COMPLETE_PATROL) && fabs(previous_avg_graph_idl - avg_graph_idl) <= tolerance)) {
@@ -748,16 +775,25 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
     of1.close();   of2.close();
     
     std::string algparams;
-    nh.getParam("/algorithm_params", algparams);
+    ros::param::get("/algorithm_params", algparams);
+
+    double goal_reached_wait;
+    if (! ros::param::get("/goal_reached_wait", goal_reached_wait))
+        goal_reached_wait = 0.0;
+
 
     char infofilename[240];
     sprintf(infofilename,"%s/%s_info.csv",path4,strnow);
 
     FILE *infofile;
     infofile = fopen (infofilename,"w");
-    fprintf(infofile,"%s;%s;%s;%s;%s;%s;%.1f;%d;%s\n",mapname.c_str(),teamsize_str,algorithm,
+    fprintf(infofile,"%s;%s;%.1f;%s;%s;%s;%s;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f\n",
+            mapname.c_str(),teamsize_str,goal_reached_wait,algorithm,
             algparams.c_str(),hostname,
-            strnow,current_time,interference_cnt,(dead?"FAIL":"TIMEOUT"));
+            strnow,current_time,interference_cnt,(dead?"FAIL":"TIMEOUT"),
+            min_idleness, gavg, gstddev, max_idleness
+    );
+
     fclose(infofile);
     
 	printf("Monitor closed.\n");

@@ -13,8 +13,8 @@ import sys, time, os
 
 MAP='DISlabs'
 NROBOTS=4
-MACHINE='iocchi-vm-ROSGroovy'
-vALG=['SEBS', 'DTAG']  # algorithms to compare
+MACHINE='segway-laptop'
+vALG=['SEBS', 'DTAP']  # algorithms to compare
 
 tarstr=''
 

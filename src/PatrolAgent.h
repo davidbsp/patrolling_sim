@@ -84,6 +84,7 @@ protected:
     double *last_visit;
     std::vector<int> vresults; // results exchanged among robots
     bool goal_canceled_by_user;
+    double goal_reached_wait;
     
     MoveBaseClient *ac; // action client for reaching target goals
     

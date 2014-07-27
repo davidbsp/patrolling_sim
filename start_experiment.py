@@ -34,6 +34,8 @@ NRobots_list = ['1','2','4','6','8','12']
 
 LocalizationMode_list = ['odom','GPS']
 
+GWait_list = ['0','3','10']
+
 Terminal_list = ['gnome-terminal','xterm']
 
 initPoses = {}
@@ -83,18 +85,19 @@ def getSimulationRunning():
 # Run the experiment with the given arguments
 # Terminates if simulation is stopped (/simulation_runnning param is false)
 # or if timeout is reached (if this is >0)
-def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT):
+def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT):
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
     print 'Loading map ',MAP
     print 'N. robot ',NROBOTS
     print 'Algorithm ',ALG,'  ',ALG_SHORT
     print 'Localization Mode ',LOC_MODE
+    print 'Goal wait time ', GWAIT
     print 'Terminal ',TERM
     print 'Timeout ',TIMEOUT
 
     loadInitPoses()
-
+    
     scenario = MAP+"_"+NROBOTS
     iposes = initPoses[scenario.lower()]
     print scenario,'   ',iposes
@@ -105,6 +108,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT):
         os.system('gnome-terminal -e "bash -c \'roscore\'" &')
     os.system('sleep 3')
     os.system('rosparam set /use_sim_time true')
+    os.system("rosparam set /goal_reached_wait "+GWAIT)
 
     cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
     print cmd
@@ -249,8 +253,21 @@ class DIP(tk.Frame):
         tk.OptionMenu(self, self.locmode_ddm, *self.locmode_list).grid(sticky=W, row=3, column=1, pady=4, padx=5)
 
 
-        lbl = Label(self, text="Terminal")
+        lbl = Label(self, text="Goal wait time")
         lbl.grid(sticky=W, row = 4, column= 0, pady=4, padx=5)
+
+        self.gwait_list = GWait_list
+        self.gwait_ddm = StringVar(self)
+        try:
+            lastgwait=self.oldConfigs["gwait"]
+        except:
+            lastgwait=self.gwait_list[0]
+        self.gwait_ddm.set(lastgwait)
+        tk.OptionMenu(self, self.gwait_ddm, *self.gwait_list).grid(sticky=W, row=4, column=1, pady=4, padx=5)
+
+
+        lbl = Label(self, text="Terminal")
+        lbl.grid(sticky=W, row = 5, column= 0, pady=4, padx=5)
 
         self.term_list = Terminal_list
         self.term_ddm = StringVar(self)
@@ -259,18 +276,18 @@ class DIP(tk.Frame):
         except:
             lastterm=self.term_list[0]
         self.term_ddm.set(lastterm)
-        tk.OptionMenu(self, self.term_ddm, *self.term_list).grid(sticky=W, row=4, column=1, pady=4, padx=5)
+        tk.OptionMenu(self, self.term_ddm, *self.term_list).grid(sticky=W, row=5, column=1, pady=4, padx=5)
   
         launchButton = Button(self, text="Start Experiment",command=self.launch_script)
-        launchButton.grid(sticky=W, row=5, column=0, pady=4, padx=5)
+        launchButton.grid(sticky=W, row=6, column=0, pady=4, padx=5)
         
         launchButton = Button(self, text="Stop Experiment",command=self.kill_demo)
-        launchButton.grid(sticky=W, row=5, column=1, pady=4, padx=5)
+        launchButton.grid(sticky=W, row=6, column=1, pady=4, padx=5)
         
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(),self.robots_ddm.get(),self.alg_ddm.get(),self.locmode_ddm.get(),self.term_ddm.get(),0) )
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(),self.robots_ddm.get(),self.alg_ddm.get(),self.locmode_ddm.get(),self.gwait_ddm.get(),self.term_ddm.get(),0) )
 
     
     def quit(self):
@@ -287,6 +304,7 @@ class DIP(tk.Frame):
       f.write("nrobots: %s\n"%self.robots_ddm.get())
       f.write("algorithm: %s\n"%self.alg_ddm.get())
       f.write("locmode: %s\n"%self.locmode_ddm.get())
+      f.write("gwait: %s\n"%self.gwait_ddm.get())
       f.write("term: %s\n"%self.term_ddm.get())
       f.close()
 
@@ -310,19 +328,20 @@ def main():
   if (len(sys.argv)==1):
     root = tk.Tk()
     DIP(root)
-    root.geometry("300x240+0+0")
+    root.geometry("300x300+0+0")
     root.mainloop()  
-  elif (len(sys.argv)==7):
+  elif (len(sys.argv)==8):
     MAP = sys.argv[1]
     NROBOTS = sys.argv[2]
     ALG_SHORT = sys.argv[3]
     LOC_MODE = sys.argv[4]
-    TERM = sys.argv[5]
-    TIMEOUT = int(sys.argv[6])
-    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, TERM, TIMEOUT)
+    GWAIT = sys.argv[5]
+    TERM = sys.argv[6]
+    TIMEOUT = int(sys.argv[7])
+    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT)
   else:
     print "Use: ",sys.argv[0]
-    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <term> <timeout>'
+    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <goal-wait> <term> <timeout>'
   
 
 

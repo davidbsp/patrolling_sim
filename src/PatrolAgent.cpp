@@ -197,6 +197,12 @@ void PatrolAgent::init(int argc, char** argv) {
         ros::spinOnce();
         loop_rate.sleep();
     }
+
+    if (! ros::param::get("/goal_reached_wait", goal_reached_wait)) {
+      goal_reached_wait = 0.0;
+      ros::param::set("/goal_reached_wait", goal_reached_wait);
+    }
+
 }
 
 
@@ -214,9 +220,7 @@ void PatrolAgent::run() {
     while(ros::ok()){
         
         if (goal_complete) {
-
-            onGoalComplete();
-        
+            onGoalComplete();  // can be redefined
         }
         else { // goal not complete (active)
             if (interference) {
@@ -263,7 +267,7 @@ void PatrolAgent::onGoalComplete()
     /** SEND GOAL (REACHED) AND INTENTION **/
     send_goal_reached(); // Send TARGET to monitor
     send_results();  // Algorithm specific function
-    
+
     //Send the goal to the robot (Global Map)
     ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
     //sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
@@ -396,10 +400,10 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
     //if(state.state_ == actionlib::SimpleClientGoalState::ABORTED) needToBackUp = true;    
     
     if(state.state_ == actionlib::SimpleClientGoalState::SUCCEEDED){
-	    ROS_INFO("Robot visiting");
-	    ros::Duration delay(3); // seconds
-	    delay.sleep();
-        ROS_INFO("SUCCESS");
+	      ROS_INFO("Goal reached ... WAITING %.2f sec",goal_reached_wait);
+        ros::Duration delay(goal_reached_wait); // wait after goal is reached
+        delay.sleep();
+        ROS_INFO("Goal reached ... DONE");
         goal_complete = true;
     }else{
         ROS_INFO("CANCELLED or ABORTED...");   //tentar voltar a enviar goal..
