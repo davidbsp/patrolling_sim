@@ -9,11 +9,11 @@
 # Term: gnome-terminal,xterm
 
 
-import sys, time, os
+import sys, time, os, socket
 
-MAP='DISlabs'
+MAP='grid'
 NROBOTS=4
-MACHINE='segway-laptop'
+MACHINE=socket.gethostname()
 vALG=['SEBS', 'DTAP']  # algorithms to compare
 
 tarstr=''
