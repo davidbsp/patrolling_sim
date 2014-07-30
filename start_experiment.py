@@ -36,6 +36,10 @@ LocalizationMode_list = ['odom','GPS']
 
 GWait_list = ['0','3','10']
 
+CommDelay_list = ['0','1','2','3']
+
+LostMsgRate_list = ['0','0.1','0.2','0.3']
+
 Terminal_list = ['gnome-terminal','xterm']
 
 initPoses = {}
@@ -86,6 +90,7 @@ def getSimulationRunning():
 # Terminates if simulation is stopped (/simulation_runnning param is false)
 # or if timeout is reached (if this is >0)
 def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT):
+
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
     print 'Loading map ',MAP
@@ -109,6 +114,8 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT):
     os.system('sleep 3')
     os.system('rosparam set /use_sim_time true')
     os.system("rosparam set /goal_reached_wait "+GWAIT)
+#    os.system("rosparam set /communication_delay "+COMMDELAY)
+#    os.system("rosparam set /lost_message_rate "+LOSTMSGRATE)
 
     cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
     print cmd

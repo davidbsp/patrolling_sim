@@ -60,7 +60,7 @@ using namespace std;
 #define NUM_MAX_ROBOTS 32
 #define MAX_COMPLETE_PATROL 100
 #define MAX_EXPERIMENT_TIME 86400  // seconds
-#define DEAD_ROBOT_TIME 180 // (seconds) time from last goal reached after which a robot is considered dead
+#define DEAD_ROBOT_TIME 300 // (seconds) time from last goal reached after which a robot is considered dead
 #define FOREVER true
 // For hystograms
 #define RESOLUTION 1.0 // seconds

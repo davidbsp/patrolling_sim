@@ -84,7 +84,8 @@ protected:
     double *last_visit;
     std::vector<int> vresults; // results exchanged among robots
     bool goal_canceled_by_user;
-    double goal_reached_wait;
+    double goal_reached_wait, communication_delay, lost_message_rate;
+    int aborted_count;
     
     MoveBaseClient *ac; // action client for reaching target goals
     
@@ -119,6 +120,7 @@ public:
     
     virtual void init(int argc, char** argv);
     void initialize_node();
+    void readParams(); // read ROS parameters
     void update_idleness();  // local idleness
     
     virtual void run();

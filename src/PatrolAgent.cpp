@@ -56,7 +56,9 @@ void PatrolAgent::init(int argc, char** argv) {
             argv[2]=grid
             argv[3]=ID_ROBOT
         */
-        
+    
+    srand ( time(NULL) );
+    
     //More than One robot (ID between 0 and 99)
     if ( atoi(argv[3])>NUM_MAX_ROBOTS || atoi(argv[3])<-1 ){
         ROS_INFO("The Robot's ID must be an integer number between 0 an 99"); //max 100 robots 
@@ -196,15 +198,30 @@ void PatrolAgent::init(int argc, char** argv) {
     while(initialize){
         ros::spinOnce();
         loop_rate.sleep();
-    }
+    }    
+    
+    readParams();
+}
+
+
+void PatrolAgent::readParams() {
 
     if (! ros::param::get("/goal_reached_wait", goal_reached_wait)) {
       goal_reached_wait = 0.0;
       ros::param::set("/goal_reached_wait", goal_reached_wait);
     }
 
-}
+    if (! ros::param::get("/communication_delay", communication_delay)) {
+      communication_delay = 0.0;
+      ros::param::set("/communication_delay", communication_delay);
+    }
 
+    if (! ros::param::get("/lost_message_rate", lost_message_rate)) {
+      lost_message_rate = 0.0;
+      ros::param::set("/lost_message_rate", lost_message_rate);
+    }
+
+}
 
 void PatrolAgent::run() {
     
@@ -406,7 +423,8 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
         ROS_INFO("Goal reached ... DONE");
         goal_complete = true;
     }else{
-        ROS_INFO("CANCELLED or ABORTED...");   //tentar voltar a enviar goal..
+        aborted_count++;
+        ROS_INFO("CANCELLED or ABORTED... %d",aborted_count);   //tentar voltar a enviar goal..
         //backUpCounter = 0;
         //backup();
         if (!goal_canceled_by_user) {
@@ -641,17 +659,7 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
     
     for (size_t k=0; k<msg->data.size(); k++) {
         vresults.push_back(*it); it++;
-    }
-/*        
-    int p1 = *it; //data[0]
-    ++it;
-     = *it; //data[1]
-    ++it;
-    int p3 = *it; //data[2]
-    ++it;
-    int p4 = *it; //data[2]
-    ++it;  
-*/   
+    } 
 
     int id_sender = vresults[0];
     int msg_type = vresults[1];
@@ -668,8 +676,24 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
         }
     }
     
-    if (!initialize)
-        receive_results();
+    if (!initialize) {
+        // communication delay
+        if (communication_delay>0) {
+            ROS_INFO("Communication delay %.1f",communication_delay);
+            ros::Duration delay(communication_delay); // seconds
+            delay.sleep();
+        }
+        bool lost_message = false;
+        if (lost_message_rate>0) {
+            double r = (rand() % 1000)/1000.0;
+            lost_message = r < lost_message_rate;
+        }
+        if (lost_message) {
+            ROS_INFO("Lost message");
+        }
+        else
+            receive_results();
+    }
 
     ros::spinOnce();
   
