@@ -116,7 +116,7 @@ void SEBS_Agent::init(int argc, char** argv) {
   for (int i=0; i<NUMBER_OF_ROBOTS; i++){
     tab_intention[i] = -1;
   }
-
+  
 }
 
 // Executed at any cycle when goal is not reached

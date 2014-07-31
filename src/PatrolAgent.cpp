@@ -102,7 +102,8 @@ void PatrolAgent::init(int argc, char** argv) {
     goal_canceled_by_user = false;
     aborted_count = 0;
     resend_goal_count = 0;
-    
+    communication_delay = 0.0;
+    lost_message_rate = 0.0;
     /* Define Starting Vertex/Position (Launch File Parameters) */
 
     ros::init(argc, argv, "patrol_agent");  // will be replaced by __name:=XXXXXX
@@ -181,7 +182,16 @@ void PatrolAgent::init(int argc, char** argv) {
     // results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
     results_sub = nh.subscribe<std_msgs::Int16MultiArray>("results", 100, boost::bind(&PatrolAgent::resultsCB, this, _1) ); //Subscrever "results" vindo dos robots
 
-    ros::Rate loop_rate(1); //1 segundo
+    
+    
+    
+
+    readParams();
+}
+    
+void PatrolAgent::ready() {
+    
+    char string1[40];
     
     /* Define Goal */
     if(ID_ROBOT==-1){ 
@@ -198,16 +208,17 @@ void PatrolAgent::init(int argc, char** argv) {
         ROS_INFO("Waiting for the move_base action server to come up");
     } 
     ROS_INFO("Connected with move_base action server");
-
+    
     initialize_node(); //dizer q está vivo
+    
+    ros::Rate loop_rate(1); //1 segundo
     
     /* Wait until all nodes are ready.. */
     while(initialize){
         ros::spinOnce();
         loop_rate.sleep();
     }    
-    
-    readParams();
+
 }
 
 
@@ -231,6 +242,9 @@ void PatrolAgent::readParams() {
 }
 
 void PatrolAgent::run() {
+    
+    // get ready
+    ready();
     
     // Asynch spinner (non-blocking)
     ros::AsyncSpinner spinner(2); // Use n threads
@@ -702,7 +716,7 @@ void PatrolAgent::send_interference(){
 
 
 void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { 
-
+    
     std::vector<signed short>::const_iterator it = msg->data.begin();    
     
     vresults.clear();
@@ -713,10 +727,16 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
 
     int id_sender = vresults[0];
     int msg_type = vresults[1];
+    
+    //printf(" MESSAGE FROM %d TYPE %d ...\n",id_sender, msg_type);
+    
     // messages coming from the monitor
     if (id_sender==-1 && msg_type==INITIALIZE_MSG_TYPE) {
         if (initialize==true && vresults[2]==100) {   //"-1,msg_type,100" (BEGINNING)
             ROS_INFO("Let's Patrol!\n");
+            double r = 1.0 * ((rand() % 1000)/1000.0);
+            ros::Duration wait(r); // seconds
+            wait.sleep();
             initialize = false;
         }
         
@@ -728,13 +748,13 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
     
     if (!initialize) {
         // communication delay
-        if (communication_delay>0) {
+        if (communication_delay>0.001) {
             ROS_INFO("Communication delay %.1f",communication_delay);
             ros::Duration delay(communication_delay); // seconds
             delay.sleep();
         }
         bool lost_message = false;
-        if (lost_message_rate>0) {
+        if (lost_message_rate>0.001) {
             double r = (rand() % 1000)/1000.0;
             lost_message = r < lost_message_rate;
         }

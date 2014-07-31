@@ -37,6 +37,7 @@
 
 #include <sstream>
 #include <string>
+#include <pthread.h>
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
@@ -58,10 +59,14 @@ private:
     ConfigFile cf;
     double theta_idl, theta_cost, theta_odist;
     float origin_x, origin_y, origin_theta;
+    pthread_mutex_t lock;
     
 public:
     DTAGreedy_Agent() : cf(CONFIG_FILENAME)
-    {}
+    {   // lock = PTHREAD_MUTEX_INITIALIZER; 
+        pthread_mutex_init(&lock, NULL);
+        
+    }
     
     virtual void init(int argc, char** argv);
     virtual int compute_next_vertex();
@@ -79,11 +84,12 @@ void DTAGreedy_Agent::init(int argc, char** argv) {
     printf("DTAGreedy_Agent::init\n");
     
     PatrolAgent::init(argc,argv);
-
+  
     global_instantaneous_idleness = new double[dimension];
     for(size_t i=0; i<dimension; i++) {
         global_instantaneous_idleness[i]=100;  // start with a high value    
     }
+        
     last_update_idl = ros::Time::now().toSec();
     
     theta_idl = cf.getDParam("theta_idleness");
@@ -139,9 +145,11 @@ void DTAGreedy_Agent::update_global_idleness()
 {   
     double now = ros::Time::now().toSec();
     
+    pthread_mutex_lock(&lock);
     for(size_t i=0; i<dimension; i++) {
         global_instantaneous_idleness[i] += (now-last_update_idl);  // update value    
     }
+    pthread_mutex_unlock(&lock);
     
     last_update_idl = now;
 }
@@ -185,6 +193,9 @@ void DTAGreedy_Agent::send_results() {
     msg.data.push_back(ID_ROBOT);
     msg.data.push_back(msg_type);
     //printf("  ** sending [%d, %d, ",ID_ROBOT,msg_type);
+    
+    pthread_mutex_lock(&lock);
+    
     for(size_t i=0; i<dimension; i++) {
         // convert in 1/100 of secs (integer value)
         int ms = (int)(global_instantaneous_idleness[i]*100);
@@ -195,6 +206,7 @@ void DTAGreedy_Agent::send_results() {
     }
     msg.data.push_back(next_vertex);
     //printf(",%d]\n",next_vertex);
+    pthread_mutex_unlock(&lock);
     
     results_pub.publish(msg);   
     //ros::spinOnce();    
@@ -206,25 +218,37 @@ void DTAGreedy_Agent::receive_results() {
     
     double now = ros::Time::now().toSec();
     
+    //printf("  ** here ** \n");
+    
     std::vector<int>::const_iterator it = vresults.begin();
     int id_sender = *it; it++;
-    if (id_sender==ID_ROBOT) return;
     int msg_type = *it; it++;
-    if (msg_type!=DTAGREEDY_MSG_TYPE) return;
-    //printf("  ** received [%d, %d, ",id_sender,msg_type);
+    
+    //printf("  ** received [%d, %d, ... \n",id_sender,msg_type);
+    
+    if ((id_sender==ID_ROBOT) || (msg_type!=DTAGREEDY_MSG_TYPE)) 
+        return;
+    pthread_mutex_lock(&lock);
     for(size_t i=0; i<dimension; i++) {
         int ms = *it; it++; // received value
-        // printf("  ** received from %d remote-GII[%lu] = %.1f\n",id_sender,i,ms);
-        //printf("%d, ",ms);
+        //printf("    -- received from %d remote-GII[%lu] = %d\n",id_sender,i,ms);
+        //printf("  - %d - \n",ms);
         double rgi = (double)ms/100.0; // convert back in seconds
+        //printf("  - i=%lu - \n",i);
+        //printf("  - global...[i]=%.1f - \n",global_instantaneous_idleness[i]);
+        if (isnan(global_instantaneous_idleness[i])) {
+            printf("NAN Exiting!!!"); return;
+        }
+
         global_instantaneous_idleness[i] = std::min(
             global_instantaneous_idleness[i]+(now-last_update_idl), rgi);
-        // printf("   ++ GII[%lu] = %.1f (r=%.1f)\n",i,global_instantaneous_idleness[i],rgi);
+        //printf("    ++ GII[%lu] = %.1f (r=%.1f)\n",i,global_instantaneous_idleness[i],rgi);
     }
+    pthread_mutex_unlock(&lock);
     last_update_idl = now;
 
     int sender_next_vertex = *it; it++;
-    //printf("%d]\n",sender_next_vertex);
+    //printf(" ... %d]\n",sender_next_vertex);
     
     // interrupt path if moving to the same target node
     if (sender_next_vertex == next_vertex) { // two robots are going to the same node
@@ -236,6 +260,7 @@ void DTAGreedy_Agent::receive_results() {
         next_vertex = compute_next_vertex(); // compute next vertex (will be different from current vertex)
         sendGoal(next_vertex);
     }
+    //printf("*** END ***\n");
 }
 
 int main(int argc, char** argv) {

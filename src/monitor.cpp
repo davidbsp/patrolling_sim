@@ -436,6 +436,9 @@ bool check_dead_robots() {
     for (int i=0; i<teamsize; i++) {        
       double delta = current_time - last_goal_reached[i];
       // printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,last_goal_reached[i],delta);
+      if (delta>DEAD_ROBOT_TIME*0.75) {
+        system("play beep.wav");
+      }
       if (delta>DEAD_ROBOT_TIME) {
           // printf("Dead robot %d. Time from last goal reached = %.1f\n",i,delta);
           return true;
@@ -589,8 +592,8 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
   nh.setParam("/simulation_runnning", true);
     
   double current_time = ros::Time::now().toSec();
-
-    
+  
+  
 	while( ros::ok() ){
 		
 		if (!initialize){	//check if msg is goal or interference -> compute necessary results.

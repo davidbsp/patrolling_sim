@@ -110,7 +110,6 @@ void GBS_Agent::init(int argc, char** argv) {
   }
   
   printf("G1 = %f, G2 = %f\n", G1, G2); 
-
 }
 
 // Executed at any cycle when goal is not reached

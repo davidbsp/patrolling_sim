@@ -2,7 +2,11 @@
 
 using namespace std;
 
-
+SSIPatrolAgent::SSIPatrolAgent() : cf(CONFIG_FILENAME)
+{
+    pthread_mutex_init(&lock, NULL);
+}
+    
 
 void SSIPatrolAgent::onGoalComplete()
 {
@@ -22,7 +26,9 @@ void SSIPatrolAgent::onGoalComplete()
 		next_vertex = next_next_vertex;
 		//update global idleness of next vertex to avoid conflicts
 		if (next_vertex>=0 && next_vertex< dimension){
+            pthread_mutex_lock(&lock);
 			global_instantaneous_idleness[next_vertex] = 0.0;   
+            pthread_mutex_unlock(&lock);
 		}
 		printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
    }
@@ -109,23 +115,24 @@ void SSIPatrolAgent::init(int argc, char** argv) {
 //    fflush(logfile);
 
     //initialize structures
+    next_vertex = -1; 
+    next_next_vertex = -1;
 
-	next_vertex = -1; 
-	next_next_vertex = -1;
-
-    taskRequests = new int[dimension];	
-    tasks = new bool[dimension];	
+    taskRequests = new int[dimension];  
+    tasks = new bool[dimension];    
     bids = new bid_tuple[dimension]; 
     global_instantaneous_idleness = new double[dimension];
     selected_vertices = new bool[dimension];
     bid_tuple noBid = {BIG_NUMBER,-1}; 
     for(size_t i=0; i<dimension; i++) {
-	taskRequests[i] = 0;
+        taskRequests[i] = 0;
         tasks[i] = false;
-	selected_vertices[i] = false;
+        selected_vertices[i] = false;
         bids[i] = noBid;
         global_instantaneous_idleness[i]=BIG_NUMBER;  // start with a high value    
     }
+
+    
     last_update_idl = ros::Time::now().toSec();
 
     first_vertex = true;	
@@ -228,6 +235,7 @@ void SSIPatrolAgent::update_global_idleness()
 
     double now = ros::Time::now().toSec();
     
+    pthread_mutex_lock(&lock);
     for(size_t i=0; i<dimension; i++) {
         global_instantaneous_idleness[i] += (now-last_update_idl);  // update value    
     }
@@ -235,6 +243,7 @@ void SSIPatrolAgent::update_global_idleness()
 	if (current_vertex>=0 && current_vertex<dimension){
 		global_instantaneous_idleness[current_vertex] = 0.0;
 	}
+	pthread_mutex_unlock(&lock);
 
     last_update_idl = now;
 }
@@ -474,6 +483,7 @@ void SSIPatrolAgent::send_results() {
     msg.data.push_back(ID_ROBOT);
     msg.data.push_back(msg_type);
     printf("  ** sending [%d, %d, ",ID_ROBOT,msg_type);
+    pthread_mutex_lock(&lock);
     for(size_t i=0; i<dimension; i++) {
         // convert in 1/100 of secs (integer value)
         int ms = (int)(global_instantaneous_idleness[i]*100);
@@ -482,6 +492,7 @@ void SSIPatrolAgent::send_results() {
         printf("%d, ",ms);
         msg.data.push_back(ms);
     }
+    pthread_mutex_unlock(&lock);
     msg.data.push_back(next_vertex);
     printf("%d]\n",next_vertex);
     
@@ -500,7 +511,7 @@ void SSIPatrolAgent::update_bids(int nv, double bv, int senderId){
 void SSIPatrolAgent::idleness_msg_handler(std::vector<int>::const_iterator it){
 
     double now = ros::Time::now().toSec();
-
+    pthread_mutex_lock(&lock);
     for(size_t i=0; i<dimension; i++) {
 		int ms = *it; it++; // received value
 		// printf("  ** received from %d remote-GII[%lu] = %.1f\n",id_sender,i,ms);
@@ -510,6 +521,7 @@ void SSIPatrolAgent::idleness_msg_handler(std::vector<int>::const_iterator it){
 			global_instantaneous_idleness[i]+(now-last_update_idl), rgi);
 		// printf("   ++ GII[%lu] = %.1f (r=%.1f)\n",i,global_instantaneous_idleness[i],rgi);
     }
+    pthread_mutex_unlock(&lock);
     last_update_idl = now;
 
 /* TODO: CONSIDER INCLUDING THIS IN SSI AS A DIRECT DE-CONFLICTING PROCEDURE

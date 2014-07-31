@@ -171,7 +171,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT):
         #os.system('sleep 1')
         gcmd = gcmd + ' --tab -e "'+cmd+'" '
     gcmd = gcmd + '&'    
-    print gcmd
+    #print gcmd
     os.system(gcmd)
     os.system('sleep '+NROBOTS)
     # wait for termination

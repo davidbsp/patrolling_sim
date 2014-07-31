@@ -29,7 +29,9 @@ typedef struct bid_tuple {
 class SSIPatrolAgent: public PatrolAgent {
 
 protected:
-
+    // Mutex to update global_idleness safely
+    pthread_mutex_t lock;
+    
 	//true if I am selecting the first vertex to go to	
     bool first_vertex; 
 
@@ -132,8 +134,7 @@ protected:
 
 public:
 
-    SSIPatrolAgent() : cf(CONFIG_FILENAME)
-    {}
+    SSIPatrolAgent();
 
     virtual void init(int argc, char** argv);
 	virtual void onGoalComplete();    

@@ -119,6 +119,7 @@ public:
     }
     
     virtual void init(int argc, char** argv);
+    void ready();
     void initialize_node();
     void readParams(); // read ROS parameters
     void update_idleness();  // local idleness
