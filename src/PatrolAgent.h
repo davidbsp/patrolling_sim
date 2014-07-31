@@ -85,7 +85,7 @@ protected:
     std::vector<int> vresults; // results exchanged among robots
     bool goal_canceled_by_user;
     double goal_reached_wait, communication_delay, lost_message_rate;
-    int aborted_count;
+    int aborted_count, resend_goal_count;
     
     MoveBaseClient *ac; // action client for reaching target goals
     
@@ -140,6 +140,8 @@ public:
     bool check_interference (int ID_ROBOT);
     void do_interference_behavior();
     void backup();
+    
+    void onGoalNotComplete(); // what to do when a goal has NOT been reached (aborted)
     
     // Events
     virtual void onGoalComplete(); // what to do when a goal has been reached

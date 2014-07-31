@@ -173,7 +173,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT):
     gcmd = gcmd + '&'    
     print gcmd
     os.system(gcmd)
-    os.system('sleep 5')
+    os.system('sleep '+NROBOTS)
     # wait for termination
     run = True
     while (run):

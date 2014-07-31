@@ -67,7 +67,7 @@ void PatrolAgent::init(int argc, char** argv) {
         ID_ROBOT = atoi(argv[3]); 
         //printf("ID_ROBOT = %d\n",ID_ROBOT); //-1 in the case there is only 1 robot.
     }
-
+                
     mapname = string(argv[2]);
     graph_file = "maps/"+mapname+"/"+mapname+".graph";
     
@@ -100,11 +100,18 @@ void PatrolAgent::init(int argc, char** argv) {
     goal_complete = true;
     last_interference = 0;
     goal_canceled_by_user = false;
+    aborted_count = 0;
+    resend_goal_count = 0;
     
     /* Define Starting Vertex/Position (Launch File Parameters) */
 
     ros::init(argc, argv, "patrol_agent");  // will be replaced by __name:=XXXXXX
     ros::NodeHandle nh;
+    
+    // wait a random time (avoid conflicts with other robots starting at the same time...)
+    double r = 3.0 * ((rand() % 1000)/1000.0);
+    ros::Duration wait(r); // seconds
+    wait.sleep();
     
     double initial_x, initial_y;
     
@@ -238,6 +245,7 @@ void PatrolAgent::run() {
         
         if (goal_complete) {
             onGoalComplete();  // can be redefined
+            resend_goal_count=0;
         }
         else { // goal not complete (active)
             if (interference) {
@@ -246,8 +254,15 @@ void PatrolAgent::run() {
             
             if (ResendGoal) {
                 //Send the goal to the robot (Global Map)
-                ROS_INFO("Re-Sending goal - Vertex %d (%f,%f)", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-                sendGoal(next_vertex);  
+                if (resend_goal_count<3) {
+                    resend_goal_count++;
+                    ROS_INFO("Re-Sending goal (%d) - Vertex %d (%f,%f)", resend_goal_count, next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+                    sendGoal(next_vertex);
+                }
+                else {
+                    resend_goal_count=0;
+                    onGoalNotComplete();
+                }
                 ResendGoal = false; //para nao voltar a entrar (envia goal so uma vez)
             }
             
@@ -276,7 +291,7 @@ void PatrolAgent::onGoalComplete()
         update_idleness();
         current_vertex = next_vertex;       
     }
-
+    
     //devolver proximo vertex tendo em conta apenas as idlenesses;
     next_vertex = compute_next_vertex();
     //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
@@ -292,6 +307,41 @@ void PatrolAgent::onGoalComplete()
     
     goal_complete = false;    
 }
+
+void PatrolAgent::onGoalNotComplete()
+{   
+    int prev_vertex = next_vertex;
+    
+    ROS_INFO("Goal not complete - Vertex %d\n", next_vertex);   
+    
+    //devolver proximo vertex tendo em conta apenas as idlenesses;
+    next_vertex = compute_next_vertex();
+    //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+
+    // Look for a random adjacent vertex different from the previous one
+    int random_cnt=0;
+    while (next_vertex == prev_vertex && random_cnt++<10) {
+        int num_neighs = vertex_web[current_vertex].num_neigh;
+        int i = rand() % num_neighs;
+        next_vertex = vertex_web[current_vertex].id_neigh[i];
+        ROS_INFO("Choosing another random vertex %d\n", next_vertex);
+    }
+    
+    // Look for any random vertex different from the previous one
+    while (next_vertex == prev_vertex) {
+        int i = rand() % dimension;
+        next_vertex = i;
+        ROS_INFO("Choosing another random vertex %d\n", next_vertex);
+    }
+
+    //Send the goal to the robot (Global Map)
+    ROS_INFO("Re-Sending NEW goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+    //sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
+    sendGoal(next_vertex);  // send to move_base
+    
+    goal_complete = false;    
+}
+
 
 void PatrolAgent::processEvents() {
     
