@@ -115,6 +115,7 @@ void Conscientious_Cognitive_Agent::onGoalComplete()
     }
     
     /** SEND GOAL (REACHED) AND INTENTION **/
+    send_goal_reached(); // Send TARGET to monitor
     send_results();
 
     if (inpath){

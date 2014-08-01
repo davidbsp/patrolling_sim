@@ -437,6 +437,7 @@ bool check_dead_robots() {
       double delta = current_time - last_goal_reached[i];
       // printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,last_goal_reached[i],delta);
       if (delta>DEAD_ROBOT_TIME*0.75) {
+        printf("Robot %d: dead robot - delta = %.1f / %.1f \n",i,delta,DEAD_ROBOT_TIME);
         system("play beep.wav");
       }
       if (delta>DEAD_ROBOT_TIME) {
@@ -612,7 +613,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 				double last_visit_temp = current_time - time_zero; ; //guarda o valor corrente
 				number_of_visits [goal] ++;
 				
-                last_goal_reached[id_robot] = current_time;
+        last_goal_reached[id_robot] = current_time;
                 
  				printf("  number_of_visits [%d] = %d\n", goal, number_of_visits [goal]);
 
