@@ -3,7 +3,13 @@ patrolling_sim
 
 patrolling_sim for ROS Groovy
 
-Authors: David Portugal (2011-2014), Luca Iocchi (2014), Alessandro Farinelli (2014)
+Authors:
+
+Main framework and basic algorithms:
+ David Portugal (2011-2014), Luca Iocchi (2014)
+ 
+Additional algorithms:
+* DTAS, DTAP: Alessandro Farinelli (2014)
 
 
 This package contains the implementation of several algorithms for multi-robot patrolling
