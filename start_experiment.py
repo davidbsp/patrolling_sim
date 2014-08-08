@@ -36,13 +36,17 @@ LocalizationMode_list = ['odom','GPS']
 
 GWait_list = ['0','3','10']
 
-CommDelay_list = ['0','1','2','3']
+CommDelay_list = ['0','0.2','1','2']
 
 LostMsgRate_list = ['0','0.1','0.2','0.3']
 
 Terminal_list = ['gnome-terminal','xterm']
 
 initPoses = {}
+
+# Fixed so far
+COMMDELAY = 0.2
+
 
 # return long name of the algorithm
 def findAlgName(alg):
@@ -98,9 +102,11 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT):
     print 'Algorithm ',ALG,'  ',ALG_SHORT
     print 'Localization Mode ',LOC_MODE
     print 'Goal wait time ', GWAIT
+    print 'Communication delay ',COMMDELAY
     print 'Terminal ',TERM
     print 'Timeout ',TIMEOUT
-
+    
+    
     loadInitPoses()
     
     scenario = MAP+"_"+NROBOTS
@@ -114,7 +120,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT):
     os.system('sleep 3')
     os.system('rosparam set /use_sim_time true')
     os.system("rosparam set /goal_reached_wait "+GWAIT)
-#    os.system("rosparam set /communication_delay "+COMMDELAY)
+    os.system("rosparam set /communication_delay "+str(COMMDELAY))
 #    os.system("rosparam set /lost_message_rate "+LOSTMSGRATE)
 
     cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
