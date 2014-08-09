@@ -45,7 +45,7 @@ Terminal_list = ['gnome-terminal','xterm']
 initPoses = {}
 
 # Fixed so far
-COMMDELAY = 0.2
+COMMDELAY_DEFAULT = 0.1
 
 
 # return long name of the algorithm
@@ -93,7 +93,7 @@ def getSimulationRunning():
 # Run the experiment with the given arguments
 # Terminates if simulation is stopped (/simulation_runnning param is false)
 # or if timeout is reached (if this is >0)
-def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT):
+def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TIMEOUT):
 
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
@@ -300,7 +300,7 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(),self.robots_ddm.get(),self.alg_ddm.get(),self.locmode_ddm.get(),self.gwait_ddm.get(),self.term_ddm.get(),0) )
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), self.alg_ddm.get(),self.locmode_ddm.get(),self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0) )
 
     
     def quit(self):
@@ -343,18 +343,19 @@ def main():
     DIP(root)
     root.geometry("300x300+0+0")
     root.mainloop()  
-  elif (len(sys.argv)==8):
+  elif (len(sys.argv)==9):
     MAP = sys.argv[1]
     NROBOTS = sys.argv[2]
     ALG_SHORT = sys.argv[3]
     LOC_MODE = sys.argv[4]
     GWAIT = sys.argv[5]
-    TERM = sys.argv[6]
-    TIMEOUT = int(sys.argv[7])
-    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT)
+    COMMDELAY = sys.argv[6]
+    TERM = sys.argv[7]
+    TIMEOUT = int(sys.argv[8])
+    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TIMEOUT)
   else:
     print "Use: ",sys.argv[0]
-    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <goal-wait> <term> <timeout>'
+    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <goal-wait>  <communication-delay> <terminal> <timeout>'
   
 
 

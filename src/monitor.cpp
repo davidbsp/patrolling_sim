@@ -89,6 +89,7 @@ bool goal_reached = false;
 int id_robot; // robot sending the message
 int goal;
 double time_zero, last_report_time;
+double comm_delay;
 
 tf::TransformListener *listener;
 
@@ -493,8 +494,7 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
         strcpy(hostname,"default");
     
     printf("Host name: %s\n",hostname);
-   
-    
+       
 	/* ESTRUTURAS DE DADOS A CALCULAR */
 	double last_visit [dimension], current_idleness [dimension], avg_idleness [dimension], stddev_idleness [dimension];
     double total_0 [dimension], total_1 [dimension],  total_2[dimension];
@@ -594,7 +594,11 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
     
   double current_time = ros::Time::now().toSec();
   
-  
+  // read communication delay
+  if (! ros::param::get("/communication_delay", comm_delay)) {
+      comm_delay = 0.0;
+  }
+
 	while( ros::ok() ){
 		
 		if (!initialize){	//check if msg is goal or interference -> compute necessary results.
@@ -791,8 +795,9 @@ int main(int argc, char** argv){	//pass TEAMSIZE GRAPH ALGORITHM
 
     FILE *infofile;
     infofile = fopen (infofilename,"w");
-    fprintf(infofile,"%s;%s;%.1f;%s;%s;%s;%s;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f\n",
-            mapname.c_str(),teamsize_str,goal_reached_wait,algorithm,
+    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f\n",
+            mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,
+            algorithm,
             algparams.c_str(),hostname,
             strnow,current_time,interference_cnt,(dead?"FAIL":"TIMEOUT"),
             min_idleness, gavg, gstddev, max_idleness

@@ -147,6 +147,11 @@ void SSIPatrolAgent::init(int argc, char** argv) {
 	theta_hop = cf.getDParam("theta_hop");	
     threshold = cf.getDParam("threshold");			
     hist = cf.getDParam("hist");
+    
+    std::stringstream paramss;
+    paramss << timeout << "," << theta_idl << "," << theta_cost << "," << theta_hop << "," << threshold << "," << hist;
+
+    ros::param::set("/algorithm_params",paramss.str());
 
 //    printf("here3 \n");
 //    fflush(stdout);
