@@ -13,8 +13,9 @@ NROBOTS=4
 ALG=DTAS
 LOC=odom
 GWAIT=3
+COMMDELAY=0.1
 TERM=gnome-terminal 
 TIMEOUT=1800
 
-./start_experiment.py $MAP $NROBOTS $ALG $LOC $GWAIT $TERM $TIMEOUT
+./start_experiment.py $MAP $NROBOTS $ALG $LOC $GWAIT $COMMDELAY $TERM $TIMEOUT
 
