@@ -182,9 +182,8 @@ void PatrolAgent::init(int argc, char** argv) {
     // results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
     results_sub = nh.subscribe<std_msgs::Int16MultiArray>("results", 100, boost::bind(&PatrolAgent::resultsCB, this, _1) ); //Subscrever "results" vindo dos robots
 
-    
-    
-    
+    // last time comm delay has been applied
+    last_communication_delay_time = ros::Time::now().toSec();   
 
     readParams();
 }
@@ -748,13 +747,17 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
     
     if (!initialize) {
         // communication delay
-        if (communication_delay>0.001) {
-            ROS_INFO("Communication delay %.1f",communication_delay);
-            ros::Duration delay(communication_delay); // seconds
-            delay.sleep();
+        if ((communication_delay>0.001) && (id_sender!=ID_ROBOT)) {
+        	double current_time = ros::Time::now().toSec();
+        	if (current_time-last_communication_delay_time>1.0) { 
+		        ROS_INFO("Communication delay %.1f",communication_delay);
+		        ros::Duration delay(communication_delay); // seconds
+		        delay.sleep();
+		        last_communication_delay_time = current_time;
+            }
         }
         bool lost_message = false;
-        if (lost_message_rate>0.001) {
+        if ((lost_message_rate>0.0001)&& (id_sender!=ID_ROBOT)) {
             double r = (rand() % 1000)/1000.0;
             lost_message = r < lost_message_rate;
         }
