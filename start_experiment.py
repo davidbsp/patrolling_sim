@@ -45,7 +45,7 @@ Terminal_list = ['gnome-terminal','xterm']
 initPoses = {}
 
 # Fixed so far
-COMMDELAY = 0.2
+COMMDELAY = 0
 
 
 # return long name of the algorithm
@@ -170,7 +170,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, TERM, TIMEOUT):
         else:
             now = datetime.datetime.now()
             dateString = now.strftime("%Y-%m-%d-%H:%M")
-# FOR DEBUG            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
+            #cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
             cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+'\''
         print cmd
         #os.system('xterm -e  "'+cmd+'" &')

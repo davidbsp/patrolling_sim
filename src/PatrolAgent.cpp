@@ -232,7 +232,7 @@ void PatrolAgent::readParams() {
     if (! ros::param::get("/communication_delay", communication_delay)) {
       communication_delay = 0.0;
       ros::param::set("/communication_delay", communication_delay);
-    }
+    } 
 
     if (! ros::param::get("/lost_message_rate", lost_message_rate)) {
       lost_message_rate = 0.0;

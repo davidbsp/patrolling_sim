@@ -221,13 +221,44 @@ double SSIPatrolAgent::compute_cost(int cv, int nv)
 }        
 
 
+//double SSIPatrolAgent::utility(int cv,int nv) {
+//    double idl = global_instantaneous_idleness[nv];
+//    double cost = compute_cost(cv,nv);
+//    double U = theta_idl * idl + theta_cost * cost;
+//    printf("  cv: %d -- U[%d] ( %.1f, %.1f ) = %.1f\n",cv,nv,idl,cost,U);
+//    return U;
+//}
+
+size_t SSIPatrolAgent::compute_hops(int cv, int nv)
+{
+    uint elem_s_path;
+    int *shortest_path = new int[dimension]; 
+    int id_neigh;
+    
+    dijkstra( cv, nv, shortest_path, elem_s_path, vertex_web, dimension); //structure with normal costs
+    size_t hops = 0;
+    
+    for(uint j=0; j<elem_s_path; j++){
+//        printf("path[%u] = %d\n",j,shortest_path[j]);
+        
+        if (j<elem_s_path-1){
+            id_neigh = is_neigh(shortest_path[j], shortest_path[j+1], vertex_web, dimension);
+			hops++;
+        }       
+    }
+    
+    return hops;
+}        
+
+
 double SSIPatrolAgent::utility(int cv,int nv) {
     double idl = global_instantaneous_idleness[nv];
-    double cost = compute_cost(cv,nv);
-    double U = theta_idl * idl + theta_cost * cost;
-    printf("  cv: %d -- U[%d] ( %.1f, %.1f ) = %.1f\n",cv,nv,idl,cost,U);
+    size_t hops = compute_hops(cv,nv);
+    double U = theta_idl * idl + theta_hop * hops;
+    //printf("  HOPSUtil:: cv: %d -- U[%d] ( %.1f, %zu ) = %.1f\n",cv,nv,idl,hops,U);
     return U;
 }
+
 
 void SSIPatrolAgent::update_global_idleness() 
 {   
@@ -248,6 +279,25 @@ void SSIPatrolAgent::update_global_idleness()
     last_update_idl = now;
 }
 
+int SSIPatrolAgent::return_next_vertex(int cv,bool* sv){
+    double maxUtility = -1e9;
+    int i_maxUtility = 0;
+
+    for(size_t i=0; i<dimension; i++){
+        
+        double U = utility(cv,i);
+        if (U > maxUtility && !sv[i]){
+            maxUtility = U;
+            i_maxUtility = i;
+        }
+    }
+    
+    int nv = i_maxUtility; // vertex_web[current_vertex].id_neigh[i_maxUtility];
+    sv[nv] = true; //this vertex was considered as a next vertex
+    printf("DTASSI: returned vertex = %d (U = %.2f)\n",nv,maxUtility);
+    return nv;
+}
+
 int SSIPatrolAgent::select_next_vertex(int cv,bool* sv){
     
     double maxUtility = -1e9;
@@ -261,6 +311,7 @@ int SSIPatrolAgent::select_next_vertex(int cv,bool* sv){
     for(size_t i=0; i<dimension; i++){
         
         double U = utility(cv,i);
+//		printf("vertex %d, marked %d",i,sv[i]);
         if (U > maxUtility && !sv[i]){
             maxUtility = U;
             i_maxUtility = i;
@@ -277,6 +328,11 @@ int SSIPatrolAgent::select_next_vertex(int cv,bool* sv){
 double SSIPatrolAgent::compute_bid(int nv){
 
 	printf("computing bid for vertex %d \n",nv);
+	printf("current tasks = ");
+	for (size_t i = 0; i<dimension;i++){
+		printf(" %d, ",tasks[i]);	
+    }
+    printf("] \n");
 
 	if (nv==next_vertex || nv==next_next_vertex){
 		printf("already going to %d sending 0 (current target: %d, current next target: %d)",nv,next_vertex,next_next_vertex);
@@ -312,16 +368,20 @@ double SSIPatrolAgent::compute_bid(int nv){
 		my_tasks[ci] = true; //remove this task from the list
 		//printf("[Target Set] Pathcost from %d to %d : %.2f \n",current_vertex,ci,path_cost);
 	} else { 
-		ci = select_next_vertex(current_vertex,my_tasks);
+		ci = return_next_vertex(current_vertex,my_tasks);
 		path_cost = compute_cost(ci);
 		//printf("[Target NOT Set] Pathcost from %d to %d : %.2f \n",current_vertex,ci,path_cost);
 	}
 	//handle remaining locations in reverse utility order
 	while (!all_selected(my_tasks)){
-		int ni = select_next_vertex(ci,my_tasks);
+		int ni = return_next_vertex(ci,my_tasks);
 		path_cost += compute_cost(ci,ni);
 		//printf("[while loop] pathcost from %d to %d : %.2f \n",ci,ni,path_cost);
 		ci=ni;
+	}
+	if (ci >= 0 && ci < dimension){
+		printf("returning back from (last task) %d to (current vertex) %d (cost = %.2f) \n",ci,current_vertex,path_cost);
+		path_cost += compute_cost(ci,current_vertex);
 	}
 	printf("total cost = %.2f \n",path_cost);
 
