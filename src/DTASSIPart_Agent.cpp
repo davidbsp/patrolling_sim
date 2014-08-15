@@ -23,11 +23,6 @@ protected:
 
     double compute_sum_distance(int cv);
 	
-	//compute number of hops to nv from cv
-	size_t compute_hops(int cv, int nv);
-
-	//compute utility considering number of hops instead of distance
-	double utility(int cv,int nv);
 
 
 public:
@@ -63,6 +58,12 @@ void DTASSIPart_Agent::init(int argc, char** argv) {
 double DTASSIPart_Agent::compute_bid(int nv){
 
 	printf("computing bid for vertex %d (using dynamic partition) \n ",nv);
+	printf("current tasks = ");
+	for (size_t i = 0; i<dimension;i++){
+		printf(" %d, ",tasks[i]);	
+    }
+    printf("] \n");
+
 
 	if (nv==next_vertex || nv==next_next_vertex){
 		printf("already going to %d sending 0 (current target: %d)",nv,next_vertex);
@@ -88,35 +89,8 @@ double DTASSIPart_Agent::compute_bid(int nv){
 
 }
 
-size_t DTASSIPart_Agent::compute_hops(int cv, int nv)
-{
-    uint elem_s_path;
-    int *shortest_path = new int[dimension]; 
-    int id_neigh;
-    
-    dijkstra( cv, nv, shortest_path, elem_s_path, vertex_web, dimension); //structure with normal costs
-    size_t hops = 0;
-    
-    for(uint j=0; j<elem_s_path; j++){
-//        printf("path[%u] = %d\n",j,shortest_path[j]);
-        
-        if (j<elem_s_path-1){
-            id_neigh = is_neigh(shortest_path[j], shortest_path[j+1], vertex_web, dimension);
-			hops++;
-        }       
-    }
-    
-    return hops;
-}        
 
 
-double DTASSIPart_Agent::utility(int cv,int nv) {
-    double idl = global_instantaneous_idleness[nv];
-    size_t hops = compute_hops(cv,nv);
-    double U = theta_idl * idl + theta_hop * hops;
-    printf("  cv: %d -- U[%d] ( %.1f, %zu ) = %.1f\n",cv,nv,idl,hops,U);
-    return U;
-}
 
 void DTASSIPart_Agent::compute_center_location(){
 	size_t min = current_vertex;

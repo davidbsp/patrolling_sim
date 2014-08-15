@@ -91,8 +91,14 @@ protected:
     bool all_selected(bool* sv);
 	
     //select the next best vertex (used to select which task should be auctioned);
-    //mark vertex that have been selected to avoid selecting them in the same alg step	
+    //mark vertex that have been selected to avoid selecting them in the same alg step
+	//when all vertices have been selected reset the selection excluding the current_vertex	
     int select_next_vertex(int currv, bool* sv);
+
+    //select the next best vertex (used to select which task should be auctioned);
+    //mark vertex that have been selected to avoid selecting them in the same alg step
+    int return_next_vertex(int currv, bool* sv);
+
  
     //compute minimum path cost considering all tasks (tasks) and the next vertex (nv). 
     //The first room is always the current goal (if any), then rooms are visited in decreasing order of utility. 
@@ -118,6 +124,9 @@ protected:
 
     //return path cost from vertex cv to vertex nv 
     double compute_cost(int cv, int nv);	
+
+	//compute number of hops to nv from cv
+	size_t compute_hops(int cv, int nv);
 
     virtual void update_bids(int next_vertex, double bid_value, int senderId);
 
