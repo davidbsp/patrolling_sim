@@ -516,8 +516,8 @@ void PatrolAgent::send_goal_reached() {
     msg.data.push_back(ID_ROBOT);
     msg.data.push_back(TARGET_REACHED_MSG_TYPE);
     msg.data.push_back(current_vertex);
-    msg.data.push_back(next_vertex);
-    msg.data.push_back(0); //David Portugal: is this necessary?
+    //msg.data.push_back(next_vertex);
+    //msg.data.push_back(0); //David Portugal: is this necessary?
     
     results_pub.publish(msg);   
     ros::spinOnce();  
@@ -693,6 +693,22 @@ void PatrolAgent::send_results() {
 
 }
 
+// simulates blocking send operation with delay in communication
+void PatrolAgent::do_send_message(std_msgs::Int16MultiArray &msg) {
+	if (communication_delay>0.001) {
+    	//double current_time = ros::Time::now().toSec();
+    	//if (current_time-last_communication_delay_time>1.0) { 
+	        //ROS_INFO("Communication delay %.1f",communication_delay);
+	        ros::Duration delay(communication_delay); // seconds
+	        delay.sleep();
+	        //last_communication_delay_time = current_time;
+        //}
+    }    
+    results_pub.publish(msg);
+    ros::spinOnce();
+}
+
+
 void PatrolAgent::receive_results() {
 
 }
@@ -746,6 +762,7 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
     }
     
     if (!initialize) {
+#if 0
         // communication delay
         if ((communication_delay>0.001) && (id_sender!=ID_ROBOT)) {
         	double current_time = ros::Time::now().toSec();
@@ -765,6 +782,7 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
             ROS_INFO("Lost message");
         }
         else
+#endif
             receive_results();
     }
 

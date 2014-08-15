@@ -154,28 +154,33 @@ int SEBS_Agent::compute_next_vertex() {
     return state_exchange_bayesian_strategy(current_vertex, vertex_web, instantaneous_idleness, tab_intention, NUMBER_OF_ROBOTS, G1, G2, edge_min);
 }
 
-// FIXME Explicit sending a message with intention
-void SEBS_Agent::send_results() {   
 
+void SEBS_Agent::send_results() {   
+    // [ID,msg_type,vertex,intention]
+    std_msgs::Int16MultiArray msg;   
+    msg.data.clear();
+    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(SEBS_MSG_TYPE);
+    msg.data.push_back(current_vertex);
+    msg.data.push_back(next_vertex);    
+    do_send_message(msg);
 }
 
 void SEBS_Agent::receive_results() {
- 
-    //received vertex and intention from other robot
-    if(initialize==false && vresults[0]>-1 && vresults[1]==TARGET_REACHED_MSG_TYPE && vresults[2]>-1 && vresults[3]>-1){    //ID,MSG_TYPE,CUR_VERT,NEXT_VERT
-
-        if (vresults[0] != ID_ROBOT){ //protection
-            robot_arrived = vresults[0];
-            vertex_arrived = vresults[2];
-            arrived = true;
-            
-            //this will only be used by SEBS:
-            robot_intention = vresults[0];
-            vertex_intention = vresults[3];
-            intention = true;
-        }   
-    } 
-    //ros::spinOnce();    
+  
+    std::vector<int>::const_iterator it = vresults.begin();
+    int id_sender = *it; it++;
+    int msg_type = *it; it++;
+    
+  	if ((id_sender==ID_ROBOT) || (msg_type!=SEBS_MSG_TYPE)) 
+    	return;
+        
+    robot_arrived = vresults[0];
+    vertex_arrived = vresults[2];
+    arrived = true;
+    robot_intention = vresults[0];
+    vertex_intention = vresults[3];
+    intention = true;
 }
 
 int main(int argc, char** argv) {

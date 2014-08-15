@@ -141,25 +141,28 @@ int GBS_Agent::compute_next_vertex() {
 }
 
 
-// FIXME Explicit sending a message with intention
 void GBS_Agent::send_results() {   
-  
+    // [ID,msg_type,vertex]
+    std_msgs::Int16MultiArray msg;   
+    msg.data.clear();
+    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(GBS_MSG_TYPE);
+    msg.data.push_back(current_vertex);
+    do_send_message(msg);
 }
 
-
-// FIXME DONE
 void GBS_Agent::receive_results() {
   
-    //received vertex and intention from other robot
-    if(initialize==false && vresults[0]>-1 && vresults[1]==TARGET_REACHED_MSG_TYPE && vresults[2]>-1 && vresults[3]>-1){    //ID,MSG_TYPE,CUR_VERT,NEXT_VERT
-
-        if (vresults[0] != ID_ROBOT){ //protection
-            robot_arrived = vresults[0];
-            vertex_arrived = vresults[2];
-            arrived = true;
-        }   
-    }  
-    // ros::spinOnce();
+    std::vector<int>::const_iterator it = vresults.begin();
+    int id_sender = *it; it++;
+    int msg_type = *it; it++;
+    
+  	if ((id_sender==ID_ROBOT) || (msg_type!=GBS_MSG_TYPE)) 
+    	return;
+        
+    robot_arrived = vresults[0];
+    vertex_arrived = vresults[2];
+    arrived = true;
 }
 
 

@@ -208,8 +208,8 @@ void DTAGreedy_Agent::send_results() {
     //printf(",%d]\n",next_vertex);
     pthread_mutex_unlock(&lock);
     
-    results_pub.publish(msg);   
-    //ros::spinOnce();    
+    do_send_message(msg);   
+      
 }
 
 

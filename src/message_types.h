@@ -40,6 +40,10 @@
 #define TARGET_REACHED_MSG_TYPE 11
 #define INTERFERENCE_MSG_TYPE 12
 
+#define GBS_MSG_TYPE 31
+
+#define SEBS_MSG_TYPE 32
+
 // Message types for DTAGreedy algorithm
 #define DTAGREEDY_MSG_TYPE 40 //Idleness message: msg format: [ID_ROBOT,msg_type,global_idleness[1..dimension],next_vertex]
 

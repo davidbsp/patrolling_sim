@@ -442,8 +442,8 @@ void SSIPatrolAgent::send_target(int nv,double bv) {
         msg.data.push_back(nv);
 	msg.data.push_back(bv);
     	printf("  ** sending Task Request [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
-	results_pub.publish(msg);   
-//    	ros::spinOnce();    
+	do_send_message(msg);   
+    
 }
 
 
@@ -458,8 +458,7 @@ void SSIPatrolAgent::send_bid(int nv,double bv) {
         msg.data.push_back(nv);
 	msg.data.push_back(bv);
     	printf("  ** sending Bid [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
-	results_pub.publish(msg);   
-//    	ros::spinOnce();    
+	do_send_message(msg);   
 }
 
 
@@ -501,8 +500,7 @@ void SSIPatrolAgent::send_results() {
     msg.data.push_back(next_vertex);
     printf("%d]\n",next_vertex);
     
-    results_pub.publish(msg);   
-    // ros::spinOnce();    
+    do_send_message(msg);   
 }
 
 void SSIPatrolAgent::update_bids(int nv, double bv, int senderId){

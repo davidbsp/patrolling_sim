@@ -153,6 +153,7 @@ public:
     void receive_positions();
     virtual void send_results();  // when goal is completed
     virtual void receive_results();  // asynchronous call
+    void do_send_message(std_msgs::Int16MultiArray &msg);
     void send_interference();
     void positionsCB(const nav_msgs::Odometry::ConstPtr& msg);
     void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg);
