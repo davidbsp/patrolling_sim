@@ -27,3 +27,15 @@ Each method is implemented through a class 'X_Agent'
 that inherits from the abstract class 'PatrolAgent' many common services and functions.
 
 Results of the experiments are stored in the 'results' folder.
+
+For running a particular experiment, use the run-exp.sh script template.
+It is convenient to copy this file in a new file that you can edit as you wish.
+For example, the current version of run_exp.sh allows to run an experiment for 
+DISlabs, with 8 robots, 30 minutes, using DTAP algorithm, and other standard parameters.
+After 30 minutes the experiment terminate and the results will be available in the files
+result/<map>_<n.robots>/<algorithm>/<machine>/<date>*.csv
+
+Ths info file contains a summary of the result of the experiments with the following values:
+Map ;	N. robots ;	Wait time	; Communication delay ;	Algorithm ;	Algorithm parameters ;	Machine ;	Date ;	Time	Interferences	; Termination ;	Idleness	min ;	avg	; stddev	; max	; avg + stddev	; avg + 2 stddev	; Interf/min
+
+											
