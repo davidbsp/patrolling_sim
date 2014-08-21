@@ -9,11 +9,11 @@
 # Term: gnome-terminal,xterm
 
 MAP=DISlabs
-NROBOTS=4
-ALG=DTAS
+NROBOTS=8
+ALG=DTAP
 LOC=odom
 GWAIT=3
-COMMDELAY=0.1
+COMMDELAY=0.2
 TERM=gnome-terminal 
 TIMEOUT=1800
 
