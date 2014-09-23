@@ -129,6 +129,8 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
 
     cmd_monitor = 'rosrun patrolling_sim monitor '+MAP+' '+ALG_SHORT+' '+NROBOTS        
     cmd_stage = 'roslaunch patrolling_sim map.launch map:='+MAP
+    if (os.getenv('ROS_DISTRO')=='groovy'):
+      cmd_stage = cmd_stage + " stage_pkg:=stage"
     print cmd_monitor
     print cmd_stage
     if (TERM == 'xterm'):
@@ -150,12 +152,14 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
         print 'Run robot ',i
         cmd = 'bash -c \'roslaunch patrolling_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+'\''
         print cmd
-        #os.system('xterm -e  "'+cmd+'" &')
-        #os.system('sleep 1')
+        if (TERM == 'xterm'):
+	  os.system('xterm -e  "'+cmd+'" &')
+	  os.system('sleep 1')
         gcmd = gcmd + ' --tab -e "'+cmd+'" '
-    gcmd = gcmd + '&'    
-    print gcmd
-    os.system(gcmd)
+    gcmd = gcmd + '&'
+    if (TERM == 'gnome-terminal'):
+	#print gcmd
+	os.system(gcmd)
     os.system('sleep 5')    
         
     # Start patrol behaviors
@@ -172,12 +176,14 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
             #cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
             cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+'\''
         print cmd
-        #os.system('xterm -e  "'+cmd+'" &')
-        #os.system('sleep 1')
+        if (TERM == 'xterm'):
+	  os.system('xterm -e  "'+cmd+'" &')
+	  os.system('sleep 1')
         gcmd = gcmd + ' --tab -e "'+cmd+'" '
-    gcmd = gcmd + '&'    
-    #print gcmd
-    os.system(gcmd)
+    gcmd = gcmd + '&'
+    if (TERM == 'gnome-terminal'):
+      #print gcmd
+      os.system(gcmd)
     os.system('sleep '+NROBOTS)
     # wait for termination
     run = True
