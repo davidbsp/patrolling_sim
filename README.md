@@ -1,7 +1,7 @@
 patrolling_sim
 ==============
 
-patrolling_sim for ROS Groovy
+patrolling_sim for ROS (Groovy/Hydro/Indigo)
 
 Authors:
 
