@@ -28,13 +28,13 @@
         <!-- remap from="cmd_vel" to="desired_cmd_vel" / -->
 	
 	<!-- Override MOVE_BASE Frame Params to include prefix -->
-	<param name="global_costmap/laser_scan_sensor/sensor_frame" value="$(arg robotname)/base_laser_link"/>
+	<param name="global_costmap/laser_scan_sensor/sensor_frame" value="/$(arg robotname)/base_laser_link"/>
 	<param name="global_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
-	<param name="global_costmap/robot_base_frame" value="$(arg robotname)/base_link"/>   
-	<param name="local_costmap/global_frame" value="$(arg robotname)/odom"/>
-	<param name="local_costmap/laser_scan_sensor/sensor_frame" value="$(arg robotname)/base_laser_link"/>
+	<param name="global_costmap/robot_base_frame" value="/$(arg robotname)/base_link"/>   
+	<param name="local_costmap/global_frame" value="/$(arg robotname)/odom"/>
+	<param name="local_costmap/laser_scan_sensor/sensor_frame" value="/$(arg robotname)/base_laser_link"/>
 	<param name="local_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
-	<param name="local_costmap/robot_base_frame" value="$(arg robotname)/base_link"/> 
+	<param name="local_costmap/robot_base_frame" value="/$(arg robotname)/base_link"/> 
     </node>
 
   </group>
