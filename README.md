@@ -1,7 +1,7 @@
 patrolling_sim
 ==============
 
-patrolling_sim for ROS (Groovy/Hydro/Indigo)
+patrolling_sim for ROS (Groovy/Hydro/Indigo) -- catkinized version (catkin branch)
 
 Authors:
 
@@ -16,7 +16,7 @@ This package contains the implementation of several algorithms for multi-robot p
 and a general structure of a PatrolAgent that can be extended to implement other ones.
 
 
-For a quick try, just compile the package ('rosmake'), start the script './start_experiment.py',
+For a quick try, just compile the workspace ('catkin_make'), start the script './start_experiment.py',
 make your choices and see the experiment running.
 
 Several maps are available in the 'maps' folder. For map X the patrol graph is visible in the file
@@ -28,7 +28,7 @@ that inherits from the abstract class 'PatrolAgent' many common services and fun
 
 Results of the experiments are stored in the 'results' folder.
 
-For running a particular experiment, use the run-exp.sh script template.
+In order to run a particular experiment, use the run-exp.sh script template.
 It is convenient to copy this file in a new file that you can edit as you wish.
 For example, the current version of run_exp.sh allows to run an experiment for 
 DISlabs, with 8 robots, 30 minutes, using DTAP algorithm, and other standard parameters.
