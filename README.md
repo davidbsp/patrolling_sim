@@ -18,6 +18,8 @@ and a general structure of a PatrolAgent that can be extended to implement other
 
 For a quick try, just compile the package ('rosmake'), start the script './start_experiment.py',
 make your choices and see the experiment running.
+WARNING: sometimes (on some machines) the very first run does not work, because of timing problems with roscore. 
+Either restart the experiment a second time, or run roscore once before using starting the experiment.
 
 Several maps are available in the 'maps' folder. For map X the patrol graph is visible in the file
 patrolling_sim/maps/X/X-graph.png 
@@ -32,10 +34,11 @@ For running a particular experiment, use the run-exp.sh script template.
 It is convenient to copy this file in a new file that you can edit as you wish.
 For example, the current version of run_exp.sh allows to run an experiment for 
 DISlabs, with 8 robots, 30 minutes, using DTAP algorithm, and other standard parameters.
-After 30 minutes the experiment terminate and the results will be available in the files
+After 30 minutes the experiment terminates and the results will be available in the files
 result/<map>_<n.robots>/<algorithm>/<machine>/<date>*.csv
 
-Ths info file contains a summary of the result of the experiments with the following values:
+The info file contains a summary of the results of the experiments with the following values:
 Map ;	N. robots ;	Wait time	; Communication delay ;	Algorithm ;	Algorithm parameters ;	Machine ;	Date ;	Time	Interferences	; Termination ;	Idleness	min ;	avg	; stddev	; max	; avg + stddev	; avg + 2 stddev	; Interf/min
 
 											
+The script can be extended to run multiple experiments in a single session, bu just adding new commands like the one in the examples (possibly with different parameters).

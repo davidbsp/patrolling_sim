@@ -1,3 +1,10 @@
 *~
+bin
+build
+lib
 results/*
 params/amcl/*_initial_pose.xml
+lastConfigUsed
+maps/*/robots.inc
+rostime.txt
+simrun.txt
