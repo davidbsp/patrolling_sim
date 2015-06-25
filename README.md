@@ -1,7 +1,8 @@
-patrolling_sim
-==============
+==========================
+patrolling_sim v2.1 (2015)
+==========================
 
-patrolling_sim for ROS (Groovy/Hydro/Indigo)
+patrolling_sim for ROS (Groovy/Hydro/Indigo) - ROSbuild version
 
 Authors:
 
@@ -12,9 +13,15 @@ Additional algorithms:
 * DTAS, DTAP: Alessandro Farinelli (2014)
 
 
+*** NOTE ***
+Fork https://github.com/gennari/patrolling_sim implements a distributed execution
+of the patrolling environment that can be used also on real robots. 
+These two branches will be merged soon.
+************
+
+
 This package contains the implementation of several algorithms for multi-robot patrolling
 and a general structure of a PatrolAgent that can be extended to implement other ones.
-
 
 For a quick try, just compile the package ('rosmake'), start the script './start_experiment.py',
 make your choices and see the experiment running.
@@ -35,7 +42,7 @@ It is convenient to copy this file in a new file that you can edit as you wish.
 For example, the current version of run_exp.sh allows to run an experiment for 
 DISlabs, with 8 robots, 30 minutes, using DTAP algorithm, and other standard parameters.
 After 30 minutes the experiment terminates and the results will be available in the files
-result/<map>_<n.robots>/<algorithm>/<machine>/<date>*.csv
+result/{map}_{n.robots}/{algorithm}/{machine}/{date}*.csv
 
 The info file contains a summary of the results of the experiments with the following values:
 Map ;	N. robots ;	Wait time	; Communication delay ;	Algorithm ;	Algorithm parameters ;	Machine ;	Date ;	Time	Interferences	; Termination ;	Idleness	min ;	avg	; stddev	; max	; avg + stddev	; avg + 2 stddev	; Interf/min
