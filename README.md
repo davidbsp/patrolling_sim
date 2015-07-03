@@ -2,7 +2,7 @@
 patrolling_sim v2.1 (2015)
 ==========================
 
-patrolling_sim for ROS (Groovy/Hydro/Indigo) - ROSbuild version
+patrolling_sim for ROS (Groovy/Hydro/Indigo) -- catkin version
 
 Authors:
 
@@ -23,7 +23,8 @@ These two branches will be merged soon.
 This package contains the implementation of several algorithms for multi-robot patrolling
 and a general structure of a PatrolAgent that can be extended to implement other ones.
 
-For a quick try, just compile the package ('rosmake'), start the script './start_experiment.py',
+
+For a quick try, just compile the workspace ('catkin_make'), start the script './start_experiment.py',
 make your choices and see the experiment running.
 WARNING: sometimes (on some machines) the very first run does not work, because of timing problems with roscore. 
 Either restart the experiment a second time, or run roscore once before using starting the experiment.
@@ -37,7 +38,7 @@ that inherits from the abstract class 'PatrolAgent' many common services and fun
 
 Results of the experiments are stored in the 'results' folder.
 
-For running a particular experiment, use the run-exp.sh script template.
+In order to run a particular experiment, use the run-exp.sh script template.
 It is convenient to copy this file in a new file that you can edit as you wish.
 For example, the current version of run_exp.sh allows to run an experiment for 
 DISlabs, with 8 robots, 30 minutes, using DTAP algorithm, and other standard parameters.
@@ -48,4 +49,5 @@ The info file contains a summary of the results of the experiments with the foll
 Map ;	N. robots ;	Wait time	; Communication delay ;	Algorithm ;	Algorithm parameters ;	Machine ;	Date ;	Time	Interferences	; Termination ;	Idleness	min ;	avg	; stddev	; max	; avg + stddev	; avg + 2 stddev	; Interf/min
 
 											
-The script can be extended to run multiple experiments in a single session, bu just adding new commands like the one in the examples (possibly with different parameters).
+The script can be extended to run multiple experiments in a single session, by just adding new commands like the one in the examples (possibly with different parameters).
+
