@@ -105,7 +105,9 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
     print 'Terminal ',TERM
     print 'Timeout ',TIMEOUT
     
-    TIMEOUT = TIMEOUT + 10 # Let's give more time to complete actions and logging
+    if (TIMEOUT>0):
+        TIMEOUT = TIMEOUT + 10 # Let's give more time to complete actions and logging
+
     loadInitPoses()
     
     scenario = MAP+"_"+NROBOTS
