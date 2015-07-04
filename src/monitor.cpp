@@ -90,6 +90,7 @@ bool goal_reached = false;
 int id_robot; // robot sending the message
 int goal;
 double time_zero, last_report_time;
+time_t real_time_zero;
 double comm_delay;
 
 tf::TransformListener *listener;
@@ -144,7 +145,10 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
                 //Clock Reset:
                 time_zero = ros::Time::now().toSec();
                 last_report_time = time_zero; 
-                printf("Time zero = %f (s)\n", time_zero);
+				
+  				time (&real_time_zero);
+
+                printf("Time zero = %f (sim) = %lu (real) \n", time_zero,(long)real_time_zero);
 
                 std_msgs::Int16MultiArray msg;  // -1,msg_type,0,0,0
                 msg.data.clear();
@@ -386,10 +390,10 @@ void scenario_name(char* name, const char* graph_file, const char* teamsize_str)
 
 //write_results to file
 void write_results (double *avg_idleness, double *stddev_idleness, int *number_of_visits, uint complete_patrol, uint dimension, 
-                    double worst_avg_idleness, double avg_graph_idl, double median_graph_idl, double stddev_graph_idl, double avg_stddev_graph_idl, 
+                    double worst_avg_idleness, double avg_graph_idl, double median_graph_idl, double stddev_graph_idl, 
                     double min_idleness, double gavg, double gstddev, double max_idleness, 
                     uint interference_cnt, uint tot_visits, float avg_visits,
-                    const char* graph_file, const char* algorithm, const char* teamsize_str, double duration, const char *filename){
+                    const char* graph_file, const char* algorithm, const char* teamsize_str, double duration, double real_duration, const char *filename){
     FILE *file;
   
     printf("writing to file %s\n",filename);
@@ -403,17 +407,21 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
     for (uint i=0; i<dimension; i++){
         fprintf(file, "%u\t%f\t%f\t%d\n", i, avg_idleness[i], stddev_idleness[i], number_of_visits[i] );
     }
-        
-        
-    fprintf(file,"\nWorst Avg Graph Idl\t%f\nAvg Avg Graph Idl\t%f\nMedian Avg Graph Idl\t%f\nStdDev Avg Graph Idl\t%f\nAvg StdDevGraph Idl\t%f\nWorst Idl\t%f\n",
-    worst_avg_idleness,avg_graph_idl,median_graph_idl,stddev_graph_idl,avg_stddev_graph_idl,max_idleness);
-    
-    fprintf(file,"\nGlobal Idleness\nAvg\t%.2f\nStddev\t%.2f\nMax\t%.2f\nMin\t%.2f\n",
-    gavg,gstddev,max_idleness,min_idleness);
 
-    
-    fprintf(file,"\nInterferences\t%u\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%f\n",
-            interference_cnt,tot_visits,avg_visits,duration);
+	fprintf(file,"Node idleness\n");
+	fprintf(file,"   worst_avg_idleness (graph) = %f\n", worst_avg_idleness);
+	fprintf(file,"   avg_idleness (graph) = %f\n", avg_graph_idl);
+	fprintf(file,"   median_idleness (graph) = %f\n", median_graph_idl);
+	fprintf(file,"   stddev_idleness (graph) = %f\n", stddev_graph_idl);
+
+	fprintf(file,"Global idleness\n");
+	fprintf(file,"   min = %.1f\n", min_idleness);
+	fprintf(file,"   avg = %.1f\n", gavg);
+	fprintf(file,"   stddev = %.1f\n", gstddev);
+	fprintf(file,"   max = %.1f\n", max_idleness);
+
+	fprintf(file,"\nInterferences\t%u\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%f\nReal Time Elapsed\t%f\n",
+		interference_cnt,tot_visits,avg_visits,duration,real_duration);
     
     fprintf(file,"----------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n\n");    
     
@@ -551,9 +559,9 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     // File to log all the idlenesses of an experimental scenario
 
     char idlfilename[240],resultsfilename[240],resultstimefilename[240];
-    sprintf(idlfilename,"%s/%s_idleness.csv",path4,strnow);
-    sprintf(resultsfilename,"%s/%s_results.csv",path4,strnow);
-    sprintf(resultstimefilename,"%s/%s_timeresults.csv",path4,strnow);
+    sprintf(idlfilename,"%s/%s_idleness.txt",path4,strnow);
+    sprintf(resultsfilename,"%s/%s_results.txt",path4,strnow);
+    sprintf(resultstimefilename,"%s/%s_timeresults.txt",path4,strnow);
     
     // Idleness file
     FILE *idlfile;
@@ -577,8 +585,9 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
   
   listener = new tf::TransformListener();
-    
-   ros::Rate loop_rate(30); //0.033 seconds or 30Hz
+  double real_duration = 0.0;
+  
+  ros::Rate loop_rate(30); //0.033 seconds or 30Hz
   
   nh.setParam("/simulation_runnning", true);
     
@@ -608,7 +617,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         number_of_visits [goal] ++;
         
         last_goal_reached[id_robot] = current_time;
-                
+
         printf("  number_of_visits [%d] = %d\n", goal, number_of_visits [goal]);
 
         if (number_of_visits [goal] == 0) {
@@ -706,6 +715,8 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         float avg_visits = (float)tot_visits/dimension;
 
         double duration = report_time-time_zero;
+		time_t real_now; time (&real_now); 
+		real_duration = (double)real_now - (double)real_time_zero;				
         
         printf("Node idleness\n");
         printf("   worst_avg_idleness (graph) = %f\n", worst_avg_idleness);
@@ -720,8 +731,8 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         printf("   stddev = %.1f\n", gstddev);
         printf("   max = %.1f\n", max_idleness);
 
-        printf("\nInterferences\t%u\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%f\n",
-            interference_cnt,tot_visits,avg_visits,duration);
+        printf("\nInterferences\t%u\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%f\nReal Time Elapsed\t%f\n",
+            interference_cnt,tot_visits,avg_visits,duration,real_duration);
         
         if (timeout_write_results)
           last_report_time = report_time;
@@ -736,17 +747,17 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         // write results to file
         if (!timeout_write_results)
             write_results (avg_idleness, stddev_idleness, number_of_visits, complete_patrol, dimension, 
-                   worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl,
+                   worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl,
                    min_idleness, gavg, gstddev, max_idleness,
                    interference_cnt, tot_visits, avg_visits,
-                   graph_file.c_str(), algorithm, teamsize_str, duration,
+                   graph_file.c_str(), algorithm, teamsize_str, duration, real_duration,
                    resultsfilename);
-        else   
+        else    
             write_results (avg_idleness, stddev_idleness, number_of_visits, complete_patrol, dimension, 
-                   worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl, avg_stddev_graph_idl,
+                   worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl,
                    min_idleness, gavg, gstddev, max_idleness,
                    interference_cnt, tot_visits, avg_visits,
-                   graph_file.c_str(), algorithm, teamsize_str, duration,
+                   graph_file.c_str(), algorithm, teamsize_str, duration, real_duration,
                    resultstimefilename);
       }
       
@@ -806,11 +817,11 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
     FILE *infofile;
     infofile = fopen (infofilename,"w");
-    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f\n",
+    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f\n",
             mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,
             algorithm,
             algparams.c_str(),hostname,
-            strnow,current_time,interference_cnt,(dead?"FAIL":"TIMEOUT"),
+            strnow,current_time,real_duration,interference_cnt,(dead?"FAIL":"TIMEOUT"),
             min_idleness, gavg, gstddev, max_idleness
     );
 

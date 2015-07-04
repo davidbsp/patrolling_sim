@@ -1,4 +1,5 @@
 #/bin/bash
+sleep 3
 rosnode kill -a
 sleep 5
 #killall -9 xterm

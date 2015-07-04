@@ -105,7 +105,9 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
     print 'Terminal ',TERM
     print 'Timeout ',TIMEOUT
     
-    TIMEOUT = TIMEOUT + 10 # Let's give more time to complete actions and logging
+    if (TIMEOUT>0):
+        TIMEOUT = TIMEOUT + 10 # Let's give more time to complete actions and logging
+
     loadInitPoses()
     
     scenario = MAP+"_"+NROBOTS
@@ -113,9 +115,12 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
     print scenario,'   ',iposes
     
     if (TERM == 'xterm'):
-        os.system('xterm -e roscore &')
+        roscore_cmd = 'xterm -e roscore &'
     else:
-        os.system('gnome-terminal -e "bash -c \'roscore\'" &')
+        roscore_cmd = 'gnome-terminal -e "bash -c \'roscore\'" &'
+    print roscore_cmd
+
+    os.system(roscore_cmd)
     os.system('sleep 3')
     os.system('rosparam set /use_sim_time true')
     os.system("rosparam set /goal_reached_wait "+GWAIT)
@@ -189,11 +194,12 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
     run = True
     while (run):
         t = getROStime()
-        #print "Elapsed time: ",t," secs."
+        #print "Elapsed time: ",t," sec Timeout = ",TIMEOUT
         if ((TIMEOUT>0 and t>TIMEOUT) or (not getSimulationRunning())):
             run = False;
         else:
             os.system('sleep 1')
+    print "Experiment terminated"
     os.system("./stop_experiment.sh")
 
 

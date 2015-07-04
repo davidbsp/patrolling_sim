@@ -46,7 +46,7 @@ After 30 minutes the experiment terminates and the results will be available in 
 result/{map}_{n.robots}/{algorithm}/{machine}/{date}*.csv
 
 The info file contains a summary of the results of the experiments with the following values:
-Map ;	N. robots ;	Wait time	; Communication delay ;	Algorithm ;	Algorithm parameters ;	Machine ;	Date ;	Time	Interferences	; Termination ;	Idleness	min ;	avg	; stddev	; max	; avg + stddev	; avg + 2 stddev	; Interf/min
+Map ; N. robots ; Wait time	; Communication delay ;	Algorithm ;	Algorithm parameters ; Machine ; Date ; Time ; Real time ; Interferences ; Termination ; Idleness	min ;	avg	; stddev ; max
 
 											
 The script can be extended to run multiple experiments in a single session, by just adding new commands like the one in the examples (possibly with different parameters).
