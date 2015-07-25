@@ -613,7 +613,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         
 //         printf("last_visit [%d] = %f\n", goal, last_visit [goal]);
         current_time = ros::Time::now().toSec();
-        printf("Robot %d reached goal %d (current time: %f)\n", id_robot, goal, current_time);
+        printf("Robot %d reached goal %d (current time: %f, alg: %s)\n", id_robot, goal, current_time, algorithm);
                 
         double last_visit_temp = current_time - time_zero; ; //guarda o valor corrente
         number_of_visits [goal] ++;
