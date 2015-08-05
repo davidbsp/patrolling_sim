@@ -197,8 +197,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
         #print "Elapsed time: ",t," sec Timeout = ",TIMEOUT
         if ((TIMEOUT>0 and t>TIMEOUT) or (not getSimulationRunning())):
             run = False;
-        else:
-            os.system('sleep 1')
+        os.system('sleep 1')
     print "Experiment terminated"
     os.system("./stop_experiment.sh")
 

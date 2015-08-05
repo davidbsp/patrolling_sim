@@ -393,7 +393,8 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
                     double worst_avg_idleness, double avg_graph_idl, double median_graph_idl, double stddev_graph_idl, 
                     double min_idleness, double gavg, double gstddev, double max_idleness, 
                     uint interference_cnt, uint tot_visits, float avg_visits,
-                    const char* graph_file, const char* algorithm, const char* teamsize_str, double duration, double real_duration, const char *filename){
+                    const char* graph_file, const char* algorithm, const char* teamsize_str, double duration, double real_duration, double comm_delay,
+		    const char *filename){
     FILE *file;
   
     printf("writing to file %s\n",filename);
@@ -420,8 +421,8 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
 	fprintf(file,"   stddev = %.1f\n", gstddev);
 	fprintf(file,"   max = %.1f\n", max_idleness);
 
-	fprintf(file,"\nInterferences\t%u\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%f\nReal Time Elapsed\t%f\n",
-		interference_cnt,tot_visits,avg_visits,duration,real_duration);
+	fprintf(file,"\nInterferences\t%u\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%f\nReal Time Elapsed\t%f\nComm delay: %.2f\n",
+		interference_cnt,tot_visits,avg_visits,duration,real_duration,comm_delay);
     
     fprintf(file,"----------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n\n");    
     
@@ -600,6 +601,14 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
       comm_delay = 0.0;
   }
 
+  std::string algparams;
+  ros::param::get("/algorithm_params", algparams);
+
+  double goal_reached_wait;
+  if (! ros::param::get("/goal_reached_wait", goal_reached_wait))
+     goal_reached_wait = 0.0;
+
+
   while( ros::ok() ){
     
     if (!initialize){  //check if msg is goal or interference -> compute necessary results.
@@ -752,14 +761,14 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
                    worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl,
                    min_idleness, gavg, gstddev, max_idleness,
                    interference_cnt, tot_visits, avg_visits,
-                   graph_file.c_str(), algorithm, teamsize_str, duration, real_duration,
+                   graph_file.c_str(), algorithm, teamsize_str, duration, real_duration, comm_delay,
                    resultsfilename);
         else {
             write_results (avg_idleness, stddev_idleness, number_of_visits, complete_patrol, dimension, 
                    worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl,
                    min_idleness, gavg, gstddev, max_idleness,
                    interference_cnt, tot_visits, avg_visits,
-                   graph_file.c_str(), algorithm, teamsize_str, duration, real_duration,
+                   graph_file.c_str(), algorithm, teamsize_str, duration, real_duration, comm_delay,
                    resultstimefilename);
 
 			fprintf(resultstimecsvfile,"%.1f;%.1f;%.1f;%.1f;%.1f\n", 
@@ -789,13 +798,41 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
     } // if ! initialize  
     
+    current_time = ros::Time::now().toSec();
     ros::spinOnce();
-    loop_rate.sleep();    
+    loop_rate.sleep();
+        
   } // while ros ok
+
   
   fclose(idlfile);
   fclose(resultstimecsvfile);
+
+
+
+  // write info file
+    char infofilename[240];
+    sprintf(infofilename,"%s/%s_info.csv",path4,strnow);
+
     
+    duration = current_time-time_zero;
+    time_t real_now; time (&real_now); 
+    real_duration = (double)real_now - (double)real_time_zero;
+
+    FILE *infofile;
+    infofile = fopen (infofilename,"w");
+    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f\n",
+            mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,
+            algorithm,
+            algparams.c_str(),hostname,
+            strnow,duration,real_duration,interference_cnt,(dead?"FAIL":"TIMEOUT"),
+            min_idleness, gavg, gstddev, max_idleness
+    );
+
+    fclose(infofile);
+    cout << "Info file " << infofile << " saved." << endl;
+
+
     // Hystogram files
     char hfilename[240],chfilename[240];
     sprintf(hfilename, "%s/%s.hist", path4,strnow);
@@ -812,37 +849,9 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     }
     of1.close();   of2.close();
     
-    std::string algparams;
-    ros::param::get("/algorithm_params", algparams);
 
-    double goal_reached_wait;
-    if (! ros::param::get("/goal_reached_wait", goal_reached_wait))
-        goal_reached_wait = 0.0;
-
-
-    char infofilename[240];
-    sprintf(infofilename,"%s/%s_info.csv",path4,strnow);
-
-    current_time = ros::Time::now().toSec();
-
-    duration = current_time-time_zero;
-    time_t real_now; time (&real_now); 
-    real_duration = (double)real_now - (double)real_time_zero;
-
-    FILE *infofile;
-    infofile = fopen (infofilename,"w");
-    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f\n",
-            mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,
-            algorithm,
-            algparams.c_str(),hostname,
-            strnow,duration,real_duration,interference_cnt,(dead?"FAIL":"TIMEOUT"),
-            min_idleness, gavg, gstddev, max_idleness
-    );
-
-    fclose(infofile);
-    
   printf("Monitor closed.\n");
-  usleep(1e9);
+  usleep(3e9);
   
 }
 
