@@ -2,6 +2,8 @@
 <launch>
   <arg name="robotname" default="robot_0" />
   <arg name="mapname" default="grid" />
+  <arg name="thin_navigation" default="false" />
+
 
   <group ns="$(arg robotname)">    
      <!--tf_prefix is now DEPRECATED: Override all Frame params -->   
@@ -10,32 +12,64 @@
     <!-- Run the map server -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/$(arg mapname)/$(arg mapname).yaml" />
 
-    <!--- Run AMCL -->
-    <include file="$(find patrolling_sim)/params/amcl/amcl_diff.launch" />       
-    <include file="$(find patrolling_sim)/params/amcl/$(arg robotname)_initial_pose.xml" />
-    
-    <!-- Override AMCL Frame Params to include prefix -->
-    <param name="/$(arg robotname)/amcl/base_frame_id" value="$(arg robotname)/base_link"/>
-    <param name="/$(arg robotname)/amcl/odom_frame_id" value="$(arg robotname)/odom"/>
-    <param name="/$(arg robotname)/amcl/global_frame_id" value="map"/> <!--common map frame for all robots -->
-    
-    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-        <rosparam file="$(find patrolling_sim)/params/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" />
-        <rosparam file="$(find patrolling_sim)/params/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" />
-        <rosparam file="$(find patrolling_sim)/params/move_base/local_costmap_params.yaml" command="load" />
-        <rosparam file="$(find patrolling_sim)/params/move_base/global_costmap_params.yaml" command="load" />
-        <rosparam file="$(find patrolling_sim)/params/move_base/base_local_planner_params.yaml" command="load" />
-        <!-- remap from="cmd_vel" to="desired_cmd_vel" / -->
+    <group if="$(arg thin_navigation)">
+
+	    <node pkg="thin_localizer" type="thin_localizer_node" name="thin_localizer" output="screen">
+
+	      <!-- param name="initial_pose_x" value="22.8"/>
+	      <param name="initial_pose_y" value="21.975"/>
+	      <param name="initial_pose_theta" value="1.57"/  -->
+
+	      <param name="global_frame_id" value="/$(arg robotname)/map"/>
+	      <param name="base_frame_id" value="/$(arg robotname)/base_link"/>
+	      <param name="odom_frame_id" value="/$(arg robotname)/odom"/>
+	      <param name="laser_topic" value="/$(arg robotname)/base_scan"/>
+	   </node>
+
+           <include file="$(find patrolling_sim)/params/amcl/$(arg robotname)_initial_pose.xml" />
+	    
+	   <node pkg="thin_localizer" type="thin_planner_node" name="thin_planner" output="screen">
+	      <param name="max_range" value="10.0"/>
+	      <param name="max_tv" value="1.0"/>
+	      <param name="max_rv" value="1.0"/>
+	      <param name="global_frame_id" value="/$(arg robotname)/map"/>
+	      <param name="base_frame_id" value="/$(arg robotname)/base_link"/>
+	      <param name="laser_topic" value="/$(arg robotname)/base_scan"/>
+	      <param name="command_vel_topic" value="/$(arg robotname)/cmd_vel"/>
+	   </node>
+
+    </group>
+
+    <group unless="$(arg thin_navigation)">
+
+	    <!--- Run AMCL -->
+	    <include file="$(find patrolling_sim)/params/amcl/amcl_diff.launch" />       
+	    <include file="$(find patrolling_sim)/params/amcl/$(arg robotname)_initial_pose.xml" />
+	    
+	    <!-- Override AMCL Frame Params to include prefix -->
+	    <param name="/$(arg robotname)/amcl/base_frame_id" value="$(arg robotname)/base_link"/>
+	    <param name="/$(arg robotname)/amcl/odom_frame_id" value="$(arg robotname)/odom"/>
+	    <param name="/$(arg robotname)/amcl/global_frame_id" value="map"/> <!--common map frame for all robots -->
+	    
+	    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+		<rosparam file="$(find patrolling_sim)/params/move_base/costmap_common_params.yaml" command="load" ns="global_costmap" />
+		<rosparam file="$(find patrolling_sim)/params/move_base/costmap_common_params.yaml" command="load" ns="local_costmap" />
+		<rosparam file="$(find patrolling_sim)/params/move_base/local_costmap_params.yaml" command="load" />
+		<rosparam file="$(find patrolling_sim)/params/move_base/global_costmap_params.yaml" command="load" />
+		<rosparam file="$(find patrolling_sim)/params/move_base/base_local_planner_params.yaml" command="load" />
+		<!-- remap from="cmd_vel" to="desired_cmd_vel" / -->
 	
-	<!-- Override MOVE_BASE Frame Params to include prefix -->
-	<param name="global_costmap/laser_scan_sensor/sensor_frame" value="/$(arg robotname)/base_laser_link"/>
-	<param name="global_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
-	<param name="global_costmap/robot_base_frame" value="/$(arg robotname)/base_link"/>   
-	<param name="local_costmap/global_frame" value="/$(arg robotname)/odom"/>
-	<param name="local_costmap/laser_scan_sensor/sensor_frame" value="/$(arg robotname)/base_laser_link"/>
-	<param name="local_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
-	<param name="local_costmap/robot_base_frame" value="/$(arg robotname)/base_link"/> 
-    </node>
+		<!-- Override MOVE_BASE Frame Params to include prefix -->
+		<param name="global_costmap/laser_scan_sensor/sensor_frame" value="/$(arg robotname)/base_laser_link"/>
+		<param name="global_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
+		<param name="global_costmap/robot_base_frame" value="/$(arg robotname)/base_link"/>   
+		<param name="local_costmap/global_frame" value="/$(arg robotname)/odom"/>
+		<param name="local_costmap/laser_scan_sensor/sensor_frame" value="/$(arg robotname)/base_laser_link"/>
+		<param name="local_costmap/laser_scan_sensor/topic" value="/$(arg robotname)/base_scan"/>
+		<param name="local_costmap/robot_base_frame" value="/$(arg robotname)/base_link"/> 
+	    </node>
+
+    </group>
 
   </group>
 </launch>

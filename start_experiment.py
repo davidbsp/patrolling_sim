@@ -24,7 +24,7 @@ Alg_names = [
         [ 'GBS',  'GBS' ],
         [ 'SEBS', 'SEBS' ],
         [ 'DTAG', 'DTAGreedy' ],
-        [ 'DTAS', 'DTASSI' ],
+        #[ 'DTAS', 'DTASSI' ],
         [ 'DTAP', 'DTASSIPart' ]
      ]
 
@@ -46,6 +46,8 @@ initPoses = {}
 
 # Fixed so far
 COMMDELAY_DEFAULT = 0.1
+
+NAVMODULE_DEFAULT = "ros" # "thin_navigation" or "ros"
 
 # return long name of the algorithm
 def findAlgName(alg):
@@ -92,7 +94,7 @@ def getSimulationRunning():
 # Run the experiment with the given arguments
 # Terminates if simulation is stopped (/simulation_runnning param is false)
 # or if timeout is reached (if this is >0)
-def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TIMEOUT):
+def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT):
 
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
@@ -100,6 +102,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
     print 'N. robot ',NROBOTS
     print 'Algorithm ',ALG,'  ',ALG_SHORT
     print 'Localization Mode ',LOC_MODE
+    print 'Navigation module ', NAV_MODULE
     print 'Goal wait time ', GWAIT
     print 'Communication delay ',COMMDELAY
     print 'Terminal ',TERM
@@ -141,7 +144,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
     if (TERM == 'xterm'):
         os.system('xterm -e  "'+cmd_monitor+'" &') 
         os.system('xterm -e  "'+cmd_stage+'" &')
-    else:
+    else: 
         os.system('gnome-terminal --tab -e  "bash -c \''+cmd_monitor+'\'" --tab -e "bash -c \''+cmd_stage+'\'" &')
     
     os.system('sleep 3')
@@ -155,7 +158,10 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
     gcmd = 'gnome-terminal '
     for i in range(0,int(NROBOTS)):
         print 'Run robot ',i
-        cmd = 'bash -c \'roslaunch patrolling_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+'\''
+        cmd = 'bash -c \'roslaunch patrolling_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+' '
+        if (NAV_MODULE=="thin_navigation"):
+           cmd = cmd + ' thin_navigation:=true '
+        cmd = cmd + "'"
         print cmd
         if (TERM == 'xterm'):
 	  os.system('xterm -e  "'+cmd+'" &')
@@ -310,7 +316,7 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), self.alg_ddm.get(),self.locmode_ddm.get(),self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0) )
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), self.alg_ddm.get(),self.locmode_ddm.get(), NAVMODULE_DEFAULT, self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0) )
 
     
     def quit(self):
@@ -353,20 +359,21 @@ def main():
     DIP(root)
     root.geometry("300x300+0+0")
     root.mainloop()  
-  elif (len(sys.argv)==9):
+  elif (len(sys.argv)==10):
     MAP = sys.argv[1]
     NROBOTS = sys.argv[2]
     ALG_SHORT = sys.argv[3]
     LOC_MODE = sys.argv[4]
-    GWAIT = sys.argv[5]
-    COMMDELAY = sys.argv[6]
-    TERM = sys.argv[7]
-    TIMEOUT = int(sys.argv[8])
-    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TIMEOUT)
+    NAV_MODULE = sys.argv[5]
+    GWAIT = sys.argv[6]
+    COMMDELAY = sys.argv[7]
+    TERM = sys.argv[8]
+    TIMEOUT = int(sys.argv[9])
+    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT)
   else:
     print "Use: ",sys.argv[0]
-    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <goal-wait>  <communication-delay> <terminal> <timeout>'
-  
+    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <nav_module> <goal-wait> <communication-delay> <terminal> <timeout>'
+ 
 
 
 

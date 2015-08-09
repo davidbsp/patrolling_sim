@@ -14,9 +14,25 @@ TrajectoryPlannerROS:
  #yaw_goal_tolerance: 0.05
  yaw_goal_tolerance: 6.28
  xy_goal_tolerance: 0.40
- goal_distance_bias: 0.8 # default 32.0
- path_distance_bias: 0.6 # default 24.0
- occdist_scale: 0.2 # default 0.01
+
+#~<name>/pdist_scale (double, default: 0.6)
+#    The weighting for how much the controller should stay close to the path it was given 
+#~<name>/gdist_scale (double, default: 0.8)
+#    The weighting for how much the controller should attempt to reach its local goal, also controls speed 
+#~<name>/occdist_scale (double, default: 0.01)
+#    The weighting for how much the controller should attempt to avoid obstacles 
+
+ pdist_scale: 0.1
+ gdist_scale: 1.0
+ occdist_scale: 0.2 
+
+# goal_distance_bias: 0.8 
+# default 32.0  (last 0.8)
+
+# path_distance_bias: 0.6 
+# default 24.0  (last 0.6)
+
+ meter_scoring: true
 
  sim_time: 1.5
  heading_lookahead: 0.325

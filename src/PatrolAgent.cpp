@@ -190,17 +190,16 @@ void PatrolAgent::init(int argc, char** argv) {
     
 void PatrolAgent::ready() {
     
-    char string1[40];
+    char move_string[40];
     
     /* Define Goal */
     if(ID_ROBOT==-1){ 
-        strcpy (string1,"move_base"); //string = "move_base
+        strcpy (move_string,"move_base"); //string = "move_base
     }else{
-        sprintf(string1,"robot_%d/move_base",ID_ROBOT);
+        sprintf(move_string,"robot_%d/move_base",ID_ROBOT);
     }
     
-    //printf("string = %s\n",string);
-    ac = new MoveBaseClient(string1, true); 
+    ac = new MoveBaseClient(move_string, true); 
     
     //wait for the action server to come up
     while(!ac->waitForServer(ros::Duration(5.0))){

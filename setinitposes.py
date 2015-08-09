@@ -27,6 +27,9 @@ def setIP(mapname,vip):
         f.write('  <param name="amcl/initial_pose_x" value="'+str(x)+'"/>\n')
         f.write('  <param name="amcl/initial_pose_y" value="'+str(y)+'"/>\n')
         f.write('  <param name="amcl/initial_pose_a" value="'+str(radians(th))+'"/>\n')
+        f.write('  <param name="thin_localizer/initial_pose_x" value="'+str(x)+'"/>\n')
+        f.write('  <param name="thin_localizer/initial_pose_y" value="'+str(y)+'"/>\n')
+        f.write('  <param name="thin_localizer/initial_pose_theta" value="'+str(radians(th))+'"/>\n')
         f.write('</launch>\n')
         f.close()
 

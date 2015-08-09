@@ -6,16 +6,18 @@
 # Maps: grid, example, cumberland, DISlabs
 # Alg: RAND,CR,HCR,HPCC,CGG,MSP,GBS,SEBS,DTAG,DTAP
 # Loc mode: odom, GPS
+# Nav module: ros, thin_navigation
 # Term: gnome-terminal,xterm
 
 MAP=DISlabs
 NROBOTS=8
 ALG=DTAP
 LOC=odom
+NAV=ros
 GWAIT=3
 COMMDELAY=0.2
 TERM=gnome-terminal 
 TIMEOUT=1800
 
-./start_experiment.py $MAP $NROBOTS $ALG $LOC $GWAIT $COMMDELAY $TERM $TIMEOUT
+./start_experiment.py $MAP $NROBOTS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT
 

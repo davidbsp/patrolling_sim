@@ -601,12 +601,9 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
       comm_delay = 0.0;
   }
 
+  // to write in info file (read after first patrol cycle)
   std::string algparams;
-  ros::param::get("/algorithm_params", algparams);
-
   double goal_reached_wait;
-  if (! ros::param::get("/goal_reached_wait", goal_reached_wait))
-     goal_reached_wait = 0.0;
 
 
   while( ros::ok() ){
@@ -691,6 +688,13 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
       bool timeout_write_results = (report_time - last_report_time > TIMEOUT_WRITE_RESULTS);
       
       if ((patrol_cnt == complete_patrol) || timeout_write_results){ 
+
+	if (complete_patrol==1) {
+  	   ros::param::get("/algorithm_params", algparams);
+           if (! ros::param::get("/goal_reached_wait", goal_reached_wait))
+              goal_reached_wait = 0.0;
+	}
+
         // write results every time a patrolling cycle is finished.
         // or after some time
         previous_avg_graph_idl = avg_graph_idl; //save previous avg idleness graph value
@@ -830,7 +834,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     );
 
     fclose(infofile);
-    cout << "Info file " << infofile << " saved." << endl;
+    cout << "Info file " << infofilename << " saved." << endl;
 
 
     // Hystogram files
