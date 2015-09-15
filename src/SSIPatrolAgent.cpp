@@ -12,12 +12,12 @@ void SSIPatrolAgent::onGoalComplete()
 {
 
     if (first_vertex){
-		printf("computing next vertex FOR THE FIRST TIME:\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+		// printf("computing next vertex FOR THE FIRST TIME:\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
 	    next_vertex = compute_next_vertex(current_vertex);
-		printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+		// printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
 		first_vertex = false;
     } else {
-		printf("updating next vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+		// printf("updating next vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
         //Update Idleness Table:
         update_global_idleness();
 		//update current vertex
@@ -47,10 +47,10 @@ void SSIPatrolAgent::onGoalComplete()
     goal_complete = false;    
 
 	//compute next next vertex
-	printf("computing next_next_vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+	// printf("computing next_next_vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
 	next_next_vertex = compute_next_vertex(next_vertex); 
 	   
-	printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+	// printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
 
 
 }
@@ -85,12 +85,12 @@ void SSIPatrolAgent::select_faraway_vertices(bool* sv, int cv){
     if (current_vertex >= 0 && current_vertex < dimension){
 		selected_vertices[current_vertex] = true; //do not consider next vertex as possible goal 
     } 	
-	//print farway vertices
+	/* print farway vertices
 	printf("FARAWAY \n [ ");
 	for(size_t i=0; i<dimension; i++) {
 		printf("%d ",sv[i]);
     }
-	printf("]\n");
+	printf("]\n"); */
 }
 
 bool SSIPatrolAgent::all_selected(bool* sv){
@@ -325,22 +325,22 @@ int SSIPatrolAgent::select_next_vertex(int cv,bool* sv){
     
     int nv = i_maxUtility; // vertex_web[current_vertex].id_neigh[i_maxUtility];
     sv[nv] = true; //this vertex was considered as a next vertex
-    printf("DTASSI: selected possible vertex = %d (U = %.2f)\n",nv,maxUtility);
+    // printf("DTASSI: selected possible vertex = %d (U = %.2f)\n",nv,maxUtility);
 
     return nv;
 }
 
 double SSIPatrolAgent::compute_bid(int nv){
 
-	printf("computing bid for vertex %d \n",nv);
+/*	printf("computing bid for vertex %d \n",nv);
 	printf("current tasks = ");
 	for (size_t i = 0; i<dimension;i++){
 		printf(" %d, ",tasks[i]);	
     }
-    printf("] \n");
+    printf("] \n"); */
 
 	if (nv==next_vertex || nv==next_next_vertex){
-		printf("already going to %d sending 0 (current target: %d, current next target: %d)",nv,next_vertex,next_next_vertex);
+//		printf("already going to %d sending 0 (current target: %d, current next target: %d)",nv,next_vertex,next_next_vertex);
 		return 0.;
 	}
 
@@ -438,13 +438,13 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
     double bidvalue = compute_bid(mnv); 
     force_bid(mnv,bidvalue,ID_ROBOT); 
     send_target(mnv,bidvalue);
-    printf("cnv: waiting for bids (%.2f seconds) \n",timeout);
+    //printf("cnv: waiting for bids (%.2f seconds) \n",timeout);
     wait();	
-    printf("current target %d current value for target %.2f \n tasks [",mnv,bidvalue);
+    /*printf("current target %d current value for target %.2f \n tasks [",mnv,bidvalue);
     for (size_t i = 0; i<dimension;i++){
 		printf(" %d, ",tasks[i]);	
     }
-    printf("] \n"); 
+    printf("] \n"); */
     while (true){
     	if (best_bid(mnv)){ //if I am in the best position to go to mnv 
 			update_tasks();
@@ -455,13 +455,13 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 			bidvalue = compute_bid(mnv); 
 			force_bid(mnv,bidvalue,ID_ROBOT); 
 			send_target(mnv,bidvalue);
-			printf("waiting for bids (%.2f seconds)",timeout);
+			//printf("waiting for bids (%.2f seconds)",timeout);
 			wait();
-			printf("current target %d current value for target %.2f tasks [",mnv,bidvalue);
+			/*printf("current target %d current value for target %.2f tasks [",mnv,bidvalue);
 		    for (size_t i = 0; i<dimension;i++){
 				printf(" %d, ",tasks[i]);	
 		    }
-		    printf("] \n");
+		    printf("] \n");*/
 		 } 			
     }     
 }
@@ -501,7 +501,7 @@ void SSIPatrolAgent::send_target(int nv,double bv) {
         msg.data.push_back(msg_type);
         msg.data.push_back(nv);
 	msg.data.push_back(bv);
-    	printf("  ** sending Task Request [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+    	// printf("  ** sending Task Request [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
 	do_send_message(msg);   
     
 }
@@ -517,13 +517,13 @@ void SSIPatrolAgent::send_bid(int nv,double bv) {
         msg.data.push_back(msg_type);
         msg.data.push_back(nv);
 	msg.data.push_back(bv);
-    	printf("  ** sending Bid [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+    	// printf("  ** sending Bid [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
 	do_send_message(msg);   
 }
 
 
 bool SSIPatrolAgent::best_bid(int nv){
-	printf("computing whether I hold the best bid for %d, result: %d \n",nv,(bids[nv].robotId==ID_ROBOT));
+	// printf("computing whether I hold the best bid for %d, result: %d \n",nv,(bids[nv].robotId==ID_ROBOT));
 
 /*    	printf("bids [");
         for (size_t i = 0; i<dimension; i++){
@@ -546,19 +546,19 @@ void SSIPatrolAgent::send_results() {
     msg.data.clear();
     msg.data.push_back(ID_ROBOT);
     msg.data.push_back(msg_type);
-    printf("  ** sending [%d, %d, ",ID_ROBOT,msg_type);
+    // printf("  ** sending [%d, %d, ",ID_ROBOT,msg_type);
     pthread_mutex_lock(&lock);
     for(size_t i=0; i<dimension; i++) {
         // convert in 1/100 of secs (integer value)
         int ms = (int)(global_instantaneous_idleness[i]*100);
 //        if ((int)i==next_vertex) ms=0; //sending 0 for next vertex to avoid conflicts (useless for DTASSI) TODO:CHECK 
         //printf("  ** sending GII[%lu] = %d\n",i,ms);
-        printf("%d, ",ms);
+        //printf("%d, ",ms);
         msg.data.push_back(ms);
     }
     pthread_mutex_unlock(&lock);
     msg.data.push_back(next_vertex);
-    printf("%d]\n",next_vertex);
+    //printf("%d]\n",next_vertex);
     
     do_send_message(msg);   
 }
@@ -578,7 +578,7 @@ void SSIPatrolAgent::idleness_msg_handler(std::vector<int>::const_iterator it){
     for(size_t i=0; i<dimension; i++) {
 		int ms = *it; it++; // received value
 		// printf("  ** received from %d remote-GII[%lu] = %.1f\n",id_sender,i,ms);
-		printf("%d, ",ms);
+		//printf("%d, ",ms);
 		double rgi = (double)ms/100.0; // convert back in seconds
 		global_instantaneous_idleness[i] = std::min(
 			global_instantaneous_idleness[i]+(now-last_update_idl), rgi);
@@ -608,8 +608,8 @@ void SSIPatrolAgent::idleness_msg_handler(std::vector<int>::const_iterator it){
 void SSIPatrolAgent::task_request_msg_handler(std::vector<int>::const_iterator it, int senderId){
 	int nv = *it; it++;
 	double bv = *it; it++;
-	printf("handling task request message: [ vertex: %d, bid value: %.2f]",nv,bv);
-        double now = ros::Time::now().toSec();
+	//printf("handling task request message: [ vertex: %d, bid value: %.2f]",nv,bv);
+    double now = ros::Time::now().toSec();
 	taskRequests[nv] = now;
 	double my_bidValue = compute_bid(nv); 
 	update_bids(nv,bv,senderId);
@@ -621,7 +621,7 @@ void SSIPatrolAgent::task_request_msg_handler(std::vector<int>::const_iterator i
 void SSIPatrolAgent::bid_msg_handler(std::vector<int>::const_iterator it, int senderId){
 	int nv = *it; it++;
 	double bv = *it; it++;
-	printf("handling bid message: [ vertex: %d, bid value: %.2f]",nv,bv);
+	//printf("handling bid message: [ vertex: %d, bid value: %.2f]",nv,bv);
 	update_bids(nv,bv,senderId);
 }
 
@@ -633,7 +633,7 @@ void SSIPatrolAgent::receive_results() {
     int id_sender = *it; it++;
     if (id_sender==ID_ROBOT) return;
     int msg_type = *it; it++;
-    printf("  ** received [%d, %d, ... ] \n",id_sender,msg_type);
+    //printf("  ** received [%d, %d, ... ] \n",id_sender,msg_type);
     switch (msg_type){
 	    case (DTAGREEDY_MSG_TYPE):
 	    {

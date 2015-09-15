@@ -45,9 +45,9 @@ Terminal_list = ['gnome-terminal','xterm']
 initPoses = {}
 
 # Fixed so far
-COMMDELAY_DEFAULT = 0.1
+COMMDELAY_DEFAULT = 0.2
 
-NAVMODULE_DEFAULT = "ros" # "thin_navigation" or "ros"
+NAVMODULE_DEFAULT = "thin_navigation" # "thin_navigation" or "ros"
 
 # return long name of the algorithm
 def findAlgName(alg):
@@ -129,6 +129,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDEL
     os.system("rosparam set /goal_reached_wait "+GWAIT)
     os.system("rosparam set /communication_delay "+str(COMMDELAY))
 #    os.system("rosparam set /lost_message_rate "+LOSTMSGRATE)
+    os.system("rosparam set /navigation_module "+NAV_MODULE)
 
     cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
     print cmd

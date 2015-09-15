@@ -6,15 +6,14 @@
 
 
   <group ns="$(arg robotname)">    
-     <!--tf_prefix is now DEPRECATED: Override all Frame params -->   
-    <!--<param name="tf_prefix" value="$(arg robotname)" />--> 
     
     <!-- Run the map server -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(find patrolling_sim)/maps/$(arg mapname)/$(arg mapname).yaml" />
 
     <group if="$(arg thin_navigation)">
 
-	    <node pkg="thin_localizer" type="thin_localizer_node" name="thin_localizer" output="screen">
+		<node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 /map /$(arg robotname)/map 100" />
+	    <node pkg="thin_navigation" type="thin_localizer_node" name="thin_localizer" output="screen">
 
 	      <!-- param name="initial_pose_x" value="22.8"/>
 	      <param name="initial_pose_y" value="21.975"/>
@@ -28,7 +27,7 @@
 
            <include file="$(find patrolling_sim)/params/amcl/$(arg robotname)_initial_pose.xml" />
 	    
-	   <node pkg="thin_localizer" type="thin_planner_node" name="thin_planner" output="screen">
+	   <node pkg="thin_navigation" type="thin_planner_node" name="thin_planner" output="screen">
 	      <param name="max_range" value="10.0"/>
 	      <param name="max_tv" value="1.0"/>
 	      <param name="max_rv" value="1.0"/>

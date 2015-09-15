@@ -324,7 +324,7 @@ void PatrolAgent::onGoalNotComplete()
 {   
     int prev_vertex = next_vertex;
     
-    ROS_INFO("Goal not complete - Vertex %d\n", next_vertex);   
+    ROS_INFO("Goal not complete - From vertex %d to vertex %d\n", current_vertex, next_vertex);   
     
     //devolver proximo vertex tendo em conta apenas as idlenesses;
     next_vertex = compute_next_vertex();
@@ -340,7 +340,7 @@ void PatrolAgent::onGoalNotComplete()
     }
     
     // Look for any random vertex different from the previous one
-    while (next_vertex == prev_vertex) {
+    while (next_vertex == prev_vertex && next_vertex == current_vertex) {
         int i = rand() % dimension;
         next_vertex = i;
         ROS_INFO("Choosing another random vertex %d\n", next_vertex);

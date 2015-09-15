@@ -50,7 +50,6 @@
 #include <actionlib/client/simple_action_client.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
-//#include <geometry_msgs/PointStamped.h>  
 #include <std_msgs/Int16MultiArray.h>
 
 using namespace std;
@@ -92,6 +91,7 @@ int goal;
 double time_zero, last_report_time;
 time_t real_time_zero;
 double comm_delay;
+std::string nav_mod;
 
 tf::TransformListener *listener;
 
@@ -601,6 +601,13 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
       comm_delay = 0.0;
   }
 
+  if (! ros::param::get("/navigation_module", nav_mod)) {
+      nav_mod = "ros";
+  }
+
+
+
+
   // to write in info file (read after first patrol cycle)
   std::string algparams;
   double goal_reached_wait;
@@ -619,7 +626,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         
 //         printf("last_visit [%d] = %f\n", goal, last_visit [goal]);
         current_time = ros::Time::now().toSec();
-        printf("Robot %d reached goal %d (current time: %f, alg: %s)\n", id_robot, goal, current_time, algorithm);
+        printf("Robot %d reached goal %d (current time: %f, alg: %s, nav: %s)\n", id_robot, goal, current_time, algorithm, nav_mod.c_str());
                 
         double last_visit_temp = current_time - time_zero; ; //guarda o valor corrente
         number_of_visits [goal] ++;
@@ -823,14 +830,20 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     time_t real_now; time (&real_now); 
     real_duration = (double)real_now - (double)real_time_zero;
 
+    uint tot_visits=0;
+    for (size_t i=0; i<dimension; i++){
+        tot_visits += number_of_visits[i];
+    }
+    float avg_visits = (float)tot_visits/dimension;
+
     FILE *infofile;
     infofile = fopen (infofilename,"w");
-    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f\n",
-            mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,
-            algorithm,
-            algparams.c_str(),hostname,
+    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f;%d;%.1f;%d\n",
+            mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,nav_mod.c_str(),
+            algorithm, algparams.c_str(),hostname,
             strnow,duration,real_duration,interference_cnt,(dead?"FAIL":"TIMEOUT"),
-            min_idleness, gavg, gstddev, max_idleness
+            min_idleness, gavg, gstddev, max_idleness, 
+            tot_visits, avg_visits, complete_patrol
     );
 
     fclose(infofile);
