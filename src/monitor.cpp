@@ -851,7 +851,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
             mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,nav_mod.c_str(),
             algorithm, algparams.c_str(),hostname,
             strnow,duration,real_duration,interference_cnt,(dead?"FAIL":"TIMEOUT"),
-            min_idleness, gavg, gstddev, max_idleness, gT2,
+            min_idleness, gavg, gstddev, max_idleness, gT2n,
             tot_visits, avg_visits, complete_patrol
     );
 
