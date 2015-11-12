@@ -160,8 +160,15 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDEL
     for i in range(0,int(NROBOTS)):
         print 'Run robot ',i
         cmd = 'bash -c \'roslaunch patrolling_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+' '
-        if (NAV_MODULE=="thin_navigation"):
-           cmd = cmd + ' thin_navigation:=true '
+        
+        # Set navigation modules
+        if (NAV_MODULE=="ros_navigation"):
+           cmd = cmd + ' use_amcl:=true use_move_base:=true use_thin_localizer:=false use_thin_planner:=false '
+        elif (NAV_MODULE=="thin_navigation"):
+           cmd = cmd + ' use_amcl:=false use_move_base:=false  use_thin_localizer:=true use_thin_planner:=true '
+        elif (NAV_MODULE=="thin_localizer_only"):
+           cmd = cmd + ' use_amcl:=false use_move_base:=true  use_thin_localizer:=true use_thin_planner:=false '
+           
         cmd = cmd + "'"
         print cmd
         if (TERM == 'xterm'):

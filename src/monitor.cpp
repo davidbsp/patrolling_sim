@@ -685,8 +685,8 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   
   ros::Rate loop_rate(30); //0.033 seconds or 30Hz
   
-  nh.setParam("/simulation_runnning", true);
-  nh.setParam("/simulation_abort", false);
+  nh.setParam("/simulation_runnning", "true");
+  nh.setParam("/simulation_abort", "false");
     
   double current_time = ros::Time::now().toSec();
   
@@ -824,7 +824,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         // Check if simulation must be terminated
         dead = check_dead_robots();
                 
-        bool simrun=true, simabort=false;
+        simrun=true; simabort=false;
         std::string psimrun, psimabort;
         if (nh.getParam("/simulation_runnning", psimrun))
             if (psimrun=="false")
@@ -834,7 +834,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
                 simabort = true;
         
         if ( (dead) || (!simrun) || (simabort) ) {
-            printf ("Simulation is Over\n");                    
+            printf ("Simulation is Over\n");                
             nh.setParam("/simulation_runnning", false);
             finish_simulation ();
             ros::spinOnce();
