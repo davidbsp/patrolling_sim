@@ -11,7 +11,6 @@ Main framework and basic algorithms:
  
 Additional algorithms:
 * DTAP: Alessandro Farinelli (2014)
-* <<<YOUR ALGORITHM HERE>>>
 
 
 *** NOTE ***
