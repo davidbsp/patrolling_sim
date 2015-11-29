@@ -51,6 +51,7 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <std_msgs/Int16MultiArray.h>
+#include <std_msgs/String.h>
 
 using namespace std;
 
@@ -74,7 +75,7 @@ using std::endl;
 typedef unsigned int uint;
 
 ros::Subscriber results_sub;
-ros::Publisher results_pub;
+ros::Publisher results_pub, screenshot_pub;
 
 //Initialization:
 bool initialize = true; // Initialization flag
@@ -247,12 +248,19 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
 }
 
 void finish_simulation (){ //-1,msg_type,1,0,0
+  ROS_INFO("Sending stop signal to patrol agents.");
   std_msgs::Int16MultiArray msg;  
   msg.data.clear();
   msg.data.push_back(-1);
   msg.data.push_back(INITIALIZE_MSG_TYPE);
   msg.data.push_back(999);  // end of the simulation
   results_pub.publish(msg);
+  ros::spinOnce();  
+
+  ROS_INFO("Taking a screenshot of the simulator...");
+  std_msgs::String ss;
+  ss.data = "screenshot";
+  screenshot_pub.publish(ss);
   ros::spinOnce();  
 }
 
@@ -472,7 +480,7 @@ bool check_dead_robots() {
       // printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,last_goal_reached[i],delta);
       if (delta>DEAD_ROBOT_TIME*0.75) {
         printf("Robot %lu: dead robot - delta = %.1f / %.1f \n",i,delta,DEAD_ROBOT_TIME);
-        system("play beep.wav");
+        system("play -q beep.wav");
       }
       if (delta>DEAD_ROBOT_TIME) {
           // printf("Dead robot %d. Time from last goal reached = %.1f\n",i,delta);
@@ -679,7 +687,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   //Publicar dados para "results"
   results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
   
-  // listener = new tf::TransformListener(); // NEVER USED!!!
+  screenshot_pub = nh.advertise<std_msgs::String>("/stageGUIRequest", 100);
 
   double duration = 0.0, real_duration = 0.0;
   
@@ -850,11 +858,10 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         
   } // while ros ok
 
-  
+  ros::shutdown();
+
   fclose(idlfile);
   fclose(resultstimecsvfile);
-
-
 
   // write info file
     char infofilename[240];
@@ -901,9 +908,15 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     }
     of1.close();   of2.close();
     
-
   printf("Monitor closed.\n");
-  usleep(3e9);
+
+  sleep(5);
+  char cmd[80];
+  sprintf(cmd, "mv ~/.ros/stage-000003.png %s/%s_stage.png", path4,strnow);
+  system(cmd);
+  printf("%s\n",cmd);
+  printf("Screenshot image copied.\n");
+  sleep(3);
   
 }
 

@@ -8,6 +8,7 @@
 # Loc mode: odom, GPS
 # Nav module: ros, thin_navigation
 # Term: gnome-terminal,xterm
+# Custom Stage flag: true, false
 
 MAP=DISlabs
 NROBOTS=8
@@ -18,6 +19,7 @@ GWAIT=3
 COMMDELAY=0.2
 TERM=gnome-terminal 
 TIMEOUT=1800
+CUSTOM_STAGE=false
 
-./start_experiment.py $MAP $NROBOTS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT
+./start_experiment.py $MAP $NROBOTS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE
 

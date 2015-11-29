@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <launch>
   <arg name="map" default="grid" />
-  <arg name="stage_pkg" default="stage_ros" />
+  <arg name="stage_pkg" default="stage_ros"/>     <!-- stage_pkg:=stage for ROS Groovy -->
+  <arg name="custom_stage" default="false" />
+
+  <group unless="$(arg custom_stage)"> 
+      <node name="stageros" pkg="$(arg stage_pkg)" type="stageros" args="$(find patrolling_sim)/maps/$(arg map)/$(arg map).world" output="screen" />
+  </group>
   
-  <node name="stageros" pkg="$(arg stage_pkg)" type="stageros" args="$(find patrolling_sim)/maps/$(arg map)/$(arg map).world" output="screen"/>    
+  <group if="$(arg custom_stage)">   
+      <node name="stageros" pkg="$(arg stage_pkg)" type="stageros" args="$(find patrolling_sim)/maps/$(arg map)/$(arg map).world" output="screen">
+        <param name="base_frame" value="base_link" />
+        <param name="laser_topic" value="base_scan" />
+        <param name="laser_frame" value="base_laser_link" />
+      </node> 
+  </group>
+
 </launch>
+

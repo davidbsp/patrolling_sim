@@ -30,9 +30,11 @@ Alg_names = [
 
 Map_names = ['cumberland','example','grid','1r5','DISlabs']   
 
-NRobots_list = ['1','2','4','6','8','12']
+NRobots_list = ['1','2','4','6','8','10','12']
 
 LocalizationMode_list = ['odom','GPS']
+
+NavigationMode_list = ['ros','thin_navigation']
 
 GWait_list = ['0','3','10']
 
@@ -47,7 +49,7 @@ initPoses = {}
 # Fixed so far
 COMMDELAY_DEFAULT = 0.2
 
-NAVMODULE_DEFAULT = "thin_navigation" # "thin_navigation" or "ros"
+NAVMODULE_DEFAULT = "ros" # "thin_navigation" or "ros"
 
 # return long name of the algorithm
 def findAlgName(alg):
@@ -94,7 +96,8 @@ def getSimulationRunning():
 # Run the experiment with the given arguments
 # Terminates if simulation is stopped (/simulation_runnning param is false)
 # or if timeout is reached (if this is >0)
-def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT):
+# CUSTOM_STAGE: use of extended API for stage (requires custom stage and stage_ros).
+def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE):
 
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
@@ -107,6 +110,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDEL
     print 'Communication delay ',COMMDELAY
     print 'Terminal ',TERM
     print 'Timeout ',TIMEOUT
+    print 'Custom Stage ',CUSTOM_STAGE
     
     if (TIMEOUT>0):
         TIMEOUT = TIMEOUT + 10 # Let's give more time to complete actions and logging
@@ -136,8 +140,11 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDEL
     os.system(cmd)
     os.system('sleep 1')
 
-    cmd_monitor = 'rosrun patrolling_sim monitor '+MAP+' '+ALG_SHORT+' '+NROBOTS        
-    cmd_stage = 'roslaunch patrolling_sim map.launch map:='+MAP
+    cmd_monitor = 'rosrun patrolling_sim monitor '+MAP+' '+ALG_SHORT+' '+NROBOTS  
+    custom_stage = ''
+    if (CUSTOM_STAGE=="true"):
+      custom_stage = ' custom_stage:=true'
+    cmd_stage = 'roslaunch patrolling_sim map.launch map:='+MAP+custom_stage
     if (os.getenv('ROS_DISTRO')=='groovy'):
       cmd_stage = cmd_stage + " stage_pkg:=stage"
     print cmd_monitor
@@ -204,14 +211,31 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDEL
       #print gcmd
       os.system(gcmd)
     os.system('sleep '+NROBOTS)
+
+    print 'Stage simulator footprints and speedup'
+    os.system('rostopic pub /stageGUIRequest std_msgs/String "data: \'footprints\'"  --once')
+    os.system('rostopic pub /stageGUIRequest std_msgs/String "data: \'speedup\'"  --once')
+    #os.system('rm ~/.ros/stage-000003.png')
+
+    now = datetime.datetime.now()
+    strinittime = now.strftime("%Y%m%d_%H%M%S")
+
+    print 'Experiment started at ',strinittime
     # wait for termination
     run = True
     while (run):
         t = getROStime()
         #print "Elapsed time: ",t," sec Timeout = ",TIMEOUT
-        if ((TIMEOUT>0 and t>TIMEOUT) or (not getSimulationRunning())):
+        if ((TIMEOUT>0 and t>TIMEOUT) or (not getSimulationRunning())):        
             run = False;
         os.system('sleep 1')
+
+    #print "Taking a screenshot..."
+    #os.system('rostopic pub /stageGUIRequest std_msgs/String "data: \'screenshot\'"  --once')
+    #os.system('sleep 5')
+    #cmd = 'mv ~/.ros/stage-000005.png results/screenshots/stage-%s.png' %(strinittime)
+    #os.system(cmd)
+
     print "Experiment terminated"
     os.system("./stop_experiment.sh")
 
@@ -236,9 +260,11 @@ class DIP(tk.Frame):
         #self.columnconfigure(3, pad=7)
         #self.rowconfigure(3, weight=1)
         #self.rowconfigure(7, pad=7)
+
+        _row = 0
         
         lbl = Label(self, text="Map")
-        lbl.grid(sticky=W, row = 0, column= 0, pady=4, padx=5)
+        lbl.grid(sticky=W, row = _row, column= 0, pady=4, padx=5)
                 
         self.map_name_list = Map_names
         self.map_ddm = StringVar(self)
@@ -247,10 +273,12 @@ class DIP(tk.Frame):
         except:
             lastmap=self.map_name_list[0]
         self.map_ddm.set(lastmap)
-        tk.OptionMenu(self, self.map_ddm, *self.map_name_list).grid(sticky=W, row=0, column=1, pady=4, padx=5)
+        tk.OptionMenu(self, self.map_ddm, *self.map_name_list).grid(sticky=W, row=_row, column=1, pady=4, padx=5)
+
+        _row = _row + 1
 
         lbl = Label(self, text="N. Robots")
-        lbl.grid(sticky=W, row = 1, column= 0, pady=4, padx=5)
+        lbl.grid(sticky=W, row=_row, column=0, pady=4, padx=5)
 
         self.robots_n_list = NRobots_list
         self.robots_ddm = StringVar(self)
@@ -259,10 +287,12 @@ class DIP(tk.Frame):
         except:
             lastnrobots=self.robots_n_list[0]
         self.robots_ddm.set(lastnrobots)
-        tk.OptionMenu(self, self.robots_ddm, *self.robots_n_list).grid(sticky=W, row=1, column=1, pady=4, padx=5)
+        tk.OptionMenu(self, self.robots_ddm, *self.robots_n_list).grid(sticky=W, row=_row, column=1, pady=4, padx=5)
+
+        _row = _row + 1
 
         lbl = Label(self, text="Algorithm")
-        lbl.grid(sticky=W, row = 2, column= 0, pady=4, padx=5)
+        lbl.grid(sticky=W, row = _row, column= 0, pady=4, padx=5)
 
         self.algorithm_list = []
         for i in range(0,len(Alg_names)):
@@ -274,11 +304,12 @@ class DIP(tk.Frame):
         except:
             lastalg=self.algorithm_list[0]
         self.alg_ddm.set(lastalg)
-        tk.OptionMenu(self, self.alg_ddm, *self.algorithm_list).grid(sticky=W, row=2, column=1, pady=4, padx=5)
+        tk.OptionMenu(self, self.alg_ddm, *self.algorithm_list).grid(sticky=W, row=_row, column=1, pady=4, padx=5)
         
+        _row = _row + 1
 
         lbl = Label(self, text="Localization Mode")
-        lbl.grid(sticky=W, row = 3, column= 0, pady=4, padx=5)
+        lbl.grid(sticky=W, row = _row, column= 0, pady=4, padx=5)
 
         self.locmode_list = LocalizationMode_list
         self.locmode_ddm = StringVar(self)
@@ -287,11 +318,26 @@ class DIP(tk.Frame):
         except:
             lastlocmode=self.locmode_list[0]
         self.locmode_ddm.set(lastlocmode)
-        tk.OptionMenu(self, self.locmode_ddm, *self.locmode_list).grid(sticky=W, row=3, column=1, pady=4, padx=5)
+        tk.OptionMenu(self, self.locmode_ddm, *self.locmode_list).grid(sticky=W, row=_row, column=1, pady=4, padx=5)
 
+        _row = _row + 1
+
+        lbl = Label(self, text="Navigation Mode")
+        lbl.grid(sticky=W, row = _row, column= 0, pady=4, padx=5)
+
+        self.navmode_list = NavigationMode_list
+        self.navmode_ddm = StringVar(self)
+        try:
+            lastnavmode=self.oldConfigs["navMode"]
+        except:
+            lastnavmode=self.navmode_list[0]
+        self.navmode_ddm.set(lastnavmode)
+        tk.OptionMenu(self, self.navmode_ddm, *self.navmode_list).grid(sticky=W, row=_row, column=1, pady=4, padx=5)
+
+        _row = _row + 1
 
         lbl = Label(self, text="Goal wait time")
-        lbl.grid(sticky=W, row = 4, column= 0, pady=4, padx=5)
+        lbl.grid(sticky=W, row = _row, column= 0, pady=4, padx=5)
 
         self.gwait_list = GWait_list
         self.gwait_ddm = StringVar(self)
@@ -300,11 +346,12 @@ class DIP(tk.Frame):
         except:
             lastgwait=self.gwait_list[0]
         self.gwait_ddm.set(lastgwait)
-        tk.OptionMenu(self, self.gwait_ddm, *self.gwait_list).grid(sticky=W, row=4, column=1, pady=4, padx=5)
+        tk.OptionMenu(self, self.gwait_ddm, *self.gwait_list).grid(sticky=W, row=_row, column=1, pady=4, padx=5)
 
+        _row = _row + 1
 
         lbl = Label(self, text="Terminal")
-        lbl.grid(sticky=W, row = 5, column= 0, pady=4, padx=5)
+        lbl.grid(sticky=W, row = _row, column= 0, pady=4, padx=5)
 
         self.term_list = Terminal_list
         self.term_ddm = StringVar(self)
@@ -313,18 +360,20 @@ class DIP(tk.Frame):
         except:
             lastterm=self.term_list[0]
         self.term_ddm.set(lastterm)
-        tk.OptionMenu(self, self.term_ddm, *self.term_list).grid(sticky=W, row=5, column=1, pady=4, padx=5)
+        tk.OptionMenu(self, self.term_ddm, *self.term_list).grid(sticky=W, row=_row, column=1, pady=4, padx=5)
   
+        _row = _row + 1
+
         launchButton = Button(self, text="Start Experiment",command=self.launch_script)
-        launchButton.grid(sticky=W, row=6, column=0, pady=4, padx=5)
+        launchButton.grid(sticky=W, row=_row, column=0, pady=4, padx=5)
         
         launchButton = Button(self, text="Stop Experiment",command=self.kill_demo)
-        launchButton.grid(sticky=W, row=6, column=1, pady=4, padx=5)
+        launchButton.grid(sticky=W, row=_row, column=1, pady=4, padx=5)
         
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), self.alg_ddm.get(),self.locmode_ddm.get(), NAVMODULE_DEFAULT, self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0) )
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), self.alg_ddm.get(),self.locmode_ddm.get(), NAVMODULE_DEFAULT, self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false") )
 
     
     def quit(self):
@@ -341,6 +390,7 @@ class DIP(tk.Frame):
       f.write("nrobots: %s\n"%self.robots_ddm.get())
       f.write("algorithm: %s\n"%self.alg_ddm.get())
       f.write("locmode: %s\n"%self.locmode_ddm.get())
+      f.write("navmode: %s\n"%self.navmode_ddm.get())
       f.write("gwait: %s\n"%self.gwait_ddm.get())
       f.write("term: %s\n"%self.term_ddm.get())
       f.close()
@@ -365,9 +415,9 @@ def main():
   if (len(sys.argv)==1):
     root = tk.Tk()
     DIP(root)
-    root.geometry("300x300+0+0")
+    root.geometry("300x320+0+0")
     root.mainloop()  
-  elif (len(sys.argv)==10):
+  elif (len(sys.argv)==11):
     MAP = sys.argv[1]
     NROBOTS = sys.argv[2]
     ALG_SHORT = sys.argv[3]
@@ -377,10 +427,11 @@ def main():
     COMMDELAY = sys.argv[7]
     TERM = sys.argv[8]
     TIMEOUT = int(sys.argv[9])
-    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT)
+    CUSTOM_STAGE = sys.argv[10]
+    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE)
   else:
     print "Use: ",sys.argv[0]
-    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <nav_module> <goal-wait> <communication-delay> <terminal> <timeout>'
+    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <nav_module> <goal-wait> <communication-delay> <terminal> <timeout> <custom_stage_flag>'
  
 
 

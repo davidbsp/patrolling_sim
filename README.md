@@ -1,6 +1,6 @@
-==========================
-patrolling_sim v2.1 (2015)
-==========================
+===============================
+patrolling_sim v2.2 (Nov. 2015)
+===============================
 
 patrolling_sim for ROS (Groovy/Hydro/Indigo) -- catkin version
 
@@ -10,7 +10,8 @@ Main framework and basic algorithms:
  David Portugal (2011-2014), Luca Iocchi (2014)
  
 Additional algorithms:
-* DTAS, DTAP: Alessandro Farinelli (2014)
+* DTAP: Alessandro Farinelli (2014)
+* <<<YOUR ALGORITHM HERE>>>
 
 
 *** NOTE ***
@@ -24,11 +25,12 @@ It extends previous version of patrolling_sim with an improved structure of the 
 
 For a quick try, just compile the workspace ('catkin_make'), start the script './start_experiment.py',
 make your choices and see the experiment running.
+
 WARNING: sometimes (on some machines) the very first run does not work, because of timing problems with roscore. 
-Either restart the experiment a second time, or run roscore once before using starting the experiment.
+Either restart the experiment a second time, or run roscore once before starting the experiment.
 
 Several maps are available in the 'maps' folder. For map X the patrol graph is visible in the file
-patrolling_sim/maps/X/X-graph.png 
+maps/X/X-graph.png 
 
 Several algorithms have been implemented in the 'src' folder. Each method is implemented through a class 'X_Agent' that inherits from the abstract class 'PatrolAgent' many common services and functions.
 
@@ -45,4 +47,31 @@ The info file of an experiment contains a summary of the results of the experime
 Map ; N. robots ; Wait time	; Communication delay ;	Algorithm ;	Algorithm parameters ; Machine ; Date ; Time ; Real time ; Interferences ; Termination ; Idleness	min ;	avg	; stddev ; max
 
 The script can be extended to run multiple experiments in a single session, by just adding new commands like the one in the examples (possibly with different parameters).
+
+*** NEW NAVIGATION MODULES ***
+
+Default navigation modules are standard ROS nodes amcl (localization) and move_base (path planning and motion control).
+They work (usually) fine, but they require many computational resources that may limit the simulation of many robots 
+in a single machine.
+
+New navigation modules, called thin_navigation, are available at https://bitbucket.org/ggrisetti/thin_navigation.
+thin_localizer and thin_planner have the same interface as amcl and move_base so they can be used in their replacement
+by just changing the launch file. To install thin_navigation, just download the package in a catkin workspace and
+compile it with catkin_make (see README file for other details).
+
+The thin_navigation modules have been fully integrated in patrolling_sim. Just select thin_navigation instead of ros
+as navigation module either in the start_experiment.py GUI or in the run_exp.sh script.
+
+Warning: the thin_navigation modules are still under testing and debug!!!
+
+
+*** NEW SUPPORT FOR EXTENDED STAGE API ***
+
+NOTE: Extended API for stage are available with customized versions of stage and stageros.
+(See https://github.com/iocchi/stage_ros for details).
+
+With the use of the extended API it is possible to control activation of some GUI elements
+in Stage (e.g., footprints, simulation speedup, and screenshots).
+Set the Custom Stage flag to true in run_exp.sh script to activate these functions.
+
 
