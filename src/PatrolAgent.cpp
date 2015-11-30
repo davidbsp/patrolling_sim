@@ -479,7 +479,7 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
     //if(state.state_ == actionlib::SimpleClientGoalState::ABORTED) needToBackUp = true;    
     
     if(state.state_ == actionlib::SimpleClientGoalState::SUCCEEDED){
-	      ROS_INFO("Goal reached ... WAITING %.2f sec",goal_reached_wait);
+        ROS_INFO("Goal reached ... WAITING %.2f sec",goal_reached_wait);
         ros::Duration delay(goal_reached_wait); // wait after goal is reached
         delay.sleep();
         ROS_INFO("Goal reached ... DONE");
@@ -487,10 +487,13 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
     }else{
         aborted_count++;
         ROS_INFO("CANCELLED or ABORTED... %d",aborted_count);   //tentar voltar a enviar goal..
-        //backUpCounter = 0;
-        //backup();
         if (!goal_canceled_by_user) {
-            ROS_INFO("Not cancelled by the intereference... Resend Goal!");
+            ROS_INFO("Goal not cancelled by the intereference...");
+
+            ROS_INFO("Backup");
+            backup();
+
+            ROS_INFO("Resend Goal!");
             ResendGoal = true;
         }
     }
@@ -547,36 +550,42 @@ bool PatrolAgent::check_interference (int ID_ROBOT){ //verificar se os robots es
 
 void PatrolAgent::backup(){
     
+    ros::Rate loop_rate(100); // 100Hz
+    
+    int backUpCounter = 0;
     while (backUpCounter<=100){
     
-    if(backUpCounter==0){
-        ROS_INFO("The wall is too close! I need to do some backing up...");
-        // Move the robot back...
-        geometry_msgs::Twist cmd_vel;
-        cmd_vel.linear.x = -0.1;
-        cmd_vel.angular.z = 0.0;
-        cmd_vel_pub.publish(cmd_vel);
-    }
-            
-    if(backUpCounter==40){
-        // Turn the robot around...
-        geometry_msgs::Twist cmd_vel;
-        cmd_vel.linear.x = 0.0;
-        cmd_vel.angular.z = 0.5;
-        cmd_vel_pub.publish(cmd_vel);
-    }
-            
-    if(backUpCounter==100){
-        // Stop the robot...
-        geometry_msgs::Twist cmd_vel;
-        cmd_vel.linear.x = 0.0;
-        cmd_vel.angular.z = 0.0;
-        cmd_vel_pub.publish(cmd_vel);
-            
-        ROS_INFO("Done backing up, now on with my life!");      
-    }
+      if(backUpCounter==0){
+          ROS_INFO("The wall is too close! I need to do some backing up...");
+          // Move the robot back...
+          geometry_msgs::Twist cmd_vel;
+          cmd_vel.linear.x = -0.1;
+          cmd_vel.angular.z = 0.0;
+          cmd_vel_pub.publish(cmd_vel);
+      }
+              
+      if(backUpCounter==40){
+          // Turn the robot around...
+          geometry_msgs::Twist cmd_vel;
+          cmd_vel.linear.x = 0.0;
+          cmd_vel.angular.z = 0.5;
+          cmd_vel_pub.publish(cmd_vel);
+      }
+              
+      if(backUpCounter==100){
+          // Stop the robot...
+          geometry_msgs::Twist cmd_vel;
+          cmd_vel.linear.x = 0.0;
+          cmd_vel.angular.z = 0.0;
+          cmd_vel_pub.publish(cmd_vel);
+              
+          // ROS_INFO("Done backing up, now on with my life!");      
+      }
 
-    backUpCounter++;
+      ros::spinOnce();
+      loop_rate.sleep();
+      backUpCounter++;
+    
     }
     
 }

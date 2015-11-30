@@ -70,8 +70,8 @@
               <param name="base_frame_id" value="/$(arg robotname)/base_link"/>
               <param name="laser_topic" value="/$(arg robotname)/base_scan"/>
               <param name="command_vel_topic" value="/$(arg robotname)/cmd_vel"/>
-              <param name="robot_radius" value="0.65"/>
-              <param name="distance_threshold" value="1.3"/>
+              <param name="robot_radius" value="0.33"/>
+              <param name="distance_threshold" value="1.0"/>
            </node>
     </group>
 

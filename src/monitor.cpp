@@ -833,13 +833,15 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         dead = check_dead_robots();
                 
         simrun=true; simabort=false;
-        std::string psimrun, psimabort;
+        std::string psimrun, psimabort; bool bsimabort;
         if (nh.getParam("/simulation_runnning", psimrun))
             if (psimrun=="false")
                 simrun = false;
         if (nh.getParam("/simulation_abort", psimabort))
             if (psimabort=="true")
                 simabort = true;
+        if (nh.getParam("/simulation_abort", bsimabort))
+            simabort = bsimabort;
         
         if ( (dead) || (!simrun) || (simabort) ) {
             printf ("Simulation is Over\n");                
@@ -883,7 +885,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f;%.1f;%d;%.1f;%d\n",
             mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,nav_mod.c_str(),
             algorithm.c_str(), algparams.c_str(),hostname,
-            strnow,duration,real_duration,interference_cnt,((dead || simabort)?"FAIL":"TIMEOUT"),
+            strnow,duration,real_duration,interference_cnt,(dead?"FAIL":(simabort?"ABORT":"TIMEOUT")),
             min_idleness, gavg, gstddev, max_idleness, gT2n,
             tot_visits, avg_visits, complete_patrol
     );

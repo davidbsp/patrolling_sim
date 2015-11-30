@@ -57,36 +57,34 @@ void DTASSIPart_Agent::init(int argc, char** argv) {
 
 double DTASSIPart_Agent::compute_bid(int nv){
 
-	/*printf("computing bid for vertex %d (using dynamic partition) \n ",nv);
-	printf("current tasks = ");
-	for (size_t i = 0; i<dimension;i++){
-		printf(" %d, ",tasks[i]);	
+    /*printf("computing bid for vertex %d (using dynamic partition) \n ",nv);
+    printf("current tasks = ");
+    for (size_t i = 0; i<dimension;i++){
+        printf(" %d, ",tasks[i]);	
     }
     printf("] \n");*/
 
-
-	if (nv==next_vertex || nv==next_next_vertex){
-		// printf("already going to %d sending 0 (current target: %d)",nv,next_vertex);
-		return 0.;
-	}
-
-	size_t num_tasks = 1;
-    for (size_t i = 0; i<dimension ; i++){
-		if (tasks[i]){
-			num_tasks++;
-		}
+    if (nv==next_vertex || nv==next_next_vertex){
+        // printf("already going to %d sending 0 (current target: %d)",nv,next_vertex);
+        return 0.;
     }
-	
+
+    size_t num_tasks = 1;
+    for (size_t i = 0; i<dimension ; i++){
+        if (tasks[i]){
+            num_tasks++;
+        }
+    }
+
 //	size_t cv = current_vertex;
 //	if (next_vertex >= 0 && next_vertex <dimension){
 //		cv = next_vertex;
 //	}
-	double bid_value = compute_cost(nv,current_center_location)*num_tasks; 
-	//printf("bid for %d (current center %zu, num task %zu): %.2f \n",nv,current_center_location,num_tasks,bid_value);
 
-	return bid_value;
-
-
+    double bid_value = compute_cost(nv,current_center_location)*num_tasks; 
+    //printf("bid for %d (current center %zu, num task %zu): %.2f \n",nv,current_center_location,num_tasks,bid_value);
+    
+    return bid_value;
 }
 
 

@@ -10,30 +10,29 @@ SSIPatrolAgent::SSIPatrolAgent() : cf(CONFIG_FILENAME)
 
 void SSIPatrolAgent::onGoalComplete()
 {
-
+    printf("DTAP onGoalComplete!!!\n");
     if (first_vertex){
-		// printf("computing next vertex FOR THE FIRST TIME:\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
-	    next_vertex = compute_next_vertex(current_vertex);
-		// printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
-		first_vertex = false;
+        printf("computing next vertex FOR THE FIRST TIME:\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+        next_vertex = compute_next_vertex(current_vertex);
+        printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+        first_vertex = false;
     } else {
-		// printf("updating next vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+        printf("updating next vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
         //Update Idleness Table:
         update_global_idleness();
-		//update current vertex
+        //update current vertex
         current_vertex = next_vertex;
-		//update next vertex based on previous decision
-		next_vertex = next_next_vertex;
-		//update global idleness of next vertex to avoid conflicts
-		if (next_vertex>=0 && next_vertex< dimension){
+        //update next vertex based on previous decision
+        next_vertex = next_next_vertex;
+        //update global idleness of next vertex to avoid conflicts
+        
+        if (next_vertex>=0 && next_vertex< dimension){
             pthread_mutex_lock(&lock);
-			global_instantaneous_idleness[next_vertex] = 0.0;   
+            global_instantaneous_idleness[next_vertex] = 0.0;   
             pthread_mutex_unlock(&lock);
-		}
-		printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+        }
+        printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
    }
-
-
 
     /** SEND GOAL (REACHED) AND INTENTION **/
     send_goal_reached(); // Send TARGET to monitor
@@ -44,14 +43,15 @@ void SSIPatrolAgent::onGoalComplete()
     //sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
     sendGoal(next_vertex);  // send to move_base
 
-    goal_complete = false;    
-
-	//compute next next vertex
-	// printf("computing next_next_vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
-	next_next_vertex = compute_next_vertex(next_vertex); 
+    //compute next next vertex
+    printf("computing next_next_vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+    
+    //FIXME must be non-blocking !!!
+    next_next_vertex = compute_next_vertex(next_vertex); 
 	   
-	// printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+    printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
 
+    goal_complete = false;  
 
 }
 
@@ -267,8 +267,6 @@ double SSIPatrolAgent::utility(int cv,int nv) {
 
 void SSIPatrolAgent::update_global_idleness() 
 {   
-
-
     double now = ros::Time::now().toSec();
     
     pthread_mutex_lock(&lock);
@@ -276,10 +274,10 @@ void SSIPatrolAgent::update_global_idleness()
         global_instantaneous_idleness[i] += (now-last_update_idl);  // update value    
     }
     
-	if (current_vertex>=0 && current_vertex<dimension){
-		global_instantaneous_idleness[current_vertex] = 0.0;
-	}
-	pthread_mutex_unlock(&lock);
+    if (current_vertex>=0 && current_vertex<dimension){
+        global_instantaneous_idleness[current_vertex] = 0.0;
+    }
+    pthread_mutex_unlock(&lock);
 
     last_update_idl = now;
 }
@@ -438,32 +436,39 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
     double bidvalue = compute_bid(mnv); 
     force_bid(mnv,bidvalue,ID_ROBOT); 
     send_target(mnv,bidvalue);
-    //printf("cnv: waiting for bids (%.2f seconds) \n",timeout);
+    
+    printf("cnv: waiting for bids (%.2f seconds) \n",timeout);
     wait();	
-    /*printf("current target %d current value for target %.2f \n tasks [",mnv,bidvalue);
+    printf("current target %d current value for target %.2f \n tasks [",mnv,bidvalue);
     for (size_t i = 0; i<dimension;i++){
 		printf(" %d, ",tasks[i]);	
     }
-    printf("] \n"); */
+    printf("] \n");
+    
+    printf("DTAP: while(true) ... \n");
     while (true){
     	if (best_bid(mnv)){ //if I am in the best position to go to mnv 
 			update_tasks();
 			//force_bid(mnv,0,ID_ROBOT); TODO: check
-			return mnv;
+			break;
       	} else {
         	mnv = select_next_vertex(cv,selected_vertices);	
-			bidvalue = compute_bid(mnv); 
-			force_bid(mnv,bidvalue,ID_ROBOT); 
-			send_target(mnv,bidvalue);
-			//printf("waiting for bids (%.2f seconds)",timeout);
-			wait();
-			/*printf("current target %d current value for target %.2f tasks [",mnv,bidvalue);
+		bidvalue = compute_bid(mnv); 
+		force_bid(mnv,bidvalue,ID_ROBOT); 
+		send_target(mnv,bidvalue);
+		//printf("waiting for bids (%.2f seconds)",timeout);
+		wait();
+		/*printf("current target %d current value for target %.2f tasks [",mnv,bidvalue);
 		    for (size_t i = 0; i<dimension;i++){
 				printf(" %d, ",tasks[i]);	
 		    }
 		    printf("] \n");*/
-		 } 			
-    }     
+	 } 			
+    } 
+    printf("DTAP: while(true) ... DONE\n");
+    
+    return mnv;
+    
 }
 
 void SSIPatrolAgent::update_tasks(){

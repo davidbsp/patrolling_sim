@@ -78,7 +78,7 @@ protected:
     bool initialize;
     bool end_simulation;
     int next_vertex;
-    uint backUpCounter;
+    // uint backUpCounter;
     vertex *vertex_web;
     double *instantaneous_idleness;  // local idleness
     double *last_visit;
