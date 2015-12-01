@@ -490,8 +490,8 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
         if (!goal_canceled_by_user) {
             ROS_INFO("Goal not cancelled by the intereference...");
 
-            ROS_INFO("Backup");
-            backup();
+            //ROS_INFO("Backup");
+            //backup();
 
             ROS_INFO("Resend Goal!");
             ResendGoal = true;

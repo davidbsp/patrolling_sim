@@ -71,7 +71,7 @@
               <param name="laser_topic" value="/$(arg robotname)/base_scan"/>
               <param name="command_vel_topic" value="/$(arg robotname)/cmd_vel"/>
               <param name="robot_radius" value="0.33"/>
-              <param name="distance_threshold" value="1.0"/>
+              <param name="distance_threshold" value="3.0"/>
            </node>
     </group>
 
