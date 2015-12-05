@@ -50,6 +50,7 @@
 #include "getgraph.h"
 
 #define NUM_MAX_ROBOTS 32
+#define INTERFERENCE_DISTANCE 2
 
 #include "message_types.h"
 

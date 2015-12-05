@@ -491,7 +491,7 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
             ROS_INFO("Goal not cancelled by the intereference...");
 
             //ROS_INFO("Backup");
-            //backup();
+            backup();
 
             ROS_INFO("Resend Goal!");
             ResendGoal = true;
@@ -538,8 +538,8 @@ bool PatrolAgent::check_interference (int ID_ROBOT){ //verificar se os robots es
         
         dist_quad = (xPos[i] - xPos[ID_ROBOT])*(xPos[i] - xPos[ID_ROBOT]) + (yPos[i] - yPos[ID_ROBOT])*(yPos[i] - yPos[ID_ROBOT]);
         
-        if (dist_quad <= /*sqrt*/4){    //robots are 2 meter or less apart
-//          ROS_INFO("Feedback: Robots are very close. INTERFERENCE! Dist_Quad = %f", dist_quad);
+        if (dist_quad <= INTERFERENCE_DISTANCE*INTERFERENCE_DISTANCE){    //robots are ... meter or less apart
+//          ROS_INFO("Feedback: Robots are close. INTERFERENCE! Dist_Quad = %f", dist_quad);
             last_interference = ros::Time::now().toSec();
             return true;
         }       
@@ -564,7 +564,7 @@ void PatrolAgent::backup(){
           cmd_vel_pub.publish(cmd_vel);
       }
               
-      if(backUpCounter==40){
+      if(backUpCounter==20){
           // Turn the robot around...
           geometry_msgs::Twist cmd_vel;
           cmd_vel.linear.x = 0.0;
