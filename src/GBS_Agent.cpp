@@ -57,6 +57,9 @@ private:
   double G1, G2;
   double edge_min;  
   int NUMBER_OF_ROBOTS;
+  bool arrived;
+  uint vertex_arrived;
+  int robot_arrived;  
 
 public:
     virtual void init(int argc, char** argv);
@@ -70,14 +73,13 @@ public:
 
 void GBS_Agent::init(int argc, char** argv) {
   
-  int nrobots = atoi(argv[4]);
-    
   PatrolAgent::init(argc,argv);
+ 
+  NUMBER_OF_ROBOTS = atoi(argv[3]);
+  arrived = false; 
   
   /** Define G1 and G2 **/
   G1 = 0.1;
-  
-  NUMBER_OF_ROBOTS = nrobots;
  
   //default:
   G2 = 100.0;

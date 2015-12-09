@@ -90,16 +90,6 @@ protected:
     
     MoveBaseClient *ac; // action client for reaching target goals
     
-    //GBS: To calculate robot's state:
-    bool arrived;
-    uint vertex_arrived;
-    int robot_arrived;
-
-    //SEBS: To calculate robot's state:
-    bool intention;
-    uint vertex_intention;
-    int robot_intention;
-
     ros::Subscriber odom_sub, positions_sub;
     ros::Publisher positions_pub;
     ros::Subscriber results_sub;
@@ -114,8 +104,6 @@ public:
         next_vertex = -1;
         initialize = true;
         end_simulation = false;
-        arrived = false;
-	intention = false;
         ac = NULL;
     }
     

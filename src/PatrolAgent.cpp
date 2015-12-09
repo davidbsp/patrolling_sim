@@ -488,7 +488,7 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
         aborted_count++;
         ROS_INFO("CANCELLED or ABORTED... %d",aborted_count);   //tentar voltar a enviar goal..
         if (!goal_canceled_by_user) {
-            ROS_INFO("Goal not cancelled by the intereference...");
+            ROS_INFO("Goal not cancelled by the interference...");
 
             //ROS_INFO("Backup");
             backup();

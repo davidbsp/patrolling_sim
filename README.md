@@ -7,7 +7,7 @@ patrolling_sim for ROS (Groovy/Hydro/Indigo) -- catkin version
 Authors:
 
 Main framework and basic algorithms:
- David Portugal (2011-2014), Luca Iocchi (2014)
+ David Portugal (2011-2014), Luca Iocchi (2014-2015)
  
 Additional algorithms:
 * DTAP: Alessandro Farinelli (2014)

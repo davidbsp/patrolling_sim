@@ -51,6 +51,7 @@ typedef struct {
   uint id, num_neigh;
   float x, y; 		//pass these attributes in meters
   uint id_neigh[8], cost[8];
+  float cost_m[8];
   bool visited[8];
   char dir [8][3];	//table of 8 strings with 3 chars max ("N","NE","E","SE","S","SW","W","NW")
 }vertex;
@@ -67,6 +68,8 @@ void GetGraphInfo (vertex *vertex_web, uint dimension, const char* graph_file);
   
 uint IdentifyVertex (vertex *vertex_web, uint size, double x, double y);
 
+uint GetNumberEdges (vertex *vertex_web, uint dimension);
+  
 //integer to array (itoa for linux c)
 char* itoa(int value, char* str, int radix);
 

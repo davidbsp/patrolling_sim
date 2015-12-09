@@ -51,6 +51,19 @@ typedef struct {
   bool visit;
 }s_path_mcost;
 
+typedef struct {
+  uint current_vertex, next_vertex;
+  double time_then;
+  uint num_possible_neighs;
+  uint id_neighbors [8];
+  double idleness_old[8];
+  uint node_count [8];
+  double entropy;
+
+}reinforcement_learning;
+
+
+inline long double log2(const long double x);
 
 uint random (uint current_vertex, vertex *vertex_web);
 
@@ -106,3 +119,42 @@ void shift_cyclic_path (uint start_vertex, int *caminho_final, int elem_caminho_
 uint get_MSP_dimension (const char* msp_file);
 
 void get_MSP_route (uint *route, uint dimension, const char* msp_file);
+
+void create_source_and_dest_tables(vertex *vertex_web, uint *source, uint *destination, uint dimension);
+
+void get_hist_sort(vertex *vertex_web, double *hist_sort, uint dimension);
+
+int get_hist_idx_from_edge_cost (double *hist_sort, uint size, double edge_cost);
+
+int get_hist_idx (uint *source, uint *destination, uint source_vertex, uint dest_vertex, uint hist_dimension);
+
+double get_edge_cost_between (vertex *vertex_web, uint vertex_A, uint vertex_B);
+
+void load_real_histogram(double *real_histogram, uint size_hist, char* filename);
+
+void normalize_histogram(double *real_histogram, double *histogram, uint size_hist);
+
+int pertence_uint_idx (uint elemento, uint *tab, uint tam_tab);
+
+int get_min(uint *tab, uint tam_tab);
+
+double get_min_dbl(double *tab, uint tam_tab);
+
+int get_max(uint *tab, uint tam_tab);
+
+double get_max_dbl(double *tab, uint tam_tab);
+
+void write_histogram_to_file (vertex *vertex_web, double *real_histogram, double *histogram, uint *source, uint *destination, uint hist_dimension, uint number, uint robotid);
+
+void write_reward_evolution(double reward, uint robotid);
+
+void update_likelihood_old (reinforcement_learning RL, double *real_histogram, double *hist_sort, uint size_hist, vertex *vertex_web);
+
+void update_likelihood (reinforcement_learning RL, double *real_histogram, uint *source, uint *destination, uint hist_dimension, vertex *vertex_web, int minimum_global_node_count, uint robotid);
+
+void update_likelihood_new (reinforcement_learning RL, uint *node_count_table, double *inst_idleness, uint dimension, double *real_histogram, uint *source, uint *destination, uint hist_dimension, vertex *vertex_web, uint robotid);
+
+int learning_algorithm(uint current_vertex, vertex *vertex_web, double *instantaneous_idleness, double *avg_idleness, int *tab_intention, double *histogram, uint *source, uint *destination, uint hist_dimension, int nr_robots, int id_robot, uint *node_count, reinforcement_learning &RL);
+
+
+ 

@@ -43,7 +43,17 @@
 #include "getgraph.h"
 #include "algorithms.h"
 
+//#define M_LOG2E 1.44269504088896340736 //log2(e)
+uint reward_count = 0;
+
 using namespace std;
+
+
+
+inline long double log2(const long double x){
+    return  log(x) * M_LOG2E;
+}
+
 
 uint random (uint current_vertex, vertex *vertex_web){
 
@@ -254,7 +264,7 @@ uint greedy_bayesian_strategy (uint current_vertex, vertex *vertex_web, double *
 	posterior_probability[i] = 1.0;
       }
       
-      printf("Vertex [%d]; PP = %f\n", vertex_web[current_vertex].id_neigh[i], posterior_probability[i]);
+      //printf("Vertex [%d]; PP = %f\n", vertex_web[current_vertex].id_neigh[i], posterior_probability[i]);
       
       //choose the one with maximum posterior_probability:
       if (posterior_probability[i] > max_pp){
@@ -296,6 +306,18 @@ int count_intention (uint vertex, int *tab_intention, int nr_robots){
     if(tab_intention[i]==vertex){
       count++;      
     }    
+  }
+  return count;  
+}
+
+int count_intention_cbls (uint vertex, int *tab_intention, int nr_robots, int id_robot){
+ 
+  int count = 0;
+  
+  for (int i = 0; i<nr_robots; i++){   
+    if(tab_intention[i]==vertex && i!=id_robot){ //ignore own intention
+      count++;      
+    }     
   }
   return count;  
 }
@@ -356,7 +378,7 @@ uint state_exchange_bayesian_strategy (uint current_vertex, vertex *vertex_web, 
 	
       }
 
-      printf("Vertex [%d]; PP = %f\n", vertex_web[current_vertex].id_neigh[i], posterior_probability[i]);
+      //printf("Vertex [%d]; PP = %f\n", vertex_web[current_vertex].id_neigh[i], posterior_probability[i]);
       
       //choose the one with maximum posterior_probability:
       if (posterior_probability[i] > max_pp){
@@ -1642,7 +1664,7 @@ bool caminho_apartir_vizinhos_unicos (vertex *vertex_web, int dimension, int *ca
 	
 	//se mesmo assim i_list <= 1 -> e pq todos os nos tem 2 ou + vizs...
 	if (i_list<=1){
-	  printf("Impossible to compute longest path.\n");
+	  ROS_WARN("Impossible to compute longest path.\n");
 //	  printf("Nao existem nos so com 1 vizinho. Impossivel computar caminho +longo\n");
 	  return false;
 	}
@@ -2103,7 +2125,7 @@ bool computar_caminho_de_ida (vertex *vertex_web, int dimension, int *caminho_de
 				
 				if(j==i_desvio-1){
 //				  printf("ERRO: nao houve atribuicao de prox_no e no_ant\n");
-				  printf("Error: There was no atribution of previous and next vertex.\n");
+				  ROS_WARN("Error: There was no atribution of previous and next vertex.\n");
 				}
 			  }			  
 			  
@@ -2276,7 +2298,7 @@ int cyclic (uint dimension, vertex *vertex_web, int *caminho_final) {
 */
 		int hcycle;
 		
-		printf("Hamilton Path found.\n");
+		//printf("Hamilton Path found.\n");
 		hamilton_path = true;
 		
 		//verificar se e d facto um caminho ou um circuito (1º elemento e ultimo sao vizinhos?):
@@ -2284,7 +2306,7 @@ int cyclic (uint dimension, vertex *vertex_web, int *caminho_final) {
 		
 		//e um ciclo de hamilton - podes sair:
 		if(hcycle>-1){
-		  printf("Hamilton circuit found.\n");
+		  //printf("Hamilton circuit found.\n");
 		  caminho_principal [dimension] = caminho_principal [0]; //repetir o primeiro.
 		  cycle = true;
 		  break;
@@ -2298,7 +2320,7 @@ int cyclic (uint dimension, vertex *vertex_web, int *caminho_final) {
 
   if(!hamilton_path){
 	
-	printf("No Hamilton Circuit/Path found.\n\n");
+	//printf("No Hamilton Circuit/Path found.\n\n");
 	
 	int *ciclo_principal = new int[dimension]; 
 	int elem_ciclo = 0, custo_ciclo = 0;
@@ -2616,4 +2638,1072 @@ void get_MSP_route (uint *route, uint dimension, const char* msp_file) {
     //printf ("[v=10], x = %f (meters)\n",vertex_web[10].x); 
 
    fclose(file);
+}
+
+void create_source_and_dest_tables(vertex *vertex_web, uint *source, uint *destination, uint dimension){
+
+  uint idx=0;
+  uint i, j;
+  
+  for (i=0; i<dimension; i++){    
+    for (j=0; j<vertex_web[i].num_neigh; j++){      
+      source[idx] = vertex_web[i].id;
+      destination[idx] = vertex_web[i].id_neigh[j];
+      idx++;      
+    }    
+  }
+    
+}
+
+void get_hist_sort(vertex *vertex_web, double *hist_sort, uint dimension){
+  
+  uint idx=0;
+  
+  for (uint i=0; i<dimension; i++){
+    for (uint j=0; j<vertex_web[i].num_neigh; j++){      
+      if (vertex_web[i].id < vertex_web[i].id_neigh[j] /*&& vertex_web[i].num_neigh > 1*/){
+
+	  hist_sort[idx] = vertex_web[i].cost_m[j];
+	  idx++;
+	  
+      }      
+    }    
+  }
+  
+  //int elements = sizeof(edge_costs) / sizeof(edge_costs[0]); 
+  std::sort(hist_sort, hist_sort + idx); 
+}
+
+int get_hist_idx_from_edge_cost (double *hist_sort, uint size, double edge_cost){
+  
+  for (uint i=0; i<size;i++){
+   
+    //tou a comparar doubles, o q pode ser perigoso.
+   if ( hist_sort[i]>=edge_cost - 0.001 && hist_sort[i]<=edge_cost + 0.001){ 
+    return i; 
+   }
+   
+  }
+  
+  return -1;  
+}
+
+int get_hist_idx (uint *source, uint *destination, uint source_vertex, uint dest_vertex, uint hist_dimension){
+  
+  for (uint i=0; i<hist_dimension;i++){    
+    if (source[i] == source_vertex && destination[i] == dest_vertex){      
+      return i;      
+    }
+  }
+  
+  return -1;
+  
+}
+
+double get_edge_cost_between (vertex *vertex_web, uint vertex_A, uint vertex_B){
+  
+  for (uint i=0; i<vertex_web[vertex_A].num_neigh; i++){
+   
+    if ( vertex_web[vertex_A].id_neigh[i] == vertex_B){
+	return vertex_web[vertex_A].cost_m[i];
+    }    
+  }
+  
+  return -1.0;
+  
+}
+
+void load_real_histogram(double *real_histogram, uint size_hist, char* filename){
+ 
+    FILE *file;
+    file = fopen (filename,"r"); 
+    
+    float b,c;
+    int a,e,d,f,i=0;
+    char inicio[128];
+    
+    if (file!=NULL){ 
+     
+       //ignore first three lines:
+	fgets (inicio , 128 , file);
+	fgets (inicio , 128 , file);      
+	fgets (inicio , 128 , file);
+      
+      for (i=0; i<size_hist; i++){ 		//"%f(%d)-%f(%d)\t%f\t%f"	
+	//fscanf(file, "%f\t", &a);      
+	fscanf(file, "%d(%d)-%d(%d)", &a, &d, &e, &f);
+	fscanf(file, "%f\t", &b);
+	fscanf(file, "%f", &c);
+	real_histogram[i] = c;
+      }
+      
+      fclose(file);
+    }
+  
+}
+
+void normalize_histogram(double *real_histogram, double *histogram, uint size_hist){
+  
+  double sum_real = 0.0;
+  int i;
+  
+  for (i=0; i<size_hist; i++){
+    sum_real += real_histogram[i];
+  }
+  
+  for (i=0; i<size_hist; i++){
+    histogram[i] = real_histogram[i]/sum_real;
+  }  
+  
+}
+
+int pertence_uint_idx (uint elemento, uint *tab, uint tam_tab){
+  
+  for (int i=0; i<tam_tab; i++){
+	
+	if( tab[i] == elemento) {
+	  return i;
+	}
+	
+  }
+  
+  return -1;  
+}
+
+int get_min(uint *tab, uint tam_tab){
+  
+  int min_elem = INT_MAX;
+  
+  for (int i=0; i<tam_tab; i++){
+	
+	if( tab[i] < min_elem) {
+	  min_elem = tab[i];
+	}	
+  }  
+  return min_elem;   
+}
+
+double get_min_dbl(double *tab, uint tam_tab){
+  
+  double min_elem = tab[0];
+  
+  for (int i=0; i<tam_tab; i++){
+	
+	if( tab[i] < min_elem) {
+	  min_elem = tab[i];
+	}	
+  }  
+  return min_elem;   
+}
+
+int get_max(uint *tab, uint tam_tab){
+  int max_elem = 0;
+  
+  for (int i=0; i<tam_tab; i++){
+	
+	if( tab[i] > max_elem) {
+	  max_elem = tab[i];
+	}	
+  }  
+  return max_elem;  
+  
+}
+
+double get_max_dbl(double *tab, uint tam_tab){
+  double max_elem = 0.0;
+  
+  for (int i=0; i<tam_tab; i++){
+	
+	if( tab[i] > max_elem) {
+	  max_elem = tab[i];
+	}	
+  }  
+  return max_elem;  
+  
+}
+
+void write_histogram_to_file (vertex *vertex_web, double *real_histogram, double *histogram, uint *source, uint *destination, uint hist_dimension, uint number, uint robotid){
+  
+  FILE *file;
+  char filename[128];
+  char number_str[20];
+  strcpy(filename,"results/histogram_r");	//e.g.: #histogram_r1_d1000
+  itoa(robotid, number_str, 10);
+  strcat(filename,number_str);
+  strcat(filename,"_d");
+  itoa(number, number_str, 10);  
+  strcat(filename,number_str);
+  strcat(filename,".txt");
+  
+  file = fopen (filename,"w"); 
+  
+  if (file!=NULL){ 
+    
+    fprintf(file, "\n[x] Source(deg)-Dest(deg):\t[y] Norm_hist:\tReal_hist:\n\n");
+    
+    for (int i=0; i<hist_dimension; i++){
+      fprintf(file, "%d(%d)-%d(%d)\t%f\t%f\n", source[i], vertex_web[source[i]].num_neigh, destination[i], vertex_web[destination[i]].num_neigh, histogram[i], real_histogram[i]);
+      //fprintf(file, "%f\t%f\t%f\n", hist_sort[i], histogram[i], real_histogram[i]);
+    }   
+    fclose(file);
+  }
+  
+}
+
+void write_reward_evolution(double reward, uint robotid){ //"results/reward_evolution.txt"
+  
+  FILE *file;
+  char filename[128];
+  char number_str[20];
+  strcpy(filename,"results/reward_evolution_r");
+  itoa(robotid, number_str, 10);
+  strcat(filename,number_str);
+  strcat(filename,".txt");
+  
+  file = fopen (filename,"a");
+  
+    if (file!=NULL){ 
+      fprintf(file, "%d\t%f\n", reward_count,reward);
+      fclose(file);
+    }
+    reward_count++;  
+}
+
+void update_likelihood_old (reinforcement_learning RL, double *real_histogram, double *hist_sort, uint size_hist, vertex *vertex_web){ //actualizar idleness_new: campo que falta preencher na struct
+
+  //só se:   RL.num_possible_neighs > 1 :: 1ª verificação para evitar analisar lixo
+  if (RL.num_possible_neighs <= 1){
+   return; 
+  }
+ 
+  int id_next_vertex = pertence_uint_idx (RL.next_vertex, RL.id_neighbors, RL.num_possible_neighs);
+  
+  //ROS_INFO("id_next_vertex = %d", id_next_vertex);
+  
+  if (id_next_vertex<0){
+    return;
+  }
+  
+  int SIGN = 1;
+  uint i = 0;
+  
+  
+  uint node_count = RL.node_count[id_next_vertex];
+  //ROS_INFO("node_count = %d", node_count);
+  
+  uint node_max = get_max(RL.node_count, RL.num_possible_neighs);
+  //ROS_INFO("node_max = %d", node_max);
+  
+  uint node_min = get_min(RL.node_count, RL.num_possible_neighs);
+  //ROS_INFO("node_min = %d", node_min);
+  
+  if (node_count == node_max && node_max > node_min){
+   SIGN = -1; 
+  }  
+  
+  /**1- CALCULAR A NOVA Idleness BASEADA NO INSTANTE DE TEMPO *** **/ 
+  if (node_min == node_max){ //check idleness effect:
+    
+    double idleness_new [RL.num_possible_neighs];
+    double add_time = ros::Time::now().toSec() - (RL.time_then);
+    
+    //double idleness_old_current = 0.0;
+    //double idleness_new_current = add_time;
+    
+    //isto é so dos vizinhos
+    for(i=0; i<RL.num_possible_neighs; i++){
+      idleness_new[i] = RL.idleness_old[i] + add_time;
+    }
+    
+    idleness_new[id_next_vertex] = 0.0;
+    
+    //calculate sums:
+    double sum_idle_old = 0.0;
+    double sum_idle_new = 0.0;
+    
+    for(i=0; i<RL.num_possible_neighs; i++){
+      sum_idle_old += RL.idleness_old[i];
+      sum_idle_new += idleness_new[i];      
+    }    
+    
+    sum_idle_new += add_time; //add current_vertex idlenss (in idle_old was zero)
+
+    //ROS_INFO("sum_idle_old: %f", sum_idle_old);
+    //ROS_INFO("sum_idle_new: %f", sum_idle_new);
+    
+    if (sum_idle_old < sum_idle_new){
+      SIGN = -1;
+    }
+    
+  } 
+  
+  //Now we have the sign.
+  //ROS_INFO("Sign = %d", SIGN);
+  
+  
+  /** 2- Quanto mais baixa a entropia, maior o reward ou punishment **/  
+  
+  double edge_cost = get_edge_cost_between (vertex_web, RL.current_vertex, RL.next_vertex);
+  //ROS_INFO("edge_cost = %f",edge_cost);
+  
+  int hist_idx_next_vertex = get_hist_idx_from_edge_cost (hist_sort, size_hist, edge_cost);
+  //ROS_INFO("hist_idx_next_vertex = %d",hist_idx_next_vertex);
+  
+  ROS_INFO("Punish/Reward: %f", ((double)SIGN)*(1.0 - RL.entropy) );
+  
+  //ROS_INFO("Before: real_histogram [hist_idx_next_vertex] = %f", real_histogram [hist_idx_next_vertex]);
+  
+  //Punish or Reward:
+  real_histogram [hist_idx_next_vertex] += ((double)SIGN)*(1.0 - RL.entropy);
+  
+  //minimum normalized histogram value = 1/nedges*2.5 (4)
+  //initial histogram value = 1/nedges (10)
+  //maximum normalized histogram value = 4/nedges (40)
+  
+  //minimum real histogram value = 4.0:
+  if (real_histogram [hist_idx_next_vertex] < 4.0){
+    real_histogram [hist_idx_next_vertex] = 4.0;
+  }
+  
+  //maximum real histogram value = 40.0:
+  if (real_histogram [hist_idx_next_vertex] > 40.0){
+    real_histogram [hist_idx_next_vertex] = 40.0;
+  }  
+  
+  //ROS_INFO("After: real_histogram [hist_idx_next_vertex] = %f", real_histogram [hist_idx_next_vertex]);
+    
+}
+
+void update_likelihood (reinforcement_learning RL, double *real_histogram, uint *source, uint *destination, uint hist_dimension, vertex *vertex_web, int minimum_global_node_count, uint robotid){ //actualizar idleness_new: campo que falta preencher na struct
+
+  //só se:   RL.num_possible_neighs > 1 :: 1ª verificação para evitar analisar lixo
+  if (RL.num_possible_neighs <= 1){
+   //write_reward_evolution(0.0, robotid);
+   return;
+  }
+  
+ 
+  int id_next_vertex = pertence_uint_idx (RL.next_vertex, RL.id_neighbors, RL.num_possible_neighs);
+  
+  ROS_INFO("id_next_vertex = %d", id_next_vertex);
+  
+  if (id_next_vertex<0){
+    ROS_WARN("Couldn't find id_next_vertex in update_likelihood()");
+    return;
+  }
+  
+  int SIGN = 0;
+  double strong_reward = 0.0;
+  uint i = 0;
+  
+  double node_count_tab[RL.num_possible_neighs];
+  
+  /**node counts normalizados pelo vertex degree*2 (se deg>1)**/
+  double node_count;
+  
+  //if (vertex_web[RL.next_vertex].num_neigh <= 1){
+    node_count = (double) RL.node_count[id_next_vertex] / (double) vertex_web[RL.next_vertex].num_neigh;
+  //}else{
+  //  node_count = (double) RL.node_count[id_next_vertex] / (double) 2*vertex_web[RL.next_vertex].num_neigh;
+  //}
+  
+  
+  for (i=0; i<RL.num_possible_neighs; i++){
+    
+    //if (vertex_web[ RL.id_neighbors[i] ].num_neigh <= 1){
+      node_count_tab[i] = (double) RL.node_count[i] / (double) vertex_web[ RL.id_neighbors[i] ].num_neigh;
+    //}else{
+    //  node_count_tab[i] = (double) RL.node_count[i] / (double) 2*vertex_web[ RL.id_neighbors[i] ].num_neigh;
+    //}
+    
+    ROS_INFO("node_count (%d) = %d", RL.id_neighbors[i], RL.node_count[i] );
+    ROS_INFO("degree (%d) = %d", RL.id_neighbors[i], vertex_web[RL.id_neighbors[i]].num_neigh);
+    ROS_INFO("node_count_norm (%d) = %f",RL.id_neighbors[i], node_count_tab[i]);    
+    
+  }
+  
+  //uint node_max = get_max(RL.node_count, RL.num_possible_neighs);
+  double node_max = get_max_dbl(node_count_tab, RL.num_possible_neighs);
+  ROS_INFO("node_max_norm = %f",node_max); 
+
+  //ROS_INFO("node_max = %d", node_max);
+  
+  double node_min = get_min_dbl(node_count_tab, RL.num_possible_neighs);
+  ROS_INFO("node_min_norm = %f",node_min); 
+  //ROS_INFO("node_min = %d", node_min);
+  
+  /*if (node_count == node_max && node_max > node_min){
+   SIGN = -1; 
+  }*/
+  
+  if (node_count == node_max){ 
+   SIGN = -5;
+   strong_reward = -1.0;
+   ROS_INFO("STRONG PUNISHMENT!!! node_count = node_max, SIGN = %d",SIGN);
+  }
+  
+  if (node_count == node_min){
+   SIGN = 1;
+   ROS_INFO("node_count = node_min, SIGN = %d",SIGN); 
+  }  
+  
+  if (node_min == node_max){
+   SIGN = 0;   
+   ROS_INFO("node_max = node_min, SIGN = %d",SIGN);
+   
+  }else{
+    
+   /**reward se for a menor node_cont (não normalizado) do grafo global **/
+   if (RL.node_count[id_next_vertex] > 0 && RL.node_count[id_next_vertex] == minimum_global_node_count){ 
+     SIGN = 5;	/**Dimension this as a parameter (alfa) in the reward funcion **/
+     strong_reward = 1.0;
+     ROS_INFO("node_count = minimum_global_node_count, SIGN = %d",SIGN);
+     ROS_WARN("STRONG REWARD!!!!!!!!!!! Vertex with minimum global node count"); 
+   }   
+    
+   if(SIGN==0){
+     ROS_INFO("node_max > node_count >= node_min, SIGN = %d",SIGN);
+   }
+  }
+  
+  //if(SIGN==5){
+  //  ROS_WARN("STRONG REWARD!!!!!!!!!!! Vertex with minimum global node count"); 
+  //}
+  
+  if (SIGN==0){ //not the node with minimum node count: but it may have high instantaneous idleness
+    
+    
+    double max_idleness = 0.0;
+    
+    for (i=0; i<RL.num_possible_neighs; i++){
+      if (RL.idleness_old[i] > max_idleness){
+	max_idleness = RL.idleness_old[i];
+      }
+    }
+    
+    ROS_INFO("max_idleness = %f", max_idleness);
+    ROS_INFO("idleness_old(v=%d) = %f", RL.next_vertex, RL.idleness_old[id_next_vertex]);
+    
+    //doesn't have the highest idleness - bad decision: negative reward
+    if (max_idleness > RL.idleness_old[id_next_vertex]){
+     SIGN = -1; /**alfa = 100**/
+     ROS_INFO("V=%d Doesn't have the highest idleness - bad decision, SIGN = %d",RL.next_vertex, SIGN);
+     
+    }/*else{ //se idleness do seleccionado for 2X maior q idleness do 2º maior (Reward+)
+
+      bool reward = true;
+      
+      for (i=0; i<RL.num_possible_neighs; i++){
+	if (max_idleness <= 2.0*RL.idleness_old[i]+0.001 ){ //tamos a comparar doubles...
+	  reward = false;
+	}
+	ROS_INFO("idleness_old(v=%d) = %f", RL.id_neighbors[i], RL.idleness_old[i]);
+      }
+      
+      if (reward){
+	SIGN=1;
+	ROS_INFO("V=%d Has the highest idleness: Twice the 2nd one, SIGN = %d",RL.next_vertex,SIGN);
+      }else{
+	ROS_INFO("V=%d Has the highest idleness: But NOT twice the 2nd one, SIGN = %d",RL.next_vertex,SIGN);
+      }
+      
+    }*/
+    
+  }
+  
+  if (SIGN==0){
+    ROS_WARN("Punish/Reward: 0.0");
+    //write_reward_evolution(0.0, robotid);
+    return;
+  }
+  
+  /**1- CALCULAR A NOVA Idleness BASEADA NO INSTANTE DE TEMPO *** **/ 
+   /*if (node_min == node_max){ //check idleness effect:
+    
+    double idleness_new [RL.num_possible_neighs];
+    double add_time = ros::Time::now().toSec() - (RL.time_then);
+    
+    //double idleness_old_current = 0.0;
+    //double idleness_new_current = add_time;
+    
+    //isto é so dos vizinhos
+    for(i=0; i<RL.num_possible_neighs; i++){
+      idleness_new[i] = RL.idleness_old[i] + add_time;
+    }
+    
+    idleness_new[id_next_vertex] = 0.0;
+    
+    //calculate sums:
+    double sum_idle_old = 0.0;
+    double sum_idle_new = 0.0;
+    
+    for(i=0; i<RL.num_possible_neighs; i++){
+      sum_idle_old += RL.idleness_old[i];
+      sum_idle_new += idleness_new[i];      
+    }    
+    
+    sum_idle_new += add_time; //add current_vertex idlenss (in idle_old was zero)
+
+    //ROS_INFO("sum_idle_old: %f", sum_idle_old);
+    //ROS_INFO("sum_idle_new: %f", sum_idle_new);
+    
+    if (sum_idle_old < sum_idle_new){
+      SIGN = -1;
+    }
+    
+  }*/
+  
+  //Now we have the sign.
+  //ROS_INFO("Sign = %d", SIGN);
+  
+  
+  /** 2- Quanto mais baixa a entropia, maior o reward ou punishment **/  
+  
+  //double edge_cost = get_edge_cost_between (vertex_web, RL.current_vertex, RL.next_vertex);
+  //ROS_INFO("edge_cost = %f",edge_cost);
+  
+  
+  //int hist_idx_next_vertex = get_hist_idx_from_edge_cost (hist_sort, size_hist, edge_cost);
+  
+  /**ALTERADO PARA SER EDGE DIRIGIDA: Faz mais sentido...**/
+  int hist_idx_next_vertex = get_hist_idx (source, destination, RL.current_vertex, RL.next_vertex, hist_dimension);
+  
+  //ROS_INFO("hist_idx_next_vertex = %d",hist_idx_next_vertex);
+  
+ 
+  double reward_inc = ((double)SIGN)*(1.0 - RL.entropy);
+  
+  if (abs(SIGN)>1){ //strong reward...
+    reward_inc = strong_reward;
+  }
+  
+  //double reward_inc = ((double)SIGN*SCALE_FACTOR)*(RL.entropy);
+  ROS_WARN("Punish/Reward: %f", reward_inc );  
+  ROS_INFO("Before Update: real_histogram [hist_idx_next_vertex] = %f", real_histogram [hist_idx_next_vertex]);
+  
+  //Update histogram:
+  real_histogram [hist_idx_next_vertex] += reward_inc;  
+  //write_reward_evolution(reward_inc, robotid);
+  
+  //minimum normalized histogram value = 1/nedges*2.5 (4)
+  //initial histogram value = 1/nedges (10)
+  //maximum normalized histogram value = 4/nedges (40)
+  
+  //minimum real histogram value = 5.0:
+  if (real_histogram [hist_idx_next_vertex] < 5.0){ //tava 4
+    real_histogram [hist_idx_next_vertex] = 5.0;
+  }
+  
+  //maximum real histogram value = 20.0:
+  if (real_histogram [hist_idx_next_vertex] > 20.0){ //tava 40
+    real_histogram [hist_idx_next_vertex] = 20.0;
+  }  
+  
+  ROS_INFO("After Update (and truncation): real_histogram [hist_idx_next_vertex] = %f", real_histogram [hist_idx_next_vertex]);
+    
+}
+
+void update_likelihood_new (reinforcement_learning RL, uint *node_count_table, double *inst_idleness, uint dimension, double *real_histogram, uint *source, uint *destination, uint hist_dimension, vertex *vertex_web, uint robotid){ //actualizar idleness_new: campo que falta preencher na struct
+
+  //só se:   RL.num_possible_neighs > 1 :: 1ª verificação para evitar analisar lixo
+  if (RL.num_possible_neighs <= 1){
+   //write_reward_evolution(0.0, robotid);
+   return;
+  }
+  
+  int SIGN_tab [RL.num_possible_neighs];
+  
+  //preencher isto:
+  //int idx_vertex[RL.num_possible_neighs]; //se for preciso - preencher ja no prox for
+  double node_norm[RL.num_possible_neighs]; //
+  double node_min, node_max; //
+  int idx_min, idx_max; //
+  uint i; //
+    
+  for (i=0; i<RL.num_possible_neighs; i++){
+    
+    //if (vertex_web[ RL.id_neighbors[i] ].num_neigh <= 1){
+    SIGN_tab[i] = 0;
+    
+    node_norm[i] = (double) node_count_table[ RL.id_neighbors[i] ] / (double) vertex_web[ RL.id_neighbors[i] ].num_neigh;
+    //node_norm[i] = (double) node_count_table[ RL.id_neighbors[i] ];
+    
+    //}else{
+    //  node_count_tab[i] = (double) RL.node_count[i] / (double) 2*vertex_web[ RL.id_neighbors[i] ].num_neigh;
+    //}
+    
+    if (i==0){
+      //initializations
+     node_min = node_norm[i];
+     node_max = 0.0;
+     idx_min = 0;
+     idx_max = -1;
+    }
+    
+    //updates
+    if (node_norm[i] <= node_min){
+      idx_min=i;
+      node_min = node_norm[i];
+    }
+    
+    if (node_norm[i] >= node_max){
+      idx_max=i;
+      node_max = node_norm[i];
+    }
+    
+    //ROS_INFO("node_count (%d) = %d", RL.id_neighbors[i], node_count_table[ RL.id_neighbors[i] ] );
+    //ROS_INFO("degree (%d) = %d", RL.id_neighbors[i], vertex_web[RL.id_neighbors[i]].num_neigh);
+    //ROS_INFO("node_count_norm (%d) = %f",RL.id_neighbors[i], node_norm[i]);
+    //ROS_INFO("inst_idl[%d] = %f", RL.id_neighbors[i], inst_idleness[RL.id_neighbors[i]] );
+  }
+  
+  
+  
+  
+  int ocurr_min = 0;
+  int ocurr_max = 0;
+  int tab_idx_min [RL.num_possible_neighs];
+  int tab_idx_max [RL.num_possible_neighs];
+  
+  for (i=0; i<RL.num_possible_neighs; i++){
+      
+    if(node_min <= node_norm[i]+ 0.001 ||  node_min >= node_norm[i] -0.001) { //double comparation
+      tab_idx_min[ocurr_min] = i;
+      ocurr_min++;
+    }
+    
+    if(node_max <= node_norm[i] + 0.001 ||  node_max >= node_norm[i] - 0.001 ) {//double comparation
+      tab_idx_max[ocurr_max] = i;
+      ocurr_max++;      
+    }
+  }
+  
+  
+  
+  
+  //ROS_INFO("ocurr_min = %d", ocurr_min);
+  
+  /*for (i=0; i<ocurr_min; i++){
+    ROS_INFO("tab_idx_min[%d] = %d", i,tab_idx_min[i]);
+  }*/
+  
+  //ROS_INFO("ocurr_max = %d", ocurr_max);
+  
+  /*for (i=0; i<ocurr_max; i++){
+    ROS_INFO("tab_idx_max[%d] = %d", i,tab_idx_max[i]);
+  } */
+  
+   
+    
+    if (ocurr_min == 1){ // 1 choice:
+      SIGN_tab [idx_min] = 1;
+      //ROS_INFO("SIGN(%d)[v=%d] = %d", idx_min, RL.id_neighbors[idx_min], SIGN_tab [idx_min]);
+    }
+    
+    if (ocurr_max == 1){ //1 choice:
+      SIGN_tab [idx_max] = -1;
+      //ROS_INFO("SIGN(%d)[v=%d] = %d", idx_max, RL.id_neighbors[idx_max], SIGN_tab [idx_max]);
+    }
+    
+    if (ocurr_min > 1){ //more than 1 choice:
+      
+      //ESCOLHER O(S) QUE TEM IDLENESS MAIOR
+      double max_idl = 0.0;
+      int vertex_index;
+      
+      //get max_idl:
+      for (i=0; i<ocurr_min; i++){
+	
+	vertex_index = RL.id_neighbors [ tab_idx_min [i] ];
+	
+	if (inst_idleness [vertex_index] > max_idl){
+	  max_idl = inst_idleness [vertex_index];
+	}
+      }
+      
+      //tnh max_idl mas n sei num d ocurr
+      int ocurr_idl_max = 0;
+      int tab_idl_max [ocurr_min];
+      
+      //get num ocurr of max_idl:
+      for (i=0; i<ocurr_min; i++){
+	vertex_index = RL.id_neighbors [ tab_idx_min [i] ]; //guardar idx da vertex_web / inst_idleness
+	
+	if (inst_idleness [vertex_index] == max_idl){
+	  tab_idl_max[ocurr_idl_max] = tab_idx_min [i]; // guardar idx da RL.id_neighbors table
+	  ocurr_idl_max++;
+	}
+      }
+      
+      //SIGNs:
+      for (i=0; i<ocurr_idl_max; i++){
+	
+	vertex_index = RL.id_neighbors [ tab_idl_max [i] ];
+	SIGN_tab [ tab_idl_max[i] ] = 1;
+	
+	//ROS_INFO("SIGN(%d)[v=%d] = %d", tab_idl_max[i], vertex_index, SIGN_tab [ tab_idl_max[i] ]);
+      }
+      
+      
+      
+    }
+    
+    if (ocurr_max > 1) {
+      //ESCOLHER O(S) QUE TEM IDLENESS MENOR
+      double min_idl;
+      int vertex_index;
+      
+      //get min_idl:
+      for (i=0; i<ocurr_max; i++){
+	
+	vertex_index = RL.id_neighbors [ tab_idx_max [i] ];	
+	if (i==0){min_idl = inst_idleness [vertex_index];} //initialization
+	
+	if (inst_idleness [vertex_index] < min_idl){
+	  min_idl = inst_idleness [vertex_index];
+	}
+      }
+      
+      //tnh min_idl mas n sei num d ocurr
+      int ocurr_idl_min = 0;
+      int tab_idl_min [ocurr_max];
+      
+      //get num ocurr of min_idl:
+      for (i=0; i<ocurr_max; i++){
+	vertex_index = RL.id_neighbors [ tab_idx_max [i] ]; //guardar idx da vertex_web / inst_idleness
+	
+	if (inst_idleness [vertex_index] == min_idl){
+	  tab_idl_min[ocurr_idl_min] = tab_idx_max [i]; // guardar idx da RL.id_neighbors table
+	  ocurr_idl_min++;
+	}
+      }
+      
+      //SIGNs:
+      for (i=0; i<ocurr_idl_min; i++){
+	
+	vertex_index = RL.id_neighbors [ tab_idl_min [i] ];
+	SIGN_tab [ tab_idl_min[i] ] = -1;  /** AQUI POSSO PENALIZAR BASTANTE = NÓ QUE ACABEI DE VISITAR E NAO QUERO CA VOLTAR **/
+	
+	//ROS_INFO("SIGN(%d)[v=%d] = %d", tab_idl_min[i], vertex_index, SIGN_tab [ tab_idl_min[i] ]);
+      }      
+      
+      
+      
+    }
+    
+  
+  /*if (node_min == node_max){
+    //TODOS SAO IGUAIS É PRECISO VER IDLENESS MAX E MIN
+    ROS_WARN ("node_min = node_max");
+  }*/
+  
+  int hist_idx_next_vertex, vertex_index;
+  
+  double reward_inc = (1.0 - RL.entropy);
+  //write_reward_evolution(reward_inc, robotid); //apenas para monitorizar a dimensão do valor
+  
+  for (i=0; i<RL.num_possible_neighs; i++){
+    
+    vertex_index = RL.id_neighbors[i];   
+    
+    //ROS_INFO("SIGN(%d)[v=%d] = %d", i, vertex_index, SIGN_tab[i]);   
+
+    hist_idx_next_vertex = get_hist_idx (source, destination, RL.current_vertex, vertex_index, hist_dimension);
+    
+    reward_inc = ((double)SIGN_tab[i])*(1.0 - RL.entropy);
+    
+    //ROS_WARN("real_histogram [e(%d,%d)] = (%f) + (%f) = %f", RL.current_vertex, vertex_index, real_histogram [hist_idx_next_vertex], reward_inc, real_histogram [hist_idx_next_vertex]+reward_inc);
+   
+    //Update histogram:
+    real_histogram [hist_idx_next_vertex] += reward_inc;  
+    
+    //Truncation:
+    if (real_histogram [hist_idx_next_vertex] < 0.5){
+      real_histogram [hist_idx_next_vertex] = 0.5;
+    }
+    
+    //maximum real histogram value = 20.0:
+    if (real_histogram [hist_idx_next_vertex] > 2.0){
+      real_histogram [hist_idx_next_vertex] = 2.0;
+    }      
+    
+  } 
+  
+  
+  //int minimum_global_node_count = get_min(node_count_table, dimension);
+    
+   /**reward se for a menor node_cont (não normalizado) do grafo global **/
+   /*if (RL.node_count[id_next_vertex] > 0 && RL.node_count[id_next_vertex] == minimum_global_node_count){ 
+     SIGN = 5;	//Dimension this as a parameter (alfa) in the reward funcion
+     strong_reward = 1.0;
+     ROS_INFO("node_count = minimum_global_node_count, SIGN = %d",SIGN);
+     ROS_WARN("STRONG REWARD!!!!!!!!!!! Vertex with minimum global node count"); 
+   } */  
+
+}
+
+int learning_algorithm(uint current_vertex, vertex *vertex_web, double *instantaneous_idleness, double *avg_idleness, int *tab_intention, double *histogram, uint *source, uint *destination, uint hist_dimension, int nr_robots, int id_robot, uint *node_count, reinforcement_learning &RL){
+  
+    RL.current_vertex = current_vertex;
+    int next_vertex; //result of the decision 
+    
+    //ROS_INFO("current_vertex: %d", current_vertex);
+
+    // FIRST STEP: FILTER POSSIBLE NEIGHBORS - REMOVE THOSE UNDER INTENTION OF OTHER ROBOTS 
+    uint num_neighs = vertex_web[current_vertex].num_neigh;
+    uint neighbors [num_neighs];    
+    uint num_possible_neighs = 0;
+    int id_neigh, count;
+    uint i;
+
+     for (i=0; i<num_neighs; i++){
+	  
+      id_neigh = vertex_web[current_vertex].id_neigh[i];
+      //ROS_INFO("Possible Neighbor: %d", id_neigh);
+      count = count_intention_cbls (id_neigh, tab_intention, nr_robots, id_robot);
+	  
+      if (count==0){
+	  //save possible neighbor:
+	  neighbors [num_possible_neighs] =  id_neigh;
+	  RL.id_neighbors [num_possible_neighs] = id_neigh;
+	  num_possible_neighs++;
+	   
+      }	//else{ignore neighbor: some robot is going there}
+      
+     }
+     
+     RL.num_possible_neighs = num_possible_neighs;
+     
+     
+    // SECOND STEP: CALCULATE POSTERIOR PROBABILITY OF NEIHBORS ACCORDING TO PRIOR AND LIKELIHOOD DIST 
+    
+    if (num_possible_neighs == 0){ //No decision: Wait.
+      next_vertex = current_vertex;
+      
+    }else if (num_possible_neighs == 1){ //Only one possible decision      
+      next_vertex = neighbors [0];
+      
+    }else if (num_possible_neighs > 1){	//In this case there are several possible decisions: Calculate Posterior & then Punish / Reward
+
+      //Calculate Common Prior Denominator:
+      double prior_denominator = 0.0;
+      
+      //For Lookahead prior we need:
+      double w_first_layer = 0.75;
+      double max_idl_scnd_layer [num_possible_neighs];
+      double prior_tab [num_possible_neighs];      
+      
+      bool prior_with_lookahead = true;
+      
+      if (!prior_with_lookahead){  
+	
+	/** IMMEDIATE LOCAL NORMALIZED PRIOR - BEFORE **/
+	for (i=0; i<num_possible_neighs; i++){
+	  //prior_denominator += instantaneous_idleness [ neighbors[i] ];
+	  prior_denominator += avg_idleness [ neighbors[i] ];
+	}	
+	//ROS_INFO("prior_denominator: %f", prior_denominator);  
+	
+      }else{	/** LOCAL LOOKAHEAD PRIOR **/
+	int j;
+	//save each prior in a table "prior_tab"
+	for (i=0; i<num_possible_neighs; i++){	  
+	  int id_v = neighbors[i];
+	  max_idl_scnd_layer[i] = 0.0;
+	  
+	  for (j=0; j<vertex_web[id_v].num_neigh; j++) { //2nd layer (lookahead)
+
+	    if (vertex_web[id_v].num_neigh==1){
+	      prior_tab [i] = avg_idleness[id_v];
+	      
+	    }else{
+	    
+	      int id_neigh_scnd_layer = vertex_web[id_v].id_neigh[j];
+	      count = count_intention_cbls (id_neigh_scnd_layer, tab_intention, nr_robots, id_robot);
+	      
+	      if (count == 0){ //ignore those intended by other robots
+		
+		//ROS_INFO("avg_idleness[v=%d(viz=%i)] = %f", id_neigh_scnd_layer, id_v, avg_idleness [id_neigh_scnd_layer]);
+
+		//save max avg idl among neighbors
+		if (avg_idleness [id_neigh_scnd_layer] > max_idl_scnd_layer [i]){
+		  max_idl_scnd_layer [i] = avg_idleness [id_neigh_scnd_layer];		
+		}	      
+	      }
+	    
+	    }
+	  } //end for
+	  
+	  if (max_idl_scnd_layer[i]<=0.001){  //many robots may be near...
+	   prior_tab[i] = avg_idleness[id_v];
+	   //ROS_INFO("prior_tab [%d] = %f", i, prior_tab[i]);
+	    
+	  }else{	    
+	    //ROS_INFO("avg_idleness[v=%d] = %f", id_v, avg_idleness[id_v]);
+	    //ROS_INFO("max_idl_scnd_layer = %f", max_idl_scnd_layer[i]);
+	    prior_tab [i] = (w_first_layer*avg_idleness[id_v]) + ((1.0-w_first_layer)*max_idl_scnd_layer[i]);
+	    //ROS_INFO("prior_tab [%d] = %f", i, prior_tab[i]);
+	  }
+	  //calcular o denominador 
+	  prior_denominator += prior_tab [i];
+	}
+	//ROS_INFO("prior_denominator = %f", prior_denominator);
+	
+	
+      } //else lookahead prior
+      
+      //calculate Bayes rule (Prior * Likelihood):
+      double posterior_probability [num_possible_neighs];
+      double norm_posterior_probability [num_possible_neighs];
+      double max_pp= -1;
+      uint possibilities[num_neighs];     
+      uint hits=0; 
+      double posterior_sum = 0.0;
+      double entropy = 0.0;
+      
+      for (i=0; i<num_possible_neighs; i++){	
+	//prior:
+	double prior; 
+	
+	if (prior_denominator <= 0.001){ //in the beginning all idlenesses are zero.
+	  prior = 1.0 / (double) num_possible_neighs;
+	  
+	}else{
+	  //prior = instantaneous_idleness [ neighbors[i] ] / prior_denominator;  // [0-1]
+	  
+	  if (!prior_with_lookahead){  /** IMMEDIATE LOCAL NORMALIZED PRIOR - BEFORE **/	    
+	    prior = avg_idleness [ neighbors[i] ] / prior_denominator;  // [0-1]
+	    
+	  }else{	/** LOCAL LOOKAHEAD PRIOR **/	    
+	    prior = prior_tab[i] / prior_denominator;	  
+	  }
+	}
+	
+	//ROS_INFO("Prior(v=%d) = %f", neighbors[i], prior);
+	
+	
+	//likelihood:
+	
+	/*double edge_cost = get_edge_cost_between (vertex_web, current_vertex, neighbors[i]);
+	if (edge_cost < 0.0){
+	  ROS_ERROR("learning_algorithm(): edge_cost = -1");
+	  return -1;
+	}
+	
+	int idx_edge = get_hist_idx_from_edge_cost (hist_sort, number_of_edges, edge_cost);
+	if (idx_edge < 0) {
+	  ROS_ERROR("learning_algorithm(): idx_edge = -1");
+	  return -1;
+	}*/
+	
+	int idx_edge = get_hist_idx (source, destination, current_vertex, neighbors[i], hist_dimension);
+	if (idx_edge < 0) {
+	  ROS_ERROR("learning_algorithm(): idx_edge = -1");
+	  return -1;
+	}
+	
+	double likelihood = histogram[idx_edge];  // [0-1]
+	
+	//ROS_INFO("Edge (%d - %d) has idx %d", current_vertex, neighbors[i], idx_edge);
+	//ROS_INFO("Likelihood(v=%d, edge=%d) = %f", neighbors[i], idx_edge, likelihood);
+	
+	//posterior:
+	posterior_probability[i] = prior * likelihood;
+	posterior_sum += posterior_probability[i]; //get normalizing factor
+	
+	RL.node_count[i] = node_count [ neighbors[i] ];
+	RL.idleness_old[i] = instantaneous_idleness [ neighbors[i] ];
+	
+	//choose the one with maximum posterior_probability:
+	if (posterior_probability[i] > max_pp){
+	  max_pp = posterior_probability[i];
+	  
+	  hits=0;
+	  possibilities[hits] = neighbors[i];
+	  
+	}else if (posterior_probability[i] == max_pp){
+	  hits ++;
+	  possibilities[hits] = neighbors[i];
+	} 
+	
+      }
+      
+      // Normalize Posterior:      
+      for (i=0; i<num_possible_neighs; i++){	
+	norm_posterior_probability[i] = posterior_probability[i] / posterior_sum;	
+	//ROS_INFO("PP(v=%d) = %f", neighbors[i], norm_posterior_probability[i]);	
+	entropy += norm_posterior_probability[i] * log2 (norm_posterior_probability[i]);	
+      }
+      
+      /** CALCULATE DECISION ENTROPY **/
+      entropy = -entropy;
+      //ROS_INFO("Decision Entropy = %f", entropy);
+      
+      /** NORMALIZE ENTROPY ACCORDING TO NR# DECISIONS **/
+      double equiv_prob = 1.0/(double)num_possible_neighs;
+      //ROS_INFO("equiv_prob = %f", equiv_prob);
+      double entropy_max = -((double)num_possible_neighs)*( equiv_prob * log2(equiv_prob) );      
+      //ROS_INFO("Max Entropy (%d decisions) = %f", num_possible_neighs, entropy_max);
+      
+      RL.entropy = entropy / entropy_max;
+      
+      if (RL.entropy > 1.0) {RL.entropy = 1.0;}
+      //ROS_INFO("Normalized Entropy = %f", RL.entropy);
+      
+      //there may be more than one "correct" decision: choose closer vertex
+      if(hits>0){
+
+	//ROS_INFO("More than one possibility: Choose closer vertex");
+	int possible_vertex = possibilities[0];
+	int id_neigh_possible_vertex = -1;	
+	      
+	for (i=0; i<num_neighs; i++){      
+	  if (vertex_web[current_vertex].id_neigh[i] == possible_vertex){
+	    id_neigh_possible_vertex = i;
+	  }
+	}	
+	      
+	int min_edge = vertex_web[current_vertex].cost[id_neigh_possible_vertex];
+	int chosen=0;
+	      
+	//printf("hits: %d\n", hits);	
+	//printf("Edge (%d): %d\n", possible_vertex, min_edge);
+	      
+	int j;
+	      
+	for (i=1; i<=hits; i++){	  
+	  possible_vertex=possibilities[i];
+		
+	  id_neigh_possible_vertex = -1;	
+			
+		for (j=0; j<num_neighs; j++){      
+			if (vertex_web[current_vertex].id_neigh[j] == possible_vertex){
+			    id_neigh_possible_vertex = j;
+			}
+		}	  
+		
+		//printf("Edge (%d): %d\n", possible_vertex, vertex_web[current_vertex].cost[id_neigh_possible_vertex]);
+		
+		if (vertex_web[current_vertex].cost[id_neigh_possible_vertex] <= min_edge){
+		  min_edge = vertex_web[current_vertex].cost[id_neigh_possible_vertex];
+		  chosen = i;
+		}
+		
+	 }      
+		
+	 //printf("rand integer = %d\n", i);
+	 next_vertex = possibilities [chosen];		// closest vertex 
+      
+	
+      }else{
+	next_vertex = possibilities[0];
+      }
+
+      
+    }
+    
+    RL.time_then = ros::Time::now().toSec();
+    RL.next_vertex = next_vertex;    
+    return next_vertex;
+
 }

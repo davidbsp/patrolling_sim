@@ -137,6 +137,22 @@ uint IdentifyVertex (vertex *vertex_web, uint size, double x, double y){
   return v;  
 }
 
+uint GetNumberEdges (vertex *vertex_web, uint dimension){
+  
+  uint result = 0;
+  
+  for (uint i=0; i<dimension; i++){
+    for (uint j=0; j<vertex_web[i].num_neigh; j++){      
+      if (vertex_web[i].id < vertex_web[i].id_neigh[j]){
+	result++;
+      }      
+    }    
+  }
+  
+  return result;
+  
+}
+
 //integer to array (itoa for linux c)
 char* itoa(int value, char* str, int radix) {
     static char dig[] =
