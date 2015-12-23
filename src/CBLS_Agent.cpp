@@ -187,11 +187,15 @@ void CBLS_Agent::onGoalComplete() {
 	}	
 	/** *****************************************************/  
 	
-	 if (current_vertex==next_vertex){
-	   goal_complete = true; //do not try to go there!
-	   /** PARA ENVIAR INTENÇÃO DE FICAR **/
+	
+	/** David Portugal: 23 Dec. 2015 -- changed this behavior. 
+	 *  The robot no longer stays in the same place if all neighbor vertices are occupied**/
+	
+	 //if (current_vertex==next_vertex){
+	 //  goal_complete = true; //do not try to go there!
+	 //  //Stay in the same place to avoid interference
 	   
-	 }else{
+	 //}else{
 	    
 	  //send_info(current_vertex, next_vertex);
 	  send_goal_reached(); // Send TARGET to monitor
@@ -202,7 +206,7 @@ void CBLS_Agent::onGoalComplete() {
 	  sendGoal(next_vertex);  // send to move_base
 	  
 	  goal_complete = false;    	  
-	 }	
+	 //}	
   
 }
 

@@ -3455,6 +3455,7 @@ int learning_algorithm(uint current_vertex, vertex *vertex_web, double *instanta
     uint num_possible_neighs = 0;
     int id_neigh, count;
     uint i;
+    bool all_neigh_occupied = false;
 
      for (i=0; i<num_neighs; i++){
 	  
@@ -3477,10 +3478,26 @@ int learning_algorithm(uint current_vertex, vertex *vertex_web, double *instanta
      
     // SECOND STEP: CALCULATE POSTERIOR PROBABILITY OF NEIHBORS ACCORDING TO PRIOR AND LIKELIHOOD DIST 
     
-    if (num_possible_neighs == 0){ //No decision: Wait.
-      next_vertex = current_vertex;
+    if (num_possible_neighs == 0){
+      //OLD BEHAVIOR: next_vertex = current_vertex (No decision: Wait)
       
-    }else if (num_possible_neighs == 1){ //Only one possible decision      
+      //NEW BEHAVIOR:
+      //All neighbors are occupied so choose 1 between all of them:
+      //fill "neighbors" table and "num_possible_neighs" again:
+      
+      
+      for (i=0; i<num_neighs; i++){
+	neighbors[i] = vertex_web[current_vertex].id_neigh[i];
+	RL.id_neighbors [i] = neighbors[i];
+      }
+      
+      num_possible_neighs = num_neighs;
+      RL.num_possible_neighs = num_possible_neighs;
+      all_neigh_occupied = true; 
+      
+    }
+    
+    if (num_possible_neighs == 1){ //Only one possible decision      
       next_vertex = neighbors [0];
       
     }else if (num_possible_neighs > 1){	//In this case there are several possible decisions: Calculate Posterior & then Punish / Reward
@@ -3521,7 +3538,8 @@ int learning_algorithm(uint current_vertex, vertex *vertex_web, double *instanta
 	      int id_neigh_scnd_layer = vertex_web[id_v].id_neigh[j];
 	      count = count_intention_cbls (id_neigh_scnd_layer, tab_intention, nr_robots, id_robot);
 	      
-	      if (count == 0){ //ignore those intended by other robots
+	      //ignore those intended by other robots
+	      if ( all_neigh_occupied == false && count == 0 ){
 		
 		//ROS_INFO("avg_idleness[v=%d(viz=%i)] = %f", id_neigh_scnd_layer, id_v, avg_idleness [id_neigh_scnd_layer]);
 
@@ -3631,7 +3649,7 @@ int learning_algorithm(uint current_vertex, vertex *vertex_web, double *instanta
       // Normalize Posterior:      
       for (i=0; i<num_possible_neighs; i++){	
 	norm_posterior_probability[i] = posterior_probability[i] / posterior_sum;	
-	//ROS_INFO("PP(v=%d) = %f", neighbors[i], norm_posterior_probability[i]);	
+	//ROS_INFO("PP(v=%d) = %f", neighbors[i], norm_posterior_probability[i]);
 	entropy += norm_posterior_probability[i] * log2 (norm_posterior_probability[i]);	
       }
       
