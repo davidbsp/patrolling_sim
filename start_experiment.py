@@ -98,7 +98,7 @@ def getSimulationRunning():
 # Terminates if simulation is stopped (/simulation_runnning param is false)
 # or if timeout is reached (if this is >0)
 # CUSTOM_STAGE: use of extended API for stage (requires custom stage and stage_ros).
-def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE):
+def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP):
 
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
@@ -112,7 +112,8 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDEL
     print 'Terminal ',TERM
     print 'Timeout ',TIMEOUT
     print 'Custom Stage ',CUSTOM_STAGE
-    
+    print 'Simulator speed-up ',SPEEDUP    
+
     if (TIMEOUT>0):
         TIMEOUT = TIMEOUT + 10 # Let's give more time to complete actions and logging
 
@@ -215,7 +216,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDEL
 
     print 'Stage simulator footprints and speedup'
     os.system('rostopic pub /stageGUIRequest std_msgs/String "data: \'footprints\'"  --once')
-    os.system('rostopic pub /stageGUIRequest std_msgs/String "data: \'speedup\'"  --once')
+    os.system('rostopic pub /stageGUIRequest std_msgs/String "data: \'speedup_%.1f\'"  --once' %(SPEEDUP))
     #os.system('rm ~/.ros/stage-000003.png')
 
     now = datetime.datetime.now()
@@ -418,7 +419,12 @@ def main():
     DIP(root)
     root.geometry("300x320+0+0")
     root.mainloop()  
-  elif (len(sys.argv)==11):
+
+  elif (len(sys.argv)<10):
+    print "Use: ",sys.argv[0]
+    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <nav_module> <goal-wait> <communication-delay> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
+
+  else:
     MAP = sys.argv[1]
     NROBOTS = sys.argv[2]
     ALG_SHORT = sys.argv[3]
@@ -428,13 +434,16 @@ def main():
     COMMDELAY = sys.argv[7]
     TERM = sys.argv[8]
     TIMEOUT = int(sys.argv[9])
-    CUSTOM_STAGE = sys.argv[10]
-    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE)
-  else:
-    print "Use: ",sys.argv[0]
-    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <nav_module> <goal-wait> <communication-delay> <terminal> <timeout> <custom_stage_flag>'
- 
+    CUSTOM_STAGE = False
+    SPEEDUP = 4.7
+    if (len(sys.argv)>=11):
+      CUSTOM_STAGE = sys.argv[10]
+    if (len(sys.argv)>=12):
+      SPEEDUP = float(sys.argv[11])
+    
+    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP)
 
+ 
 
 
 if __name__ == '__main__':
