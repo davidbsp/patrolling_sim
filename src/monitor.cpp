@@ -120,8 +120,9 @@ uint patrol_cnt = 1;
 
 string algorithm;
 
-int hn, hsum;
-int hv[(int)(MAXIDLENESS/RESOLUTION)+1];
+#define hn ((int)(MAXIDLENESS/RESOLUTION)+1)
+int hsum;
+int hv[hn];
 
 // Idleness file
 FILE *idlfile;
@@ -380,7 +381,7 @@ double Median( double *a, uint dimension )
 
 
 uint calculate_patrol_cycle ( int *nr_visits, uint dimension ){
-  dolog("calculate_patrol_cycle - begin");
+  dolog("    calculate_patrol_cycle - begin");
   uint result = INT_MAX;
   uint imin=0;
   for (uint i=0; i<dimension; i++){
@@ -389,7 +390,7 @@ uint calculate_patrol_cycle ( int *nr_visits, uint dimension ){
     }
   }
   //printf("  --- complete patrol: visits of %d : %d\n",imin,result);
-  dolog("calculate_patrol_cycle - end");
+  dolog("    calculate_patrol_cycle - end");
   return result;  
 }
 
@@ -471,7 +472,7 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
 
 bool check_dead_robots() {
 
-    dolog("check_dead_robots - begin");
+    dolog("  check_dead_robots - begin");
 
     double current_time = ros::Time::now().toSec();
     bool r=false;
@@ -490,7 +491,7 @@ bool check_dead_robots() {
       }
     }
 
-    dolog("check_dead_robots - end");
+    dolog("  check_dead_robots - end");
 
     return r;
 }
@@ -499,7 +500,7 @@ bool check_dead_robots() {
 // update stats after robot 'id_robot' visits node 'goal'
 void update_stats(int id_robot, int goal) {
 
-    dolog("update_stats - begin");
+    dolog("  update_stats - begin");
 
     
 //   printf("last_visit [%d] = %.1f\n", goal, last_visit [goal]);
@@ -514,11 +515,15 @@ void update_stats(int id_robot, int goal) {
 
     printf("  number_of_visits [%d] = %d\n", goal, number_of_visits [goal]);
 
+    dolog("  update_stats - 1");
+
     if (number_of_visits [goal] == 0) {
         avg_idleness [goal] = 0.0; stddev_idleness[goal] = 0.0;
         total_0 [goal] = 0.0; total_1 [goal] = 0.0;  total_2 [goal] = 0.0;
     }
     else { // if (number_of_visits [goal] > 0) {
+
+          dolog("  update_stats - 2");
 
         current_idleness [goal] = last_visit_temp - last_visit [goal];
         printf("  current_idleness [%d] = %.2f\n", goal, current_idleness [goal]);
@@ -527,18 +532,26 @@ void update_stats(int id_robot, int goal) {
             max_idleness=current_idleness [goal];
         if (current_idleness [goal] < min_idleness || min_idleness<0.1)
             min_idleness=current_idleness [goal];
+        
+            dolog("  update_stats - 3");
+
         // global stats
         gT0++; gT1 += current_idleness[goal]; gT2 += current_idleness[goal]*current_idleness[goal];
         gT2n = gT2 / gT0;
     
+            dolog("  update_stats - 4");
+
         fprintf(idlfile,"%.1f;%d;%d;%.1f;%d\n",current_time,id_robot,goal,current_idleness[goal],interference_cnt);
         fflush(idlfile);
 
+            dolog("  update_stats - 5");
+
         // for hystograms
         int b = (int)(current_idleness[goal]/RESOLUTION);
-        hv[b]++; hsum++;
+        if (b<hn) {
+          hv[b]++; hsum++;
+        }
 
-// avg_idleness [goal] = current_idleness [goal];
         total_0 [goal] += 1.0; total_1 [goal] += current_idleness [goal];  total_2 [goal] += current_idleness [goal]*current_idleness [goal];
         avg_idleness [goal] = total_1[goal]/total_0[goal]; 
         stddev_idleness[goal] = 1.0/total_0[goal] * sqrt(total_0[goal]*total_2[goal]-total_1[goal]*total_1[goal]); 
@@ -563,7 +576,7 @@ void update_stats(int id_robot, int goal) {
             
     goal_reached = false;
 
-    dolog("update_stats - end");
+    dolog("  update_stats - end");
 
 }
 
@@ -671,7 +684,8 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     
     // File to log all the idlenesses of an experimental scenario
 
-    char idlfilename[240],resultsfilename[240],resultstimefilename[240],resultstimecsvfilename[240];
+    char idlfilename[240],resultsfilename[240],resultstimefilename[240],resultstimecsvfilename[240],expname[240];
+    sprintf(expname,"%s/%s",path4,strnow);
     sprintf(idlfilename,"%s/%s_idleness.txt",path4,strnow);
     sprintf(resultsfilename,"%s/%s_results.txt",path4,strnow);
     sprintf(resultstimefilename,"%s/%s_timeresults.txt",path4,strnow);
@@ -679,7 +693,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
     FILE *fexplist;
     fexplist = fopen("experiments.txt", "a");
-    fprintf(fexplist,"%s/%s\n",path4,strnow);
+    fprintf(fexplist,"%s\n",expname);
     fclose(fexplist);
 
     idlfile = fopen (idlfilename,"a");
@@ -693,8 +707,10 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     logfile = fopen(logfilename, "w");
 #endif
 
+    dolog("Monitor node starting");
+    dolog(expname);
+    
     // Vectors for hystograms
-    hn = (int)(MAXIDLENESS/RESOLUTION)+1;
     for (int k=0; k<hn; k++) hv[k]=0;
     hsum=0;
     
@@ -943,6 +959,8 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     
   printf("Monitor closed.\n");
 
+  dolog("Monitor closed");
+  
   sleep(5);
   char cmd[80];
   sprintf(cmd, "mv ~/.ros/stage-000003.png %s/%s_stage.png", path4,strnow);
@@ -951,5 +969,6 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   printf("Screenshot image copied.\n");
   sleep(3);
   
+  dolog("Snapshots done");
 }
 
