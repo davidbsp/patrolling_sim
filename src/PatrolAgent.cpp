@@ -286,11 +286,7 @@ void PatrolAgent::run() {
         
         }
         
-        //ros::Duration delay = ros::Duration(0.1);
-        //delay.sleep();
-        
-	// ros::spinOnce();           
-	loop_rate.sleep(); //David Portugal: I believe this is more correct to guarantee that the loop takes exactly 0.1 secs            
+	loop_rate.sleep(); 
 
     } // while ros.ok    
 }

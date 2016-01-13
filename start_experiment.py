@@ -47,8 +47,7 @@ Terminal_list = ['gnome-terminal','xterm']
 
 initPoses = {}
 
-# Fixed so far
-COMMDELAY_DEFAULT = 0.2
+COMMDELAY_DEFAULT = 0.0
 
 NAVMODULE_DEFAULT = "ros" # "thin_navigation" or "ros"
 
@@ -435,7 +434,7 @@ def main():
     TERM = sys.argv[8]
     TIMEOUT = int(sys.argv[9])
     CUSTOM_STAGE = False
-    SPEEDUP = 4.7
+    SPEEDUP = 1.0
     if (len(sys.argv)>=11):
       CUSTOM_STAGE = sys.argv[10]
     if (len(sys.argv)>=12):

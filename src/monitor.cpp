@@ -56,6 +56,7 @@
 using namespace std;
 
 #include "getgraph.h"
+#include "message_types.h"
 
 #define NUM_MAX_ROBOTS 32
 #define MAX_COMPLETE_PATROL 100
@@ -67,7 +68,8 @@ using namespace std;
 #define RESOLUTION 1.0 // seconds
 #define MAXIDLENESS 500.0 // seconds
 
-#include "message_types.h"
+#define LOG_MONITOR 0
+
 
 using std::cout;
 using std::endl;
@@ -84,10 +86,12 @@ uint teamsize;
 bool init_robots[NUM_MAX_ROBOTS];
 double last_goal_reached[NUM_MAX_ROBOTS];
 
+// mutex for accessing last_goal_reached vector
+pthread_mutex_t lock_last_goal_reached;
+
 //State Variables:
-bool interference = false;
 bool goal_reached = false;
-int id_robot; // robot sending the message
+
 int goal;
 double time_zero, last_report_time;
 time_t real_time_zero;
@@ -122,32 +126,38 @@ int hv[(int)(MAXIDLENESS/RESOLUTION)+1];
 // Idleness file
 FILE *idlfile;
 
+// log file
+FILE *logfile = NULL;
+
+void dolog(const char *str) {
+  if (logfile) {
+    fprintf(logfile,"%s\n",str);
+    fflush(logfile);
+  }
+}
 
 void update_stats(int id_robot, int goal);
 
-/*
-void getRobotPose(int robotid, float &x, float &y, float &theta) {
-    
-    std::string robotname = "robot_"+robotid;
-    tf::StampedTransform transform;
 
-    try {
-        listener->waitForTransform("/map", "/" + robotname + "/base_link", ros::Time(0), ros::Duration(3));
-        listener->lookupTransform("/map", "/" + robotname + "/base_link", ros::Time(0), transform);
-        x = transform.getOrigin().x();
-        y = transform.getOrigin().y();
-        theta = tf::getYaw(transform.getRotation());
-    }
-    catch(tf::TransformException ex) {
-        ROS_ERROR("%s", ex.what()); x=0; y=0; theta=0;
-    }
-
+double get_last_goal_reached(int k)
+{
+  pthread_mutex_lock(&lock_last_goal_reached);
+  double r = last_goal_reached[k];
+  pthread_mutex_unlock(&lock_last_goal_reached);
+  return r;
 }
-*/
+
+void set_last_goal_reached(int k, double val)
+{
+  pthread_mutex_lock(&lock_last_goal_reached);
+  last_goal_reached[k] = val;
+  pthread_mutex_unlock(&lock_last_goal_reached);
+}
 
 
-
-void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [ID,vertex,intention,interference]
+void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) 
+{
+    dolog("resultsCB - begin");
 
     std::vector<signed short>::const_iterator it = msg->data.begin();    
     
@@ -159,8 +169,8 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
         vresults.push_back(*it); it++;
     }
 
-    id_robot = vresults[0];
-    int msg_type = vresults[1];
+    int id_robot = vresults[0];  // robot sending the message
+    int msg_type = vresults[1];  // message type
 
     switch(msg_type) {
         case INITIALIZE_MSG_TYPE:
@@ -179,8 +189,7 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
                 time_zero = ros::Time::now().toSec();
                 last_report_time = time_zero; 
 				
-  				time (&real_time_zero);
-
+  		time (&real_time_zero);
                 printf("Time zero = %.1f (sim) = %lu (real) \n", time_zero,(long)real_time_zero);
 
                 std_msgs::Int16MultiArray msg;  // -1,msg_type,0,0,0
@@ -215,36 +224,15 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) { // msg array: [
             //interference: [ID,msg_type]
             if (initialize==false){
                 ROS_INFO("Robot %d sent interference.\n", id_robot); 
-                interference = true;
+                interference_cnt++;
                 ros::spinOnce();
             }
-  
-            /*else{
-                //Interferencia ou Goal
-                double vertex = msg->point.x;
-                double interf = msg->point.y;
-                double init = msg->point.z;
-                
-                if (msg->header.frame_id != "monitor"){
-                    
-        //       printf("Interference or Goal! frame_id = %s (%f,%f)\n",msg->header.frame_id.c_str(),msg->point.x,msg->point.y);
-                    id_robot_int = atoi( msg->header.frame_id.c_str() ); 
-                    
-                    if (interf == 0.0 && init == 0.0){
-                        goal = (int) vertex;
-                        printf("Robot %d reached Goal %d.\n", id_robot_int, goal);
-                        goal_reached = true;
-                    }
-                    if (interf == 1.0 ){
-        //         printf("Received Interference from Robot %d.\n", id_robot_int);
-                        interference = true;
-                    }
-                    
-                }
-            }*/
             break;
         }
     }
+
+    dolog("resultsCB - end");
+
 }
 
 void finish_simulation (){ //-1,msg_type,1,0,0
@@ -392,6 +380,7 @@ double Median( double *a, uint dimension )
 
 
 uint calculate_patrol_cycle ( int *nr_visits, uint dimension ){
+  dolog("calculate_patrol_cycle - begin");
   uint result = INT_MAX;
   uint imin=0;
   for (uint i=0; i<dimension; i++){
@@ -400,6 +389,7 @@ uint calculate_patrol_cycle ( int *nr_visits, uint dimension ){
     }
   }
   //printf("  --- complete patrol: visits of %d : %d\n",imin,result);
+  dolog("calculate_patrol_cycle - end");
   return result;  
 }
 
@@ -437,6 +427,9 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
                     const char* graph_file, const char* teamsize_str, 
                     double duration, double real_duration, double comm_delay,
 		            const char *filename) {
+
+    dolog("write_results - begin");
+
     FILE *file;
   
     printf("writing to file %s\n",filename);
@@ -470,29 +463,44 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
     fprintf(file,"----------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n\n");    
     
     
-  fclose(file); /*done!*/  
+    fclose(file); /*done!*/  
+
+    dolog("write_results - end");
+
 }
 
 bool check_dead_robots() {
+
+    dolog("check_dead_robots - begin");
+
     double current_time = ros::Time::now().toSec();
-    for (size_t i=0; i<teamsize; i++) {        
-      double delta = current_time - last_goal_reached[i];
-      // printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,last_goal_reached[i],delta);
+    bool r=false;
+    for (size_t i=0; i<teamsize; i++) {
+      double l = get_last_goal_reached(i);
+      double delta = current_time - l;
+      // printf("DEBUG dead robot: %d   %.1f - %.1f = %.1f\n",i,current_time,l,delta);
       if (delta>DEAD_ROBOT_TIME*0.75) {
         printf("Robot %lu: dead robot - delta = %.1f / %.1f \n",i,delta,DEAD_ROBOT_TIME);
         system("play -q beep.wav");
       }
       if (delta>DEAD_ROBOT_TIME) {
           // printf("Dead robot %d. Time from last goal reached = %.1f\n",i,delta);
-          return true;
+          r=true;
+          break;
       }
     }
-    return false;
+
+    dolog("check_dead_robots - end");
+
+    return r;
 }
 
 
 // update stats after robot 'id_robot' visits node 'goal'
 void update_stats(int id_robot, int goal) {
+
+    dolog("update_stats - begin");
+
     
 //   printf("last_visit [%d] = %.1f\n", goal, last_visit [goal]);
      double current_time = ros::Time::now().toSec();
@@ -502,7 +510,7 @@ void update_stats(int id_robot, int goal) {
     double last_visit_temp = current_time - time_zero; ; //guarda o valor corrente
     number_of_visits [goal] ++;
     
-    last_goal_reached[id_robot] = current_time;
+    set_last_goal_reached(id_robot,current_time);
 
     printf("  number_of_visits [%d] = %d\n", goal, number_of_visits [goal]);
 
@@ -554,6 +562,8 @@ void update_stats(int id_robot, int goal) {
     printf("  complete patrol cycles = %d\n\n", complete_patrol);        
             
     goal_reached = false;
+
+    dolog("update_stats - end");
 
 }
 
@@ -617,7 +627,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   
   for (size_t i=0; i<NUM_MAX_ROBOTS; i++){
     init_robots[i] = false;
-        last_goal_reached[i] = 0.0;
+    last_goal_reached[i] = 0.0;
   }
 
   bool dead = false; // check if there is a dead robot
@@ -667,11 +677,22 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     sprintf(resultstimefilename,"%s/%s_timeresults.txt",path4,strnow);
     sprintf(resultstimecsvfilename,"%s/%s_timeresults.csv",path4,strnow);
 
+    FILE *fexplist;
+    fexplist = fopen("experiments.txt", "a");
+    fprintf(fexplist,"%s/%s\n",path4,strnow);
+    fclose(fexplist);
+
     idlfile = fopen (idlfilename,"a");
     
-	FILE *resultstimecsvfile;
+    FILE *resultstimecsvfile;
     resultstimecsvfile = fopen(resultstimecsvfilename, "w");
-    
+
+#if LOG_MONITOR
+    char logfilename[80];
+    sprintf(logfilename,"monitor_%s.log",strnow);
+    logfile = fopen(logfilename, "w");
+#endif
+
     // Vectors for hystograms
     hn = (int)(MAXIDLENESS/RESOLUTION)+1;
     for (int k=0; k<hn; k++) hv[k]=0;
@@ -708,6 +729,8 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   }
 
 
+  // mutex for accessing last_goal_reached vector
+  pthread_mutex_init(&lock_last_goal_reached, NULL);
 
 
   // to write in info file (read after first patrol cycle)
@@ -717,13 +740,10 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
   while( ros::ok() ){
     
+    dolog("main loop - begin");
+
     if (!initialize){  //check if msg is goal or interference -> compute necessary results.
-      
-      if (interference){
-        interference_cnt++;
-        interference = false;
-      }
-      
+            
       // check time
       double report_time = ros::Time::now().toSec();
       
@@ -733,6 +753,8 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
       bool timeout_write_results = (report_time - last_report_time > TIMEOUT_WRITE_RESULTS);
       
       if ((patrol_cnt == complete_patrol) || timeout_write_results){ 
+
+        dolog("main loop - write results begin");
 
 	if (complete_patrol==1) {
   	   ros::param::get("/algorithm_params", algparams);
@@ -827,36 +849,45 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 			fflush(resultstimecsvfile);
 
 		}
-      }
-      
-        // Check if simulation must be terminated
-        dead = check_dead_robots();
-                
-        simrun=true; simabort=false;
-        std::string psimrun, psimabort; bool bsimabort;
-        if (nh.getParam("/simulation_runnning", psimrun))
-            if (psimrun=="false")
-                simrun = false;
-        if (nh.getParam("/simulation_abort", psimabort))
-            if (psimabort=="true")
-                simabort = true;
-        if (nh.getParam("/simulation_abort", bsimabort))
-            simabort = bsimabort;
-        
-        if ( (dead) || (!simrun) || (simabort) ) {
-            printf ("Simulation is Over\n");                
-            nh.setParam("/simulation_runnning", false);
-            finish_simulation ();
-            ros::spinOnce();
-            break;
-        }
 
+        dolog("main loop - write results begin");
+
+      } // if ((patrol_cnt == complete_patrol) || timeout_write_results)
+      
+
+      dolog("  main loop check - begin");
+
+      // Check if simulation must be terminated
+      dead = check_dead_robots();
+                
+      simrun=true; simabort=false;
+      std::string psimrun, psimabort; bool bsimabort;
+      if (nh.getParam("/simulation_runnning", psimrun))
+          if (psimrun=="false")
+              simrun = false;
+      if (nh.getParam("/simulation_abort", psimabort))
+          if (psimabort=="true")
+              simabort = true;
+      if (nh.getParam("/simulation_abort", bsimabort))
+          simabort = bsimabort;
+        
+      if ( (dead) || (!simrun) || (simabort) ) {
+          printf ("Simulation is Over\n");                
+          nh.setParam("/simulation_runnning", false);
+          finish_simulation ();
+          ros::spinOnce();
+          break;
+      }
+
+      dolog("  main loop check - end");
 
     } // if ! initialize  
     
     current_time = ros::Time::now().toSec();
     ros::spinOnce();
     loop_rate.sleep();
+
+    dolog("main loop - end");
         
   } // while ros ok
 
