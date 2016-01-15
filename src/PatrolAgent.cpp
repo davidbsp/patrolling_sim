@@ -43,6 +43,7 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <nav_msgs/Odometry.h>
+#include <std_srvs/Empty.h>
 
 
 #include "PatrolAgent.h"
@@ -488,6 +489,20 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
 
             //ROS_INFO("Backup");
             backup();
+
+            ROS_INFO("Clear costmap!");
+
+            char srvname[80];
+            sprintf(srvname,"/robot_%d/move_base/clear_costmaps",ID_ROBOT);
+            ros::NodeHandle n;
+            ros::ServiceClient client = n.serviceClient<std_srvs::Empty>(srvname);
+            std_srvs::Empty srv;
+            if (client.call(srv)) {
+                ROS_INFO("Costmaps cleared.\n");
+            }
+            else {
+                ROS_ERROR("Failed to call service move_base/clear_costmaps");
+            }
 
             ROS_INFO("Resend Goal!");
             ResendGoal = true;
