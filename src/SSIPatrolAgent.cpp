@@ -43,15 +43,14 @@ void SSIPatrolAgent::onGoalComplete()
     //sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
     sendGoal(next_vertex);  // send to move_base
 
+    goal_complete = false; 
+
     //compute next next vertex
     printf("computing next_next_vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
     
-    //FIXME must be non-blocking !!!
     next_next_vertex = compute_next_vertex(next_vertex); 
 	   
     printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
-
-    goal_complete = false;  
 
 }
 
@@ -445,7 +444,7 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
     }
     printf("] \n");
     
-    printf("DTAP: while(true) ... \n");
+    //printf("DTAP: while(true) ... \n");
     while (true){
     	if (best_bid(mnv)){ //if I am in the best position to go to mnv 
 			update_tasks();
@@ -456,7 +455,7 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 		bidvalue = compute_bid(mnv); 
 		force_bid(mnv,bidvalue,ID_ROBOT); 
 		send_target(mnv,bidvalue);
-		//printf("waiting for bids (%.2f seconds)",timeout);
+		//printf("  ... waiting for bids (%.2f seconds) ... \n",timeout);
 		wait();
 		/*printf("current target %d current value for target %.2f tasks [",mnv,bidvalue);
 		    for (size_t i = 0; i<dimension;i++){
@@ -464,8 +463,8 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 		    }
 		    printf("] \n");*/
 	 } 			
-    } 
-    printf("DTAP: while(true) ... DONE\n");
+    }
+    //printf("DTAP: while(true) ... DONE\n");
     
     return mnv;
     

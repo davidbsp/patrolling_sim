@@ -515,15 +515,11 @@ void update_stats(int id_robot, int goal) {
 
     printf("  number_of_visits [%d] = %d\n", goal, number_of_visits [goal]);
 
-    dolog("  update_stats - 1");
-
     if (number_of_visits [goal] == 0) {
         avg_idleness [goal] = 0.0; stddev_idleness[goal] = 0.0;
         total_0 [goal] = 0.0; total_1 [goal] = 0.0;  total_2 [goal] = 0.0;
     }
     else { // if (number_of_visits [goal] > 0) {
-
-          dolog("  update_stats - 2");
 
         current_idleness [goal] = last_visit_temp - last_visit [goal];
         printf("  current_idleness [%d] = %.2f\n", goal, current_idleness [goal]);
@@ -533,18 +529,12 @@ void update_stats(int id_robot, int goal) {
         if (current_idleness [goal] < min_idleness || min_idleness<0.1)
             min_idleness=current_idleness [goal];
         
-            dolog("  update_stats - 3");
-
         // global stats
         gT0++; gT1 += current_idleness[goal]; gT2 += current_idleness[goal]*current_idleness[goal];
         gT2n = gT2 / gT0;
     
-            dolog("  update_stats - 4");
-
         fprintf(idlfile,"%.1f;%d;%d;%.1f;%d\n",current_time,id_robot,goal,current_idleness[goal],interference_cnt);
         fflush(idlfile);
-
-            dolog("  update_stats - 5");
 
         // for hystograms
         int b = (int)(current_idleness[goal]/RESOLUTION);
@@ -871,7 +861,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
       } // if ((patrol_cnt == complete_patrol) || timeout_write_results)
       
 
-      dolog("  main loop check - begin");
+      dolog("    check - begin");
 
       // Check if simulation must be terminated
       dead = check_dead_robots();
@@ -895,7 +885,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
           break;
       }
 
-      dolog("  main loop check - end");
+      dolog("    check - end");
 
     } // if ! initialize  
     

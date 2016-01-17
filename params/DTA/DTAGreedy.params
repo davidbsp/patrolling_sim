@@ -1,6 +1,6 @@
 [SECTION Main]
 
-PROFILE DISlabs
+PROFILE cumberland
 
 
 [END]
@@ -24,8 +24,8 @@ theta_distance_from_origin      -2.0
 [PROFILE cumberland]
 
 theta_idleness      1.0
-theta_navigation    -0.5
-theta_distance_from_origin      -2.0
+theta_navigation    -0.75
+theta_distance_from_origin      -5.0
 
 [END]
 

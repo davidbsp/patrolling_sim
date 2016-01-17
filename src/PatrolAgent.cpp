@@ -285,9 +285,9 @@ void PatrolAgent::run() {
                 return;
             }   
         
-        }
+        } // if (goal_complete)
         
-	loop_rate.sleep(); 
+		loop_rate.sleep(); 
 
     } // while ros.ok    
 }

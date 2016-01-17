@@ -22,8 +22,8 @@ TrajectoryPlannerROS:
 #~<name>/occdist_scale (double, default: 0.01)
 #    The weighting for how much the controller should attempt to avoid obstacles 
 
- pdist_scale: 0.1
- gdist_scale: 1.0
+ pdist_scale: 0.6
+ gdist_scale: 0.8
  occdist_scale: 0.2 
 
 # goal_distance_bias: 0.8 
