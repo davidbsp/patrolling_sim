@@ -69,7 +69,7 @@ using namespace std;
 #define MAXIDLENESS 500.0 // seconds
 
 #define LOG_MONITOR 0
-
+#define SAVE_HYSTOGRAMS 0
 
 using std::cout;
 using std::endl;
@@ -120,9 +120,11 @@ uint patrol_cnt = 1;
 
 string algorithm;
 
+#if SAVE_HYSTOGRAMS
 #define hn ((int)(MAXIDLENESS/RESOLUTION)+1)
 int hsum;
 int hv[hn];
+#endif
 
 // Idleness file
 FILE *idlfile;
@@ -536,11 +538,13 @@ void update_stats(int id_robot, int goal) {
         fprintf(idlfile,"%.1f;%d;%d;%.1f;%d\n",current_time,id_robot,goal,current_idleness[goal],interference_cnt);
         fflush(idlfile);
 
+#if SAVE_HYSTOGRAMS
         // for hystograms
         int b = (int)(current_idleness[goal]/RESOLUTION);
         if (b<hn) {
           hv[b]++; hsum++;
         }
+#endif
 
         total_0 [goal] += 1.0; total_1 [goal] += current_idleness [goal];  total_2 [goal] += current_idleness [goal]*current_idleness [goal];
         avg_idleness [goal] = total_1[goal]/total_0[goal]; 
@@ -699,10 +703,12 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
     dolog("Monitor node starting");
     dolog(expname);
-    
+
+#if SAVE_HYSTOGRAMS    
     // Vectors for hystograms
     for (int k=0; k<hn; k++) hv[k]=0;
     hsum=0;
+#endif
     
   //Wait for all robots to connect! (Exchange msgs)
   ros::init(argc, argv, "monitor");
@@ -930,7 +936,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     fclose(infofile);
     cout << "Info file " << infofilename << " saved." << endl;
 
-
+#if SAVE_HYSTOGRAMS
     // Hystogram files
     char hfilename[240],chfilename[240];
     sprintf(hfilename, "%s/%s.hist", path4,strnow);
@@ -946,6 +952,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         of2 << k*RESOLUTION << " " << c << endl;
     }
     of1.close();   of2.close();
+#endif
     
   printf("Monitor closed.\n");
 
