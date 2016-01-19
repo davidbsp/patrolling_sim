@@ -17,8 +17,9 @@ D = '../results/cumberland_4/'
 
 #Example
 L = [
-D+'SEBS/vaio-i7/20160117_153630',
-D+'SEBS/vaio-i7/20160117_175721'
+D+'DTAP/vaio-i7/20160117_175721',
+D+'DTAP/vaio-i7/20160117_184032',
+D+'DTAP/vaio-i7/20160117_192124'
 ]
 
 

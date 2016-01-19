@@ -20,7 +20,7 @@ boxplots_idl <- function(vf) {
 
 #print(vf[i*2-1])
 
-    	m <- read.csv(vf[i*2-1],sep=";",header=FALSE)      # a[,4] idleness values vector for dataset a
+    	m <- read.csv(vf[i*2-1],sep=";",header=TRUE)      # a[,4] idleness values vector for dataset a
         l[i] <- vf[i*2]
 
 #print(l[i])

@@ -10,8 +10,8 @@
 
 idleness_aov <- function(f1, f2) {
 
-    a <- read.csv(f1,sep=";",header=FALSE)
-    b <- read.csv(f2,sep=";",header=FALSE)
+    a <- read.csv(f1,sep=";",header=TRUE)
+    b <- read.csv(f2,sep=";",header=TRUE)
 
     # a[,4] idleness values vector for dataset a
     # b[,4] idleness values vector for dataset b
