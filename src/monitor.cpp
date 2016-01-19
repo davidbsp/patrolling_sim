@@ -460,8 +460,8 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
 	fprintf(file,"   max = %.1f\n", max_idleness);
 	fprintf(file,"   sum (idl^2) = %.1f\n", gT2n);
 
-	fprintf(file,"\nInterferences\t%u\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%.1f\nReal Time Elapsed\t%.1f\nComm delay: %.2f\n",
-		interference_cnt,tot_visits,avg_visits,duration,real_duration,comm_delay);
+	fprintf(file,"\nInterferences\t%u\nInterference rate\t%.2f\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%.1f\nReal Time Elapsed\t%.1f\nComm delay: %.2f\n",
+		interference_cnt,(float)interference_cnt/duration*60,tot_visits,avg_visits,duration,real_duration,comm_delay);
     
     fprintf(file,"----------------------------------------------------------------------------------------------------------------------------------------------------------------\n\n\n");    
     
@@ -678,11 +678,11 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     
     // File to log all the idlenesses of an experimental scenario
 
-    char idlfilename[240],resultsfilename[240],resultstimefilename[240],resultstimecsvfilename[240],expname[240];
+    char idlfilename[240],resultsfilename[240],resultstimecsvfilename[240],expname[240]; // resultstimefilename[240]
     sprintf(expname,"%s/%s",path4,strnow);
-    sprintf(idlfilename,"%s/%s_idleness.txt",path4,strnow);
+    sprintf(idlfilename,"%s/%s_idleness.csv",path4,strnow);
     sprintf(resultsfilename,"%s/%s_results.txt",path4,strnow);
-    sprintf(resultstimefilename,"%s/%s_timeresults.txt",path4,strnow);
+    //sprintf(resultstimefilename,"%s/%s_timeresults.txt",path4,strnow);
     sprintf(resultstimecsvfilename,"%s/%s_timeresults.csv",path4,strnow);
 
     FILE *fexplist;
@@ -691,9 +691,12 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     fclose(fexplist);
 
     idlfile = fopen (idlfilename,"a");
-    
+    fprintf(idlfile,"Time;Robot;Node;Idleness;Interferences\n"); // header
+
     FILE *resultstimecsvfile;
     resultstimecsvfile = fopen(resultstimecsvfilename, "w");
+
+    fprintf(resultstimecsvfile,"Time;Idleness min;Idleness avg;Idleness stddev;Idleness max;Interferences\n"); // header
 
 #if LOG_MONITOR
     char logfilename[80];
@@ -827,8 +830,8 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         printf("   max = %.1f\n", max_idleness);
         printf("   sum (idl^2) / n = %.1f\n", gT2n);
 
-        printf("\nInterferences\t%u\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%.1f\nReal Time Elapsed\t%.1f\n",
-            interference_cnt,tot_visits,avg_visits,duration,real_duration);
+        printf("\nInterferences\t%u\nInterference rate\t%.2f\nVisits\t%u\nAvg visits per node\t%.1f\nTime Elapsed\t%.1f\nReal Time Elapsed\t%.1f\n",
+            interference_cnt,(float)interference_cnt/duration*60,tot_visits,avg_visits,duration,real_duration);
         
         if (timeout_write_results)
           last_report_time = report_time;
@@ -849,16 +852,18 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
                    graph_file.c_str(), teamsize_str, duration, real_duration, comm_delay,
                    resultsfilename);
         else {
+            /*
             write_results (avg_idleness, stddev_idleness, number_of_visits, complete_patrol, dimension, 
                    worst_avg_idleness, avg_graph_idl, median_graph_idl, stddev_graph_idl,
                    min_idleness, gavg, gstddev, max_idleness, gT2n,
                    interference_cnt, tot_visits, avg_visits,
                    graph_file.c_str(), teamsize_str, duration, real_duration, comm_delay,
                    resultstimefilename);
+            */
 
-			fprintf(resultstimecsvfile,"%.1f;%.1f;%.1f;%.1f;%.1f\n", 
-						 duration,min_idleness,gavg,gstddev,max_idleness);
-			fflush(resultstimecsvfile);
+            fprintf(resultstimecsvfile,"%.1f;%.1f;%.1f;%.1f;%.1f;%d\n", 
+						 duration,min_idleness,gavg,gstddev,max_idleness,interference_cnt);
+            fflush(resultstimecsvfile);
 
 		}
 
@@ -908,6 +913,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   fclose(idlfile);
   fclose(resultstimecsvfile);
 
+
   // write info file
     char infofilename[240];
     sprintf(infofilename,"%s/%s_info.csv",path4,strnow);
@@ -925,11 +931,11 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
     FILE *infofile;
     infofile = fopen (infofilename,"w");
-    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f;%.1f;%d;%.1f;%d\n",
+    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f;%.2f;%d;%.1f;%d\n",
             mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,nav_mod.c_str(),
             algorithm.c_str(), algparams.c_str(),hostname,
             strnow,duration,real_duration,interference_cnt,(dead?"FAIL":(simabort?"ABORT":"TIMEOUT")),
-            min_idleness, gavg, gstddev, max_idleness, gT2n,
+            min_idleness, gavg, gstddev, max_idleness, (float)interference_cnt/duration*60,
             tot_visits, avg_visits, complete_patrol
     );
 
