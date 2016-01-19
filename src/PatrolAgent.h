@@ -86,6 +86,7 @@ protected:
     std::vector<int> vresults; // results exchanged among robots
     bool goal_canceled_by_user;
     double goal_reached_wait, communication_delay, last_communication_delay_time, lost_message_rate;
+    std::string initial_positions;
     int aborted_count, resend_goal_count;
     
     MoveBaseClient *ac; // action client for reaching target goals

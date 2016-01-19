@@ -25,7 +25,6 @@ Alg_names = [
         [ 'SEBS', 'SEBS' ],
         [ 'CBLS', 'CBLS' ],
         [ 'DTAG', 'DTAGreedy' ],
-        #[ 'DTAS', 'DTASSI' ],
         [ 'DTAP', 'DTASSIPart' ]
      ]
 
@@ -50,6 +49,8 @@ initPoses = {}
 COMMDELAY_DEFAULT = 0.0
 
 NAVMODULE_DEFAULT = "ros" # "thin_navigation" or "ros"
+
+INITPOS_DEFAULT = "spread"
 
 # return long name of the algorithm
 def findAlgName(alg):
@@ -97,11 +98,12 @@ def getSimulationRunning():
 # Terminates if simulation is stopped (/simulation_runnning param is false)
 # or if timeout is reached (if this is >0)
 # CUSTOM_STAGE: use of extended API for stage (requires custom stage and stage_ros).
-def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP):
+def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP):
 
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
     print 'Loading map ',MAP
+    print 'Initial pos ',INITPOS
     print 'N. robot ',NROBOTS
     print 'Algorithm ',ALG,'  ',ALG_SHORT
     print 'Localization Mode ',LOC_MODE
@@ -119,6 +121,10 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDEL
     loadInitPoses()
     
     scenario = MAP+"_"+NROBOTS
+
+    if (INITPOS[0]=='c'):
+        scenario = scenario+'c'
+
     iposes = initPoses[scenario.lower()]
     print scenario,'   ',iposes
     
@@ -135,6 +141,7 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDEL
     os.system("rosparam set /communication_delay "+str(COMMDELAY))
 #    os.system("rosparam set /lost_message_rate "+LOSTMSGRATE)
     os.system("rosparam set /navigation_module "+NAV_MODULE)
+    os.system("rosparam set /initial_positions "+INITPOS)
 
     cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
     print cmd
@@ -374,7 +381,7 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), self.alg_ddm.get(),self.locmode_ddm.get(), NAVMODULE_DEFAULT, self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false") )
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), NAVMODULE_DEFAULT, self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false") )
 
     
     def quit(self):
@@ -421,26 +428,27 @@ def main():
 
   elif (len(sys.argv)<10):
     print "Use: ",sys.argv[0]
-    print " or  ",sys.argv[0],' <map> <n.robots> <alg_short> <loc_mode> <nav_module> <goal-wait> <communication-delay> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
+    print " or  ",sys.argv[0],' <map> <n.robots> <init_pos> <alg_short> <loc_mode> <nav_module> <goal_wait_time> <communication_delay> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
 
   else:
     MAP = sys.argv[1]
     NROBOTS = sys.argv[2]
-    ALG_SHORT = sys.argv[3]
-    LOC_MODE = sys.argv[4]
-    NAV_MODULE = sys.argv[5]
-    GWAIT = sys.argv[6]
-    COMMDELAY = sys.argv[7]
-    TERM = sys.argv[8]
-    TIMEOUT = int(sys.argv[9])
+    INITPOS = sys.argv[3]
+    ALG_SHORT = sys.argv[4]
+    LOC_MODE = sys.argv[5]
+    NAV_MODULE = sys.argv[6]
+    GWAIT = sys.argv[7]
+    COMMDELAY = sys.argv[8]
+    TERM = sys.argv[9]
+    TIMEOUT = int(sys.argv[10])
     CUSTOM_STAGE = False
     SPEEDUP = 1.0
-    if (len(sys.argv)>=11):
-      CUSTOM_STAGE = sys.argv[10]
     if (len(sys.argv)>=12):
-      SPEEDUP = float(sys.argv[11])
+      CUSTOM_STAGE = sys.argv[11]
+    if (len(sys.argv)>=13):
+      SPEEDUP = float(sys.argv[12])
     
-    run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP)
+    run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP)
 
  
 

@@ -5,6 +5,7 @@
 #
 # MAP: Available maps: grid, example, cumberland, DISlabs
 # NROBOTS: number of robots
+# INITPOS: initial position of the robots: spread, compact
 # ALG: Algorithm: RAND,CR,HCR,HPCC,CGG,MSP,GBS,SEBS,CBLS,DTAG,DTAP
 # LOC: Localization mode: odom, GPS
 # NAV: Navigation module: ros, thin_navigation
@@ -17,6 +18,7 @@
 
 MAP=DISlabs
 NROBOTS=8
+INITPOS=spread
 ALG=DTAP
 LOC=odom
 NAV=ros
@@ -27,7 +29,7 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=1.0
 
-./start_experiment.py $MAP $NROBOTS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP
+./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP
 
 # The command terminates after TIMEOUT. More instances of this command can be repeated for performing 
 # multiple batch experiments.
@@ -35,9 +37,9 @@ SPEEDUP=1.0
 # E.g., the following script runs three experiments with different number of robots
 #
 # NROBOTS=4
-# ./start_experiment.py $MAP $NROBOTS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP
+# ./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP
 # NROBOTS=6
-# ./start_experiment.py $MAP $NROBOTS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP
+# ./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP
 # NROBOTS=8
-# ./start_experiment.py $MAP $NROBOTS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP
+# ./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP
 
