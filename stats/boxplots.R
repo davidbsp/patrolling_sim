@@ -1,50 +1,53 @@
 #
 # How to use:
 #
-# $ Rscript boxplots.R <file_idleness_1> ... <file_idleness_n>
+# $ Rscript boxplots.R <title> <file_idleness_1> <label_1> ... <file_idleness_n> <label_n>
 #
 # Example:
 #
-# $ Rscript boxplots.R results/grid_4/SEBS/iocchi-d1/20151117_010310_idleness.csv ... 
+# $ Rscript boxplots.R grid_4 results/grid_4/SEBS/iocchi-d1/20151117_010310_idleness.csv ... 
 
 
-boxplots_idl <- function(vf) {
+boxplots_idl <- function(v) {
 
-    n <- length(vf)/2
+    plot_title = args[1]
+    
+    n <- (length(v)-1)/2
     z <- vector(length=n)
     means <- vector(length=n)
     l <- vector(length=n)
 
     i <- 1
-	while (i <= n) {
+    j <- 2
+    while (i <= n) {
 
 #print(vf[i*2-1])
 
-    	m <- read.csv(vf[i*2-1],sep=";",header=TRUE)      # a[,4] idleness values vector for dataset a
-        l[i] <- vf[i*2]
+        m <- read.csv(v[j],sep=";",header=TRUE)      # a[,4] idleness values vector for dataset a
+        l[i] <- v[j+1]
 
 #print(l[i])
 
         vname = sprintf("a%d",i)
 
 #print(vname)
-    	assign(vname,m[,4])
+        assign(vname,m[,4])
 
-    	means[i] = mean(get(vname))
+        means[i] = mean(get(vname))
 
- 		z[i] = vname
+        z[i] = vname
 
-		i <- i+1
+        i <- i+1
+        j <- j+2
  
-	}
+    }
 
     dd <- lapply(z, get, envir=environment())
     names(dd) <- l
     
-    boxplot(dd,outline=TRUE,horizontal=FALSE,range=3,las=2)
-#    boxplot(dd,outline=FALSE,horizontal=FALSE,range=3,las=2)
+    boxplot(dd,outline=TRUE,horizontal=FALSE, range=3, las=2, main=plot_title)
 
-	points(means, pch = 8, cex = 1.5)
+    points(means, pch = 8, cex = 1.5)
 
 }
 

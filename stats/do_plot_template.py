@@ -15,20 +15,28 @@ D = '../results/cumberland_4/'
 
 # L = <list of experiments to compare and label to use in the plot (no spaces allowed in the label!!!)>
 
-#Example
+# Example
 L = [
 D+'SEBS/vaio-i7/20160117_153630','SEBS_1', # no spaces in the label
 D+'DTAP/vaio-i7/20160117_175721','DTAP_1'
 ]
 
+# title = Title of the plot
+
+# Example
+title = '"cumberland map, 4 robots"'
+
 
 # Run the R script
 
-cmd = "Rscript boxplots.R "
+cmd = 'Rscript boxplots.R ' + title + ' '
 lfiles = ""
 
 for i in range(0,len(L)/2):
-  lfiles = lfiles + "%s_idleness.csv %s " %(L[i*2],L[i*2+1])
+  lfiles = lfiles + '%s_idleness.csv %s ' %(L[i*2],L[i*2+1])
 
 print cmd+lfiles
 os.system(cmd+lfiles)
+
+os.system('evince Rplots.pdf &')
+
