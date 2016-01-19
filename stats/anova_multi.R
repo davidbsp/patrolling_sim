@@ -5,7 +5,7 @@
 #
 # Example:
 #
-# $ Rscript anova_multi.R results/grid_4/SEBS/iocchi-d1/20151117_010310_idleness.txt results/grid_4/SEBS/iocchi-d1/20151117_020344_idleness.txt
+# $ Rscript anova_multi.R results/grid_4/SEBS/iocchi-d1/20151117_010310_idleness.csv results/grid_4/SEBS/iocchi-d1/20151117_020344_idleness.csv
 
 
 idleness_aov <- function(f1, f2) {
