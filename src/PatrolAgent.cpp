@@ -50,6 +50,9 @@
 
 using namespace std;
 
+#define DELTA_TIME_SEQUENTIAL_START 15
+
+
 void PatrolAgent::init(int argc, char** argv) {
         /*
             argv[0]=/.../patrolling_sim/bin/GBS
@@ -225,17 +228,26 @@ void PatrolAgent::readParams() {
 
     if (! ros::param::get("/goal_reached_wait", goal_reached_wait)) {
       goal_reached_wait = 0.0;
-      ros::param::set("/goal_reached_wait", goal_reached_wait);
+      ROS_WARN("Cannot read parameter /goal_reached_wait. Using default value!");
+      //ros::param::set("/goal_reached_wait", goal_reached_wait);
     }
 
     if (! ros::param::get("/communication_delay", communication_delay)) {
       communication_delay = 0.0;
-      ros::param::set("/communication_delay", communication_delay);
+      ROS_WARN("Cannot read parameter /communication_delay. Using default value!");
+      //ros::param::set("/communication_delay", communication_delay);
     } 
 
     if (! ros::param::get("/lost_message_rate", lost_message_rate)) {
       lost_message_rate = 0.0;
-      ros::param::set("/lost_message_rate", lost_message_rate);
+      ROS_WARN("Cannot read parameter /lost_message_rate. Using default value!");
+      //ros::param::set("/lost_message_rate", lost_message_rate);
+    }
+
+    if (! ros::param::get("/initial_positions", initial_positions)) {
+      initial_positions = "spread";
+      ROS_WARN("Cannot read parameter /initial_positions. Using default value!");
+      //ros::param::set("/initial_pos", initial_positions);
     }
 
 }
@@ -766,10 +778,17 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
     
     // messages coming from the monitor
     if (id_sender==-1 && msg_type==INITIALIZE_MSG_TYPE) {
-        if (initialize==true && vresults[2]==100) {   //"-1,msg_type,100" (BEGINNING)
+        if (initialize==true && vresults[2]==100) {   //"-1,msg_type,100,seq_flag" (BEGINNING)
             ROS_INFO("Let's Patrol!\n");
             double r = 1.0 * ((rand() % 1000)/1000.0);
+
+            if (initial_positions[0]=='c')
+                r = DELTA_TIME_SEQUENTIAL_START * ID_ROBOT;
+
             ros::Duration wait(r); // seconds
+
+            printf("Wait %.1f seconds (init pos:%s)\n",r,initial_positions.c_str());
+
             wait.sleep();
             initialize = false;
         }

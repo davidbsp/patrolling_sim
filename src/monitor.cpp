@@ -71,6 +71,7 @@ using namespace std;
 #define LOG_MONITOR 0
 #define SAVE_HYSTOGRAMS 0
 
+using std::string;
 using std::cout;
 using std::endl;
 
@@ -95,10 +96,9 @@ bool goal_reached = false;
 int goal;
 double time_zero, last_report_time;
 time_t real_time_zero;
-double comm_delay;
-std::string nav_mod;
+double goal_reached_wait,comm_delay,lost_message_rate;
+string algorithm, algparams, nav_mod, initial_positions;
 
-// tf::TransformListener *listener;
 
 #define MAX_DIMENSION 100
 
@@ -118,7 +118,7 @@ uint interference_cnt = 0;
 uint complete_patrol = 0;
 uint patrol_cnt = 1;
 
-string algorithm;
+
 
 #if SAVE_HYSTOGRAMS
 #define hn ((int)(MAXIDLENESS/RESOLUTION)+1)
@@ -195,7 +195,7 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg)
   		time (&real_time_zero);
                 printf("Time zero = %.1f (sim) = %lu (real) \n", time_zero,(long)real_time_zero);
 
-                std_msgs::Int16MultiArray msg;  // -1,msg_type,0,0,0
+                std_msgs::Int16MultiArray msg;  // -1,msg_type,100,0,0
                 msg.data.clear();
                 msg.data.push_back(-1);
                 msg.data.push_back(INITIALIZE_MSG_TYPE);
@@ -238,7 +238,7 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg)
 
 }
 
-void finish_simulation (){ //-1,msg_type,1,0,0
+void finish_simulation (){ //-1,msg_type,999,0,0
   ROS_INFO("Sending stop signal to patrol agents.");
   std_msgs::Int16MultiArray msg;  
   msg.data.clear();
@@ -727,23 +727,36 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     
   double current_time = ros::Time::now().toSec();
   
-  // read communication delay
-  if (! ros::param::get("/communication_delay", comm_delay)) {
-      comm_delay = 0.0;
-  }
+    // read parameters
+    if (! ros::param::get("/goal_reached_wait", goal_reached_wait)) {
+      goal_reached_wait = 0.0;
+      ROS_WARN("Cannot read parameter /goal_reached_wait. Using default value 0.0!");
+    }
 
-  if (! ros::param::get("/navigation_module", nav_mod)) {
+    if (! ros::param::get("/communication_delay", comm_delay)) {
+      comm_delay = 0.0;
+      ROS_WARN("Cannot read parameter /communication_delay. Using default value 0.0!");
+    } 
+
+    if (! ros::param::get("/lost_message_rate", lost_message_rate)) {
+      lost_message_rate = 0.0;
+      ROS_WARN("Cannot read parameter /lost_message_rate. Using default value 0.0!");
+    }
+
+    if (! ros::param::get("/initial_positions", initial_positions)) {
+      initial_positions = "spread";
+      ROS_WARN("Cannot read parameter /initial_positions. Using default value 'spread'!");
+    }
+
+    if (! ros::param::get("/navigation_module", nav_mod)) {
+      ROS_WARN("Cannot read parameter /navigation_module. Using default value 'ros'!");
       nav_mod = "ros";
-  }
+    }
 
 
   // mutex for accessing last_goal_reached vector
   pthread_mutex_init(&lock_last_goal_reached, NULL);
 
-
-  // to write in info file (read after first patrol cycle)
-  std::string algparams;
-  double goal_reached_wait;
 
 
   while( ros::ok() ){
@@ -764,11 +777,11 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
         dolog("main loop - write results begin");
 
-	if (complete_patrol==1) {
-  	   ros::param::get("/algorithm_params", algparams);
-           if (! ros::param::get("/goal_reached_wait", goal_reached_wait))
-              goal_reached_wait = 0.0;
-	}
+        if (complete_patrol==1) {
+  	        ros::param::get("/algorithm_params", algparams);
+            if (! ros::param::get("/goal_reached_wait", goal_reached_wait))
+                goal_reached_wait = 0.0;
+        }
 
         // write results every time a patrolling cycle is finished.
         // or after some time
@@ -921,10 +934,13 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     }
     float avg_visits = (float)tot_visits/dimension;
 
+
+    // Write info file with overall results 
+
     FILE *infofile;
     infofile = fopen (infofilename,"w");
-    fprintf(infofile,"%s;%s;%.1f;%.2f;%s;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f;%.2f;%d;%.1f;%d\n",
-            mapname.c_str(),teamsize_str,goal_reached_wait,comm_delay,nav_mod.c_str(),
+    fprintf(infofile,"%s;%s;%s;%.1f;%.2f;%s;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f;%.2f;%d;%.1f;%d\n",
+            mapname.c_str(),teamsize_str,initial_positions.c_str(),goal_reached_wait,comm_delay,nav_mod.c_str(),
             algorithm.c_str(), algparams.c_str(),hostname,
             strnow,duration,real_duration,interference_cnt,(dead?"FAIL":(simabort?"ABORT":"TIMEOUT")),
             min_idleness, gavg, gstddev, max_idleness, (float)interference_cnt/duration*60,
@@ -933,6 +949,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
     fclose(infofile);
     cout << "Info file " << infofilename << " saved." << endl;
+
 
 #if SAVE_HYSTOGRAMS
     // Hystogram files
