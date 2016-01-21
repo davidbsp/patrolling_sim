@@ -197,10 +197,14 @@ void DTAGreedy_Agent::send_results() {
     pthread_mutex_lock(&lock);
     
     for(size_t i=0; i<dimension; i++) {
-        // convert in 1/100 of secs (integer value)
-        int ms = (int)(global_instantaneous_idleness[i]*100);
+        // convert in 1/10 of secs (integer value) Max value 3276.8 second (> 50 minutes) !!!
+        int ms = (int)(global_instantaneous_idleness[i]*10);
+        if (ms>32768) { // Int16 is used to send messages
+            ROS_WARN("Wrong conversion when sending idleness value in messages!!!");
+            ms=32000;
+        }
         if ((int)i==next_vertex) ms=0;
-        //printf("  ** sending GII[%lu] = %d\n",i,ms);
+        // printf("  ** sending GII[%lu] = %d from value %.2f \n",i,ms,global_instantaneous_idleness[i]);
         //printf("%d, ",ms);
         msg.data.push_back(ms);
     }
@@ -233,7 +237,7 @@ void DTAGreedy_Agent::receive_results() {
         int ms = *it; it++; // received value
         //printf("    -- received from %d remote-GII[%lu] = %d\n",id_sender,i,ms);
         //printf("  - %d - \n",ms);
-        double rgi = (double)ms/100.0; // convert back in seconds
+        double rgi = (double)ms/10.0; // convert back in seconds
         //printf("  - i=%lu - \n",i);
         //printf("  - global...[i]=%.1f - \n",global_instantaneous_idleness[i]);
         if (isnan(global_instantaneous_idleness[i])) {

@@ -89,6 +89,7 @@ void SEBS_Agent::init(int argc, char** argv) {
   G2 = 100.0;
   edge_min = 1.0;
 
+#if 0
   if (graph_file=="maps/grid/grid.graph") {  
     if (NUMBER_OF_ROBOTS == 1){G2 = 20.54;}
     if (NUMBER_OF_ROBOTS == 2){G2 = 17.70;}
@@ -111,10 +112,10 @@ void SEBS_Agent::init(int argc, char** argv) {
     if (NUMBER_OF_ROBOTS == 4){G2 = 80.74;}
     if (NUMBER_OF_ROBOTS == 6){G2 = 77.0;}
     if (NUMBER_OF_ROBOTS == 8 || NUMBER_OF_ROBOTS == 12){G2 = 63.5;}    
-    edge_min = 50.0;
-    
+    edge_min = 50.0;    
   }
-  
+#endif
+
   printf("G1 = %f, G2 = %f\n", G1, G2); 
   
   //INITIALIZE tab_intention:

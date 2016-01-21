@@ -12,12 +12,13 @@ void SSIPatrolAgent::onGoalComplete()
 {
     printf("DTAP onGoalComplete!!!\n");
     if (first_vertex){
-        printf("computing next vertex FOR THE FIRST TIME:\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+        //printf("computing next vertex FOR THE FIRST TIME:\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
         next_vertex = compute_next_vertex(current_vertex);
         printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
         first_vertex = false;
     } else {
-        printf("updating next vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+        //printf("updating next vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d\n",current_vertex, next_vertex,next_next_vertex);
+        
         //Update Idleness Table:
         update_global_idleness();
         //update current vertex
@@ -46,11 +47,11 @@ void SSIPatrolAgent::onGoalComplete()
     goal_complete = false; 
 
     //compute next next vertex
-    printf("computing next_next_vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
+    //printf("computing next_next_vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d\n",current_vertex, next_vertex,next_next_vertex);
     
     next_next_vertex = compute_next_vertex(next_vertex); 
 	   
-    printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+    printf("DONE Computed next vertices: current_vertex = %d, next_vertex=%d, next_next_vertex=%d\n",current_vertex, next_vertex,next_next_vertex);		
 
 }
 
@@ -128,7 +129,7 @@ void SSIPatrolAgent::init(int argc, char** argv) {
         tasks[i] = false;
         selected_vertices[i] = false;
         bids[i] = noBid;
-        global_instantaneous_idleness[i]=BIG_NUMBER;  // start with a high value    
+        global_instantaneous_idleness[i]=300;  // start with a high value (not too high) 
     }
 
     
@@ -143,7 +144,7 @@ void SSIPatrolAgent::init(int argc, char** argv) {
     timeout = cf.getDParam("timeout");
     theta_idl = cf.getDParam("theta_idleness");
     theta_cost = cf.getDParam("theta_navigation");
-	theta_hop = cf.getDParam("theta_hop");	
+    theta_hop = cf.getDParam("theta_hop");	
     threshold = cf.getDParam("threshold");			
     hist = cf.getDParam("hist");
     
@@ -225,14 +226,6 @@ double SSIPatrolAgent::compute_cost(int cv, int nv)
 }        
 
 
-//double SSIPatrolAgent::utility(int cv,int nv) {
-//    double idl = global_instantaneous_idleness[nv];
-//    double cost = compute_cost(cv,nv);
-//    double U = theta_idl * idl + theta_cost * cost;
-//    printf("  cv: %d -- U[%d] ( %.1f, %.1f ) = %.1f\n",cv,nv,idl,cost,U);
-//    return U;
-//}
-
 size_t SSIPatrolAgent::compute_hops(int cv, int nv)
 {
     uint elem_s_path;
@@ -240,6 +233,10 @@ size_t SSIPatrolAgent::compute_hops(int cv, int nv)
     int id_neigh;
     
     dijkstra( cv, nv, shortest_path, elem_s_path, vertex_web, dimension); //structure with normal costs
+    
+#if 1
+    return elem_s_path-1;
+#else    
     size_t hops = 0;
     
     for(uint j=0; j<elem_s_path; j++){
@@ -250,15 +247,15 @@ size_t SSIPatrolAgent::compute_hops(int cv, int nv)
 			hops++;
         }       
     }
-    
     return hops;
+#endif
 }        
 
 
 double SSIPatrolAgent::utility(int cv,int nv) {
     double idl = global_instantaneous_idleness[nv];
     size_t hops = compute_hops(cv,nv);
-    double U = theta_idl * idl + theta_hop * hops;
+    double U = theta_idl * idl + theta_hop * hops * hops;
     //printf("  HOPSUtil:: cv: %d -- U[%d] ( %.1f, %zu ) = %.1f\n",cv,nv,idl,hops,U);
     return U;
 }
@@ -292,6 +289,7 @@ int SSIPatrolAgent::return_next_vertex(int cv,bool* sv){
             maxUtility = U;
             i_maxUtility = i;
         }
+        
     }
     
     int nv = i_maxUtility; // vertex_web[current_vertex].id_neigh[i_maxUtility];
@@ -329,8 +327,8 @@ int SSIPatrolAgent::select_next_vertex(int cv,bool* sv){
 
 double SSIPatrolAgent::compute_bid(int nv){
 
-/*	printf("computing bid for vertex %d \n",nv);
-	printf("current tasks = ");
+	printf("## computing bid for vertex %d \n",nv);
+/*	printf("current tasks = ");
 	for (size_t i = 0; i<dimension;i++){
 		printf(" %d, ",tasks[i]);	
     }
@@ -385,7 +383,7 @@ double SSIPatrolAgent::compute_bid(int nv){
 		printf("returning back from (last task) %d to (current vertex) %d (cost = %.2f) \n",ci,current_vertex,path_cost);
 		path_cost += compute_cost(ci,current_vertex);
 	}
-	printf("total cost = %.2f \n",path_cost);
+	printf("## total cost = %.2f \n",path_cost);
 
 	delete[] my_tasks;
 
@@ -437,12 +435,17 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
     send_target(mnv,bidvalue);
     
     printf("cnv: waiting for bids (%.2f seconds) \n",timeout);
-    wait();	
-    printf("current target %d current value for target %.2f \n tasks [",mnv,bidvalue);
+    wait();
+    printf("current value for target node %d = %.2f \n",mnv,bidvalue);
+    
+    /*
+    printf("Tasks [");
     for (size_t i = 0; i<dimension;i++){
 		printf(" %d, ",tasks[i]);	
     }
     printf("] \n");
+    */
+    
     
     //printf("DTAP: while(true) ... \n");
     while (true){
@@ -504,8 +507,15 @@ void SSIPatrolAgent::send_target(int nv,double bv) {
 	msg.data.push_back(ID_ROBOT);
         msg.data.push_back(msg_type);
         msg.data.push_back(nv);
-	msg.data.push_back(bv);
-    	// printf("  ** sending Task Request [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+        
+        // printf("  ** sending Task Request [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+        int ibv = (int)(bv);
+        if (ibv>32767) { // Int16 is used to send messages
+            ROS_WARN("Wrong conversion when sending bid value in messages!!!");
+            ibv=32000;
+        }
+	msg.data.push_back(ibv);
+    	
 	do_send_message(msg);   
     
 }
@@ -520,8 +530,14 @@ void SSIPatrolAgent::send_bid(int nv,double bv) {
 	msg.data.push_back(ID_ROBOT);
         msg.data.push_back(msg_type);
         msg.data.push_back(nv);
-	msg.data.push_back(bv);
+	
     	// printf("  ** sending Bid [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+        int ibv = (int)(bv);
+        if (ibv>32767) { // Int16 is used to send messages
+            ROS_WARN("Wrong conversion when sending bid value in messages!!!");
+            ibv=32000;
+        }
+        msg.data.push_back(ibv);
 	do_send_message(msg);   
 }
 
@@ -553,8 +569,13 @@ void SSIPatrolAgent::send_results() {
     // printf("  ** sending [%d, %d, ",ID_ROBOT,msg_type);
     pthread_mutex_lock(&lock);
     for(size_t i=0; i<dimension; i++) {
-        // convert in 1/100 of secs (integer value)
-        int ms = (int)(global_instantaneous_idleness[i]*100);
+        // convert in 1/10 of secs (integer value) Max value 3276.8 second (> 50 minutes) !!!
+        int ms = (int)(global_instantaneous_idleness[i]*10);
+        if (ms>32767) { // Int16 is used to send messages
+            ROS_WARN("Wrong conversion when sending idleness value in messages!!!");
+            printf("*** idleness value = %.1f -> int16 value = %d\n",global_instantaneous_idleness[i],ms);
+            ms=32000;
+        }
 //        if ((int)i==next_vertex) ms=0; //sending 0 for next vertex to avoid conflicts (useless for DTASSI) TODO:CHECK 
         //printf("  ** sending GII[%lu] = %d\n",i,ms);
         //printf("%d, ",ms);
@@ -583,7 +604,7 @@ void SSIPatrolAgent::idleness_msg_handler(std::vector<int>::const_iterator it){
 		int ms = *it; it++; // received value
 		// printf("  ** received from %d remote-GII[%lu] = %.1f\n",id_sender,i,ms);
 		//printf("%d, ",ms);
-		double rgi = (double)ms/100.0; // convert back in seconds
+		double rgi = (double)ms/10.0; // convert back in seconds
 		global_instantaneous_idleness[i] = std::min(
 			global_instantaneous_idleness[i]+(now-last_update_idl), rgi);
 		// printf("   ++ GII[%lu] = %.1f (r=%.1f)\n",i,global_instantaneous_idleness[i],rgi);

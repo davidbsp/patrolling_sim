@@ -17,7 +17,7 @@
 
 #define CONFIG_FILENAME "params/DTA/DTASSI.params"
 
-#define BIG_NUMBER 10000
+#define BIG_NUMBER 999999
 
 //a tuple <robotId,bidValue>
 typedef struct bid_tuple {

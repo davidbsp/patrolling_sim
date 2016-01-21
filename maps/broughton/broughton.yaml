@@ -1,0 +1,6 @@
+image: broughton.pgm
+resolution: 0.1
+origin: [0.0, 0.0, 0.0]
+negate: 0
+occupied_thresh: 0.40
+free_thresh: 0.10

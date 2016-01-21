@@ -14,7 +14,7 @@ protected:
     //The path cost is sum of travel cost given the order. 
     double compute_bid(int nv);	
 
-    //update tasks seeting to true only the vertices for which this robot has the current highest bid
+    //update tasks setting to true only the vertices for which this robot has the current highest bid
     //based on the array bids	
     void update_tasks();
 

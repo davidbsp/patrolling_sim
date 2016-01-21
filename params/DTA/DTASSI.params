@@ -1,38 +1,21 @@
 [SECTION Main]
 
-PROFILE standard
+PROFILE default
 
 [END]
 
-[PROFILE standard]
+[PROFILE default]
 
-timeout	1.0
-theta_idleness      1
-theta_navigation    -0.1
-theta_hop			-50
-threshold	0.0			
-hist	0.0
+timeout	            1.0
+theta_idleness      1.0
+theta_hop           -50
+
+theta_navigation    0
+threshold           0.0
+hist                0.0
+
 [END]
 
 
-[PROFILE DISlabs]
-
-timeout	0.5
-theta_idleness      1
-theta_navigation    -0.1
-theta_hop			-10
-threshold	0.0			
-hist	0.0
-[END]
-
-[PROFILE Grid]
-
-timeout	0.5
-theta_idleness     1
-theta_navigation   -0.8
-theta_hop			-10
-threshold	0.0			
-hist	0.0
-[END]
 
 

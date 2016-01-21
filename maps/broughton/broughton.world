@@ -1,0 +1,20 @@
+include "../hokuyo.inc"
+include "../crobot.inc"
+include "../floorplan.inc"
+
+window( 
+  size [ 950 840 1]             # Windows size in pixels
+  rotate [ 0.000 0.000 ]        # Rotation
+  center [49.512 38.974]        # Center of the window in meters
+  scale 9.330                   # Zoom factor
+  show_data 0 
+)
+
+# load an environment bitmap
+floorplan (
+  size [100.0 80.0 1]	        # size of the environment in meters
+  pose [50.0 40.0 0 0]          # coordinates of the center of the environment in meters
+  bitmap "broughton.pgm"
+)
+
+include "robots.inc"

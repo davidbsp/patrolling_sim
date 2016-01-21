@@ -100,7 +100,7 @@ double goal_reached_wait,comm_delay,lost_message_rate;
 string algorithm, algparams, nav_mod, initial_positions;
 
 
-#define MAX_DIMENSION 100
+#define MAX_DIMENSION 200
 
 /* ESTRUTURAS DE DADOS A CALCULAR */
 double last_visit [MAX_DIMENSION], current_idleness [MAX_DIMENSION], avg_idleness [MAX_DIMENSION], stddev_idleness [MAX_DIMENSION];
