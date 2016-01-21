@@ -28,7 +28,7 @@ Alg_names = [
         [ 'DTAP', 'DTASSIPart' ]
      ]
 
-Map_names = ['cumberland','example','grid','1r5','DISlabs']   
+Map_names = ['cumberland','example','grid','1r5','DISlabs', 'broughton']   
 
 NRobots_list = ['1','2','4','6','8','10','12']
 
