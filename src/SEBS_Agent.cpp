@@ -118,6 +118,12 @@ void SEBS_Agent::init(int argc, char** argv) {
 
   printf("G1 = %f, G2 = %f\n", G1, G2); 
   
+    std::stringstream paramss;
+    paramss << G1 << "," << G2;
+
+    ros::param::set("/algorithm_params",paramss.str());
+
+    
   //INITIALIZE tab_intention:
   tab_intention = new int[NUMBER_OF_ROBOTS];
   for (int i=0; i<NUMBER_OF_ROBOTS; i++){

@@ -19,6 +19,8 @@
 
 #define BIG_NUMBER 999999
 
+#define DEBUG_PRINT 1
+
 //a tuple <robotId,bidValue>
 typedef struct bid_tuple {
 	double bidValue;

@@ -14,7 +14,7 @@ void SSIPatrolAgent::onGoalComplete()
     if (first_vertex){
         //printf("computing next vertex FOR THE FIRST TIME:\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);
         next_vertex = compute_next_vertex(current_vertex);
-        printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+        //printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d\n",current_vertex, next_vertex,next_next_vertex);		
         first_vertex = false;
     } else {
         //printf("updating next vertex :\n current_vertex = %d, next_vertex=%d, next_next_vertex=%d\n",current_vertex, next_vertex,next_next_vertex);
@@ -32,7 +32,7 @@ void SSIPatrolAgent::onGoalComplete()
             global_instantaneous_idleness[next_vertex] = 0.0;   
             pthread_mutex_unlock(&lock);
         }
-        printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d",current_vertex, next_vertex,next_next_vertex);		
+        //printf("DONE: current_vertex = %d, next_vertex=%d, next_next_vertex=%d\n",current_vertex, next_vertex,next_next_vertex);		
    }
 
     /** SEND GOAL (REACHED) AND INTENTION **/
@@ -129,7 +129,7 @@ void SSIPatrolAgent::init(int argc, char** argv) {
         tasks[i] = false;
         selected_vertices[i] = false;
         bids[i] = noBid;
-        global_instantaneous_idleness[i]=300;  // start with a high value (not too high) 
+        global_instantaneous_idleness[i]=dimension*2;  // start with a high value (not too high) 
     }
 
     
@@ -254,9 +254,14 @@ size_t SSIPatrolAgent::compute_hops(int cv, int nv)
 
 double SSIPatrolAgent::utility(int cv,int nv) {
     double idl = global_instantaneous_idleness[nv];
+    
     size_t hops = compute_hops(cv,nv);
-    double U = theta_idl * idl + theta_hop * hops * hops;
-    //printf("  HOPSUtil:: cv: %d -- U[%d] ( %.1f, %zu ) = %.1f\n",cv,nv,idl,hops,U);
+    double U = theta_idl * idl + theta_hop * hops * dimension;
+
+    // double cost = compute_cost(cv,nv); ????  1 hop = 5 m
+    // double U = theta_idl * idl + theta_navigation * cost;
+    if (U>-1000)
+        printf("  HOPSUtil:: node: %d --> U[%d] ( %.1f, %zu ) = %.1f\n",cv,nv,idl,hops,U);
     return U;
 }
 
@@ -426,18 +431,18 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 	//NOTE: if none of the neighbouring vertices is assigned to the agent all other vertices will be considered (see reset_selected_vertices() called in select_next_vertex(...))
 	//select_faraway_vertices(selected_vertices,cv);	
     if (cv >= 0 && cv < dimension){
-		selected_vertices[cv] = true; //do not consider current vertex as possible goal 
-    } 	
- 	
+        selected_vertices[cv] = true; //do not consider current vertex as possible goal 
+    }
+
     int mnv = select_next_vertex(cv,selected_vertices);	
     double bidvalue = compute_bid(mnv); 
     force_bid(mnv,bidvalue,ID_ROBOT); 
     send_target(mnv,bidvalue);
-    
-    printf("cnv: waiting for bids (%.2f seconds) \n",timeout);
+#if DEBUG_PRINT    
+    printf("DTAP compute_next_vertex: waiting for bids (%.2f seconds) \n",timeout);
     wait();
-    printf("current value for target node %d = %.2f \n",mnv,bidvalue);
-    
+    printf("DTAP compute_next_vertex: current value for target node %d = %.2f \n",mnv,bidvalue);
+#endif
     /*
     printf("Tasks [");
     for (size_t i = 0; i<dimension;i++){
@@ -473,29 +478,12 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
     
 }
 
-void SSIPatrolAgent::update_tasks(){
-    	/*printf("updating tasks: before: tasks [");
-        for (size_t i = 0; i<dimension; i++){
-	    printf(" %d, ",tasks[i]);	
-        }
-        printf("] \n"); 
 
-    	printf("bids [");
-        for (size_t i = 0; i<dimension; i++){
-	    printf(" <%.2f,%d>, ",bids[i].bidValue,bids[i].robotId);	
-        }
-        printf("] \n"); 
-*/
-	for (size_t i = 0; i< dimension; i++){
-		tasks[i] = (bids[i].robotId == ID_ROBOT);
-	}
-/*
-    	printf("after [");
-        for (size_t i = 0; i<dimension; i++){
-	    printf(" %d, ",tasks[i]);	
-        }
-        printf("] \n"); 
-*/
+// NOTE: redefined in DTASSIPart_Agent
+void SSIPatrolAgent::update_tasks(){
+    for (size_t i = 0; i< dimension; i++){
+        tasks[i] = (bids[i].robotId == ID_ROBOT);
+    }
 }
 
 void SSIPatrolAgent::send_target(int nv,double bv) {
@@ -507,8 +495,9 @@ void SSIPatrolAgent::send_target(int nv,double bv) {
 	msg.data.push_back(ID_ROBOT);
         msg.data.push_back(msg_type);
         msg.data.push_back(nv);
-        
-        // printf("  ** sending Task Request [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+#if DEBUG_PRINT
+        printf("DTAP  ** sending Task Request [robot:%d, msgtype:%d, next_vertex:%d, bid:%.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+#endif
         int ibv = (int)(bv);
         if (ibv>32767) { // Int16 is used to send messages
             ROS_WARN("Wrong conversion when sending bid value in messages!!!");
@@ -530,8 +519,9 @@ void SSIPatrolAgent::send_bid(int nv,double bv) {
 	msg.data.push_back(ID_ROBOT);
         msg.data.push_back(msg_type);
         msg.data.push_back(nv);
-	
-    	// printf("  ** sending Bid [%d, %d, %d, %.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+#if DEBUG_PRINT
+    	printf("DTAP  ** sending Bid [robot:%d, msgtype:%d, next_vertex:%d, bid:%.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+#endif
         int ibv = (int)(bv);
         if (ibv>32767) { // Int16 is used to send messages
             ROS_WARN("Wrong conversion when sending bid value in messages!!!");
@@ -630,11 +620,14 @@ void SSIPatrolAgent::idleness_msg_handler(std::vector<int>::const_iterator it){
 */
 }
 
+#if 0
 void SSIPatrolAgent::task_request_msg_handler(std::vector<int>::const_iterator it, int senderId){
 	int nv = *it; it++;
 	double bv = *it; it++;
-	//printf("handling task request message: [ vertex: %d, bid value: %.2f]",nv,bv);
-    double now = ros::Time::now().toSec();
+#if DEBUG_PRINT
+	printf("DTAP handling task request message form %d: [ vertex: %d, bid value: %.2f]\n",senderId,nv,bv);
+#endif
+        double now = ros::Time::now().toSec();
 	taskRequests[nv] = now;
 	double my_bidValue = compute_bid(nv); 
 	update_bids(nv,bv,senderId);
@@ -642,11 +635,30 @@ void SSIPatrolAgent::task_request_msg_handler(std::vector<int>::const_iterator i
 		send_bid(nv,my_bidValue);
 	}
 }
+#else
+void SSIPatrolAgent::task_request_msg_handler(std::vector<int>::const_iterator it, int senderId){
+        int nv = *it; it++;
+        double bv = *it; it++;
+        //printf("handling task request message: [ vertex: %d, bid value: %.2f]",nv,bv);
+        double now = ros::Time::now().toSec();
+        taskRequests[nv] = now;
+//      double my_bidValue = compute_bid(nv); 
+        update_bids(nv,bv,senderId);
+//      if (my_bidValue<bv*(1+hist)){
+        if (bids[nv].robotId==ID_ROBOT){
+//              send_bid(nv,my_bidValue);
+                send_bid(nv,bids[nv].bidValue);
+        }
+}
+#endif
+
 
 void SSIPatrolAgent::bid_msg_handler(std::vector<int>::const_iterator it, int senderId){
 	int nv = *it; it++;
 	double bv = *it; it++;
-	//printf("handling bid message: [ vertex: %d, bid value: %.2f]",nv,bv);
+#if DEBUG_PRINT
+	printf("DTAP handling bid message from %d: [ vertex: %d, bid value: %.2f]\n",senderId,nv,bv);
+#endif
 	update_bids(nv,bv,senderId);
 }
 

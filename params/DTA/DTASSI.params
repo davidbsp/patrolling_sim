@@ -6,11 +6,11 @@ PROFILE default
 
 [PROFILE default]
 
-timeout	            1.0
+timeout             1.0
 theta_idleness      1.0
-theta_hop           -50
+theta_hop           -2.0 
 
-theta_navigation    0
+theta_navigation    0.0
 threshold           0.0
 hist                0.0
 

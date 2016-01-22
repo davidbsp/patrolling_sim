@@ -554,13 +554,22 @@ void update_stats(int id_robot, int goal) {
 #endif
 
     }
-    
 
+    complete_patrol = calculate_patrol_cycle ( number_of_visits, dimension );                
+    printf("   complete patrol cycles = %d\n", complete_patrol); 
+    
+    // Compute node with highest current idleness
+    size_t hnode; double hidl=0;
+    for (size_t i=0; i<dimension; i++) {
+        double cidl = last_visit_temp - last_visit [i];
+        if (cidl>hidl) {
+            hidl=cidl; hnode=i;
+        }
+    }
+    printf("   highest current idleness: node %lu idl %.1f\n\n",hnode,hidl);
+    
     last_visit [goal] = last_visit_temp;
     
-    complete_patrol = calculate_patrol_cycle ( number_of_visits, dimension );                
-    printf("   complete patrol cycles = %d\n\n", complete_patrol);        
-            
     goal_reached = false;
 
     dolog("  update_stats - end");

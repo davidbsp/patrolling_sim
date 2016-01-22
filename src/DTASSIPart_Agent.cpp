@@ -1,6 +1,7 @@
 #include "SSIPatrolAgent.h"
 
-//#define MY_CONFIG_FILENAME "params/DTA/DTASSI.params"
+
+
 
 //Sequential Single Item Auction with dynamic compact partition of the environment
 class DTASSIPart_Agent: public SSIPatrolAgent {
@@ -106,7 +107,7 @@ void DTASSIPart_Agent::compute_center_location(){
 		}
         }
 	current_center_location = min;
-//	printf("current center: %d\n",current_center_location);
+	
 }
 
 double DTASSIPart_Agent::compute_sum_distance(int cv){
@@ -152,27 +153,22 @@ void DTASSIPart_Agent::update_tasks(){
 		tasks[i] = (bids[i].robotId == ID_ROBOT);
 	}
 
-/*debug print
-    	printf("task after [");
+        if (changed){
+            compute_center_location();
+        }
+
+#if DEBUG_PRINT
+
+        printf("DTAP current center location: %lu\n",current_center_location);
+        printf("DTAP: Active Tasks [");
         for (size_t i = 0; i<dimension; i++){
-	    printf(" %d, ",tasks[i]);	
+            if (tasks[i]) printf("%lu ",i);     
         }
         printf("] \n"); 
 
-	printf("changed ? %d ",changed);
-------------*/
-
-
-	if (changed){
-		compute_center_location();
-	}
-
-/*debug print
-
-	printf("center location after %d \n",current_center_location);
-
-
-------------*/
+            
+        
+#endif   
 }
 
 
