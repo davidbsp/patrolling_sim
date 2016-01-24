@@ -6,7 +6,7 @@ PROFILE default
 
 [PROFILE default]
 
-timeout             1.0
+timeout             3.0
 theta_idleness      1.0
 theta_hop           -2.0 
 

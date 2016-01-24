@@ -19,7 +19,7 @@
 
 #define BIG_NUMBER 999999
 
-#define DEBUG_PRINT 0
+#define DEBUG_PRINT 1
 
 //a tuple <robotId,bidValue>
 typedef struct bid_tuple {
@@ -51,6 +51,9 @@ protected:
 
     //tasks this robot is responsible for. A boolean vector, where the value of index i is 1 if I have to visit that location 
     bool* tasks; 
+
+    // number of active tasks
+    int nactivetasks;
 
     //vertices that has been selected within the same optimization loop but for which the robot did not win the auction
     bool* selected_vertices;

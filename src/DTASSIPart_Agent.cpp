@@ -144,13 +144,14 @@ void DTASSIPart_Agent::update_tasks(){
 
 ------------*/
 
-
+    	nactivetasks=0;
 	bool changed = false;
 	for (size_t i = 0; i< dimension; i++){
 		if (!changed && tasks[i] != (bids[i].robotId == ID_ROBOT)){
 			changed = true;		
 		}
 		tasks[i] = (bids[i].robotId == ID_ROBOT);
+		if (tasks[i]) nactivetasks++;
 	}
 
         if (changed){
@@ -160,7 +161,7 @@ void DTASSIPart_Agent::update_tasks(){
 #if DEBUG_PRINT
 
         printf("DTAP current center location: %lu\n",current_center_location);
-        printf("DTAP: Active Tasks [");
+        printf("DTAP: Active Tasks %d [",nactivetasks);
         for (size_t i = 0; i<dimension; i++){
             if (tasks[i]) printf("%lu ",i);     
         }
