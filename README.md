@@ -23,8 +23,9 @@ These two branches will be merged soon.
 This package contains the implementation of several algorithms for multi-robot patrolling and a general structure of a PatrolAgent that can be extended to implement other ones.
 It extends previous version of patrolling_sim with an improved structure of the code that allows easy integration of new algorithms, an improved navigation configuration that allows the robots to move at 1 m/s and to avoid most of conflicting situations, and a better management of the experiments and generation of the results.
 
+The software is released as a ROS catkin package and requires the navigation stack (e.g., ros-indigo-navigation).
 For a quick try, just compile the workspace ('catkin_make'), start the script './start_experiment.py',
-make your choices and see the experiment running.
+make your choices and see the experiment running. 
 
 WARNING: sometimes (on some machines) the very first run does not work, because of timing problems with roscore. 
 Either restart the experiment a second time, or run roscore once before starting the experiment.
@@ -58,7 +59,6 @@ The following result files are produced:
   Time ; Robot ; Node ; Node Idleness ; Interferences 
 
 4) timeresults.csv - contains evolution over time of the following results in a CSV format
-
 
   Time ; Idleness min ; avg ; stddev ; max ; Interferences
 
