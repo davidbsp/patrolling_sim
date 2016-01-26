@@ -120,9 +120,14 @@ protected:
     //announce the intension to go to vertex nv with a bid value of bv
     void send_target(int nv,double bv);
 
-    //computes whether this robot offered the best bid for vertex nv
+    //computes whether this robot holds the best bid for vertex nv
     //based on the array bids	
     bool best_bid(int nv);
+
+    //computes whether this robot holds the best bid for vertex nv or whether a greedy vertex assignment should be performed
+    //a greedy action is performed when the robot (cv) is adjacent to the next vertex (nv), the current idleness of nv is higher than 2*std_dev + mean 
+    // (std_dev and mean refer to the vector of current idleness) and no robot is going towards nv (i.e., no one sent a 0 valued bid).  		
+    bool greedy_best_bid(int cv, int nv);
 
     //return geometric distance from current robot position to vertex
     double compute_distance(int vertex);

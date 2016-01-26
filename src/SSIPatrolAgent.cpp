@@ -446,7 +446,9 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
     
     //printf("DTAP: while(true) ... \n");
     while (true){
-    	if (best_bid(mnv)){ //if I am in the best position to go to mnv 
+
+//    	if (best_bid(mnv)){ //if I am in the best position to go to mnv 
+    	if (greedy_best_bid(cv,mnv)){ //if I am in the best position to go to mnv 
 			update_tasks();
 			//force_bid(mnv,0,ID_ROBOT); TODO: check
 			break;
@@ -525,6 +527,42 @@ void SSIPatrolAgent::send_bid(int nv,double bv) {
 }
 
 
+//return true if the robot holds the best bid for nv OR if the vertex is adjacent on the patrol graph, the idleness is much higher than normal and no one else is going to the same vertex
+bool SSIPatrolAgent::greedy_best_bid(int cv, int nv){
+
+
+	bool my_best = (bids[nv].robotId==ID_ROBOT);
+	printf("CHECK BEST: bid robot id %d, result: %d \n",bids[nv].robotId,(bids[nv].robotId==ID_ROBOT));
+
+
+	bool adj = (compute_hops(cv,nv) <= 1);
+	printf("CHECK ADJ: cv %d, nv %d, hops: %d, result: %d \n",cv,nv,compute_hops(cv,nv),adj);
+
+	double avg_idleness = 0.;
+	for(size_t i=0; i<dimension; i++) {
+        	avg_idleness += global_instantaneous_idleness[i];
+	}
+	avg_idleness = avg_idleness/((double) dimension);
+	double std_idleness = 0.;
+	for(size_t i=0; i<dimension; i++) {
+        	std_idleness += (global_instantaneous_idleness[i] - avg_idleness)*(global_instantaneous_idleness[i] - avg_idleness);
+	}
+	std_idleness = sqrt(std_idleness/((double) dimension));
+	bool high_idleness = (global_instantaneous_idleness[nv] > (2*std_idleness + avg_idleness));
+	printf("CHECK HIGH IDLNESS: idl %f, avg %f, std %f, result: %d \n",global_instantaneous_idleness[nv],avg_idleness,std_idleness,high_idleness);
+
+	bool conflict = (bids[nv].bidValue == 0);
+	printf("CHECK CONF: bid value %f, result: %d \n",bids[nv].bidValue,conflict);
+
+	bool greedy_cond = adj && high_idleness && !conflict;
+	printf("CHECK GREEDY: result: %d \n",greedy_cond);
+
+
+	return my_best || greedy_cond;	
+}
+
+
+//return true if I have this robot holds the lowest bid for nv
 bool SSIPatrolAgent::best_bid(int nv){
 	// printf("computing whether I hold the best bid for %d, result: %d \n",nv,(bids[nv].robotId==ID_ROBOT));
 
