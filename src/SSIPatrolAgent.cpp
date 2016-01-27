@@ -453,16 +453,17 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 			break;
     	} else {
 		if (greedy_best_bid(cv,mnv)){ //if the greedy action condition is true stop the vertex selection and go to mvn (do not update your task)
+
 			//get date and time for file name
                	        time_t rawtime;
 		        struct tm * timeinfo;
 			char strnow[80];
 			time (&rawtime);
 			timeinfo = localtime(&rawtime);
-			sprintf(strnow,"greedy-actions-%d%02d%02d_%02d%02d%02d.txt",  timeinfo->tm_year+1900,timeinfo->tm_mon+1,timeinfo->tm_mday,timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
+			sprintf(strnow,"%d%02d%02d_%02d%02d%02d",  timeinfo->tm_year+1900,timeinfo->tm_mon+1,timeinfo->tm_mday,timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
 			//open file
- 			FILE* fp = fopen(strnow,"a");
-			fprintf(fp,"robot: %d, target vertex: %d, current vertex: %d\n",ID_ROBOT,mnv,cv);
+ 			FILE* fp = fopen("greedy-actions.txt","a");
+			fprintf(fp,"time: %s; robot: %d; target vertex: %d; current vertex: %d\n",strnow,ID_ROBOT,mnv,cv);
 			fclose(fp);
 			//exit from while loop	
 			break;
