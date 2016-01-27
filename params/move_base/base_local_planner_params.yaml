@@ -26,11 +26,6 @@ TrajectoryPlannerROS:
  gdist_scale: 0.8
  occdist_scale: 0.2 
 
-# goal_distance_bias: 0.8 
-# default 32.0  (last 0.8)
-
-# path_distance_bias: 0.6 
-# default 24.0  (last 0.6)
 
  meter_scoring: true
 
@@ -40,4 +35,10 @@ TrajectoryPlannerROS:
 
  vx_samples: 6
  vtheta_samples: 20
+
  dwa: true
+
+# goal_distance_bias: 32  # default 32.0  
+# path_distance_bias: 24  # default 24.0
+
+

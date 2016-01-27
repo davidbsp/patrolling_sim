@@ -160,10 +160,10 @@ void DTASSIPart_Agent::update_tasks(){
 
 #if DEBUG_PRINT
 
-        printf("DTAP current center location: %u\n",current_center_location);
+        printf("DTAP current center location: %lu\n",current_center_location);
         printf("DTAP: Active Tasks %d [",nactivetasks);
         for (size_t i = 0; i<dimension; i++){
-            if (tasks[i]) printf("%u ",i);     
+            if (tasks[i]) printf("%lu ",i);     
         }
         printf("] \n"); 
 

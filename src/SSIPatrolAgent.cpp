@@ -453,10 +453,10 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 			break;
     	} else {
 		if (greedy_best_bid(cv,mnv)){ //if the greedy action condition is true stop the vertex selection and go to mvn (do not update your task)
-
+#if DEBUG_PRINT
 			//get date and time for file name
-               	        time_t rawtime;
-		        struct tm * timeinfo;
+            time_t rawtime;
+		    struct tm * timeinfo;
 			char strnow[80];
 			time (&rawtime);
 			timeinfo = localtime(&rawtime);
@@ -465,6 +465,7 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
  			FILE* fp = fopen("greedy-actions.txt","a");
 			fprintf(fp,"time: %s; robot: %d; target vertex: %d; current vertex: %d\n",strnow,ID_ROBOT,mnv,cv);
 			fclose(fp);
+#endif
 			//exit from while loop	
 			break;
 		} else {
@@ -552,7 +553,6 @@ bool SSIPatrolAgent::greedy_best_bid(int cv, int nv){
 
 
 	bool adj = (compute_hops(cv,nv) <= 1);
-	printf("CHECK ADJ: cv %d, nv %d, hops: %d, result: %d \n",cv,nv,compute_hops(cv,nv),adj);
 
 	double avg_idleness = 0.;
 	for(size_t i=0; i<dimension; i++) {
@@ -561,18 +561,19 @@ bool SSIPatrolAgent::greedy_best_bid(int cv, int nv){
 	avg_idleness = avg_idleness/((double) dimension);
 	double std_idleness = 0.;
 	for(size_t i=0; i<dimension; i++) {
-        	std_idleness += (global_instantaneous_idleness[i] - avg_idleness)*(global_instantaneous_idleness[i] - avg_idleness);
+        std_idleness += (global_instantaneous_idleness[i] - avg_idleness)*(global_instantaneous_idleness[i] - avg_idleness);
 	}
 	std_idleness = sqrt(std_idleness/((double) dimension));
 	bool high_idleness = (global_instantaneous_idleness[nv] > (2*std_idleness + avg_idleness));
-	printf("CHECK HIGH IDLNESS: idl %f, avg %f, std %f, result: %d \n",global_instantaneous_idleness[nv],avg_idleness,std_idleness,high_idleness);
-
 	bool conflict = (bids[nv].bidValue == 0);
-	printf("CHECK CONF: bid value %f, result: %d \n",bids[nv].bidValue,conflict);
-
 	bool greedy_cond = adj && high_idleness && !conflict;
-	printf("CHECK GREEDY: result: %d \n",greedy_cond);
 
+#if DEBUG_PRINT
+	printf("CHECK ADJ: cv %d, nv %d, hops: %d, result: %d \n",cv,nv,compute_hops(cv,nv),(int)adj);
+	printf("CHECK HIGH IDLNESS: idl %f, avg %f, std %f, result: %d \n",global_instantaneous_idleness[nv],avg_idleness,std_idleness,high_idleness);
+	printf("CHECK CONF: bid value %f, result: %d \n",bids[nv].bidValue,conflict);
+	printf("CHECK GREEDY: result: %d \n",greedy_cond);
+#endif
 
 //	return my_best || greedy_cond;	
 	return greedy_cond;

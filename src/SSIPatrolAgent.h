@@ -19,7 +19,7 @@
 
 #define BIG_NUMBER 999999
 
-#define DEBUG_PRINT 1
+#define DEBUG_PRINT 0
 
 //a tuple <robotId,bidValue>
 typedef struct bid_tuple {
