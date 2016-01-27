@@ -5,7 +5,7 @@
 #
 # MAP: Available maps: grid, example, cumberland, DISlabs, broughton
 # NROBOTS: number of robots
-# INITPOS: initial position of the robots: spread, compact
+# INITPOS: initial positions of the robots: (default,a,b,c,...)
 # ALG: Algorithm: RAND,CR,HCR,HPCC,CGG,MSP,GBS,SEBS,CBLS,DTAG,DTAP
 # LOC: Localization mode: odom, GPS
 # NAV: Navigation module: ros, thin_navigation
@@ -18,7 +18,7 @@
 
 MAP=DISlabs
 NROBOTS=8
-INITPOS=spread
+INITPOS=default
 ALG=DTAP
 LOC=odom
 NAV=ros

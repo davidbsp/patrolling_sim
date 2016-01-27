@@ -50,7 +50,7 @@ COMMDELAY_DEFAULT = 0.0
 
 NAVMODULE_DEFAULT = "ros" # "thin_navigation" or "ros"
 
-INITPOS_DEFAULT = "spread"
+INITPOS_DEFAULT = "default"
 
 # return long name of the algorithm
 def findAlgName(alg):
@@ -122,8 +122,8 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     
     scenario = MAP+"_"+NROBOTS
 
-    if (INITPOS[0]=='c'):
-        scenario = scenario+'c'
+    if (INITPOS!='default'):
+        scenario = scenario+"_"+INITPOS
 
     iposes = initPoses[scenario.lower()]
     print scenario,'   ',iposes

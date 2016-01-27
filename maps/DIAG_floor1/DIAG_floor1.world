@@ -1,0 +1,19 @@
+include "../hokuyo.inc"
+include "../crobot.inc"
+include "../floorplan.inc"
+
+window( 
+  size   [ 1146 502 1 ]         
+  rotate [ 0.000 0.000 ]    
+  center [ 56.400 20.500 ]   
+  scale 10.000
+  show_data 0
+)
+
+floorplan (
+  size [114.45 46.35  1] 
+  pose [57.225 23.175 0 0]
+  bitmap "DIAG_floor1.pgm"
+)
+
+include "robots.inc"
