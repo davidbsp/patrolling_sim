@@ -447,24 +447,39 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
     //printf("DTAP: while(true) ... \n");
     while (true){
 
-//    	if (best_bid(mnv)){ //if I am in the best position to go to mnv 
-    	if (greedy_best_bid(cv,mnv)){ //if I am in the best position to go to mnv 
+    	if (best_bid(mnv)){ //if I am in the best position to go to mnv 
 			update_tasks();
 			//force_bid(mnv,0,ID_ROBOT); TODO: check
 			break;
-      	} else {
-        	mnv = select_next_vertex(cv,selected_vertices);	
-		bidvalue = compute_bid(mnv); 
-		force_bid(mnv,bidvalue,ID_ROBOT); 
-		send_target(mnv,bidvalue);
-		//printf("  ... waiting for bids (%.2f seconds) ... \n",timeout);
-		wait();
-		/*printf("current target %d current value for target %.2f tasks [",mnv,bidvalue);
-		    for (size_t i = 0; i<dimension;i++){
-				printf(" %d, ",tasks[i]);	
-		    }
-		    printf("] \n");*/
-	 } 			
+    	} else {
+		if (greedy_best_bid(cv,mnv)){ //if the greedy action condition is true stop the vertex selection and go to mvn (do not update your task)
+			//get date and time for file name
+               	        time_t rawtime;
+		        struct tm * timeinfo;
+			char strnow[80];
+			time (&rawtime);
+			timeinfo = localtime(&rawtime);
+			sprintf(strnow,"greedy-actions-%d%02d%02d_%02d%02d%02d.txt",  timeinfo->tm_year+1900,timeinfo->tm_mon+1,timeinfo->tm_mday,timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
+			//open file
+ 			FILE* fp = fopen(strnow,"a");
+			fprintf(fp,"robot: %d, target vertex: %d, current vertex: %d\n",ID_ROBOT,mnv,cv);
+			fclose(fp);
+			//exit from while loop	
+			break;
+		} else {
+			mnv = select_next_vertex(cv,selected_vertices);	
+			bidvalue = compute_bid(mnv); 
+			force_bid(mnv,bidvalue,ID_ROBOT); 
+			send_target(mnv,bidvalue);
+			//printf("  ... waiting for bids (%.2f seconds) ... \n",timeout);
+			wait();
+			/*printf("current target %d current value for target %.2f tasks [",mnv,bidvalue);
+			    for (size_t i = 0; i<dimension;i++){
+					printf(" %d, ",tasks[i]);	
+			    }
+			    printf("] \n");*/			
+		}
+	} 			
     }
     //printf("DTAP: while(true) ... DONE\n");
     
@@ -531,8 +546,8 @@ void SSIPatrolAgent::send_bid(int nv,double bv) {
 bool SSIPatrolAgent::greedy_best_bid(int cv, int nv){
 
 
-	bool my_best = (bids[nv].robotId==ID_ROBOT);
-	printf("CHECK BEST: bid robot id %d, result: %d \n",bids[nv].robotId,(bids[nv].robotId==ID_ROBOT));
+//	bool my_best = (bids[nv].robotId==ID_ROBOT);
+//	printf("CHECK BEST: bid robot id %d, result: %d \n",bids[nv].robotId,(bids[nv].robotId==ID_ROBOT));
 
 
 	bool adj = (compute_hops(cv,nv) <= 1);
@@ -558,7 +573,8 @@ bool SSIPatrolAgent::greedy_best_bid(int cv, int nv){
 	printf("CHECK GREEDY: result: %d \n",greedy_cond);
 
 
-	return my_best || greedy_cond;	
+//	return my_best || greedy_cond;	
+	return greedy_cond;
 }
 
 
