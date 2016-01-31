@@ -13,7 +13,7 @@ window(
 floorplan (
   size [50.0 40.0  1] 
   pose [25.0 20.0 0 0]
-  bitmap "DISlabs.pgm"
+  bitmap "DIAG_labs.pgm"
 )
 
 include "robots.inc"

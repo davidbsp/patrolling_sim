@@ -392,7 +392,9 @@ void SSIPatrolAgent::force_bid(int nv,double bv,int rid){
 
 void SSIPatrolAgent::wait(){
 	double t = std::min(timeout,1.0+nactivetasks*0.1);
+#if DEBUG_PRINT
 	printf("   --- waiting %.1f second ---\n",t);
+#endif
 	ros::Duration delay = ros::Duration(t); //asynchronous version
 	delay.sleep();	
 
@@ -432,9 +434,12 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
     send_target(mnv,bidvalue);
 #if DEBUG_PRINT    
     printf("DTAP [%.1f] compute_next_vertex: waiting for bids\n",ros::Time::now().toSec());
+#endif
     wait();
+#if DEBUG_PRINT    
     printf("DTAP compute_next_vertex: bids timeout - current value for target node %d = %.2f \n",mnv,bidvalue);
 #endif
+
     /*
     printf("Tasks [");
     for (size_t i = 0; i<dimension;i++){

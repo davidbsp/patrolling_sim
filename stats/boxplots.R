@@ -10,7 +10,7 @@
 
 boxplots_idl <- function(v) {
 
-    plot_title = args[1]
+    plot_title = v[1]
     
     n <- (length(v)-1)/2
     z <- vector(length=n)
@@ -45,9 +45,9 @@ boxplots_idl <- function(v) {
     dd <- lapply(z, get, envir=environment())
     names(dd) <- l
     
-    boxplot(dd,outline=TRUE,horizontal=FALSE, range=3, las=2, main=plot_title)
+    boxplot(dd,outline=TRUE,horizontal=FALSE, range=1.5, las=2, main=plot_title,  xlab="", ylab="Idleness (s)")
 
-    points(means, pch = 8, cex = 1.5)
+    points(means, pch = 8, cex = 1.25)  #3=+, 8=*
 
 }
 
