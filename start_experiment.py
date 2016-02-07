@@ -28,7 +28,7 @@ Alg_names = [
         [ 'DTAP', 'DTASSIPart' ]
      ]
 
-Map_names = ['cumberland','example','grid','1r5','DISlabs', 'broughton']   
+Map_names = ['cumberland','example','grid','1r5','broughton','DIAG_labs','DIAG_floor1']   
 
 NRobots_list = ['1','2','4','6','8','10','12']
 
@@ -381,7 +381,7 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), NAVMODULE_DEFAULT, self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false") )
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), NAVMODULE_DEFAULT, self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false",1.0) )
 
     
     def quit(self):
