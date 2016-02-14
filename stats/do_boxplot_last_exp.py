@@ -16,7 +16,7 @@ L = []
 # Read file with experiments to plot
 
 if (len(sys.argv)<4):
-    print "Use: do_plot_last_exp.py <num of last exp to plot> <plot title> <label_1> ... <label_n>"
+    print "Use: do_boxplot_last_exp.py <num of last exp to plot> <plot title> <label_1> ... <label_n>"
     sys.exit(0)
 
 exptoplot = "exptoplot.txt"
@@ -43,21 +43,18 @@ f.close
 
 # Run the R script
 
-
+cmd = 'Rscript stats/boxplots.R "'+plot_title+'" '
+lfiles = ""
 
 for i in range(0,len(L)/2):
-  plot_title_2 = '"' + plot_title.strip('"') + ' ' + L[i*2+1] + '"'
+  lfiles = lfiles + "%s_idleness.csv %s " %(L[i*2],L[i*2+1])
 
-  print plot_title_2
+print cmd+lfiles
+os.system(cmd+lfiles)
 
-  precmd = 'Rscript stats/plots.R '+plot_title_2+' '
-  cmd = precmd + "%s_idleness.csv %s " %(L[i*2],L[i*2+1])
-  os.system(cmd)
-  
-  outfile = '"' + plot_title.strip('"') + '_' + L[i*2+1] + '.pdf"'
-  cmd = 'mv Rplots.pdf '+outfile
-  os.system(cmd)
+cmd = 'mv Rplots.pdf '+outfile
+os.system(cmd)
 
-  cmd = 'evince '+outfile+ ' &'
-  os.system(cmd)
+cmd = 'evince '+outfile+ ' &'
+os.system(cmd)
 

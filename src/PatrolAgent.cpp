@@ -782,8 +782,8 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
             ROS_INFO("Let's Patrol!\n");
             double r = 1.0 * ((rand() % 1000)/1000.0);
 
-            if (initial_positions[0]=='c')
-                r = DELTA_TIME_SEQUENTIAL_START * ID_ROBOT;
+            //TODO if sequential start
+            //r = DELTA_TIME_SEQUENTIAL_START * ID_ROBOT;
 
             ros::Duration wait(r); // seconds
 
