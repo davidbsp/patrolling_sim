@@ -429,16 +429,16 @@ void write_results (double *avg_idleness, double *stddev_idleness, int *number_o
                     uint interference_cnt, uint tot_visits, float avg_visits,
                     const char* graph_file, const char* teamsize_str, 
                     double duration, double real_duration, double comm_delay,
-		            const char *filename) {
+		            string filename) {
 
     dolog("write_results - begin");
 
     FILE *file;
   
-    printf("writing to file %s\n",filename);
+    printf("writing to file %s\n",filename.c_str());
     // printf("graph file %s\n",graph_file);
         
-    file = fopen (filename,"a");
+    file = fopen (filename.c_str(),"a");
     
     //fprintf(file,"%i\n%i\n%i\n\n",num_nos,largura(),altura());
     fprintf(file, "\nComplete Patrol Cycles:\t%u\n\n", complete_patrol);
@@ -649,24 +649,27 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     
 
     // Create directory results if does not exist
-    const char* path1 = "results";
-    char path2[100],path3[150],path4[200];
-    sprintf(path2,"%s/%s",path1,sname);
-    sprintf(path3,"%s/%s",path2,algorithm.c_str());
-    sprintf(path4,"%s/%s",path3,hostname);
+    string path1 = "results";
+    
+    string path2,path3,path4;
+    
+    path2 = path1 + "/" + string(sname);
+    path3 = path2 + "/" + algorithm;
+    path4 = path3 + "/" + hostname;
+
     
     struct stat st;
     
-    if (stat(path1, &st) != 0)
-      mkdir(path1, 0777);
-    if (stat(path2, &st) != 0)
-      mkdir(path2, 0777);
-    if (stat(path3, &st) != 0)
-      mkdir(path3, 0777);
-    if (stat(path4, &st) != 0)
-      mkdir(path4, 0777);
+    if (stat(path1.c_str(), &st) != 0)
+      mkdir(path1.c_str(), 0777);
+    if (stat(path2.c_str(), &st) != 0)
+      mkdir(path2.c_str(), 0777);
+    if (stat(path3.c_str(), &st) != 0)
+      mkdir(path3.c_str(), 0777);
+    if (stat(path4.c_str(), &st) != 0)
+      mkdir(path4.c_str(), 0777);
 
-    printf("Path experimental results: %s\n",path4);
+    printf("Path experimental results: %s\n",path4.c_str());
     
     // Local time (real clock time)
     time_t rawtime;
@@ -680,23 +683,22 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     
     // File to log all the idlenesses of an experimental scenario
 
-    char idlfilename[240],resultsfilename[240],resultstimecsvfilename[240],expname[240]; // resultstimefilename[240]
-    sprintf(expname,"%s/%s",path4,strnow);
-    sprintf(idlfilename,"%s/%s_idleness.csv",path4,strnow);
-    sprintf(resultsfilename,"%s/%s_results.txt",path4,strnow);
-    //sprintf(resultstimefilename,"%s/%s_timeresults.txt",path4,strnow);
-    sprintf(resultstimecsvfilename,"%s/%s_timeresults.csv",path4,strnow);
+    string idlfilename,resultsfilename,resultstimecsvfilename,expname; 
+    expname = path4 + "/" + string(strnow);
+    idlfilename = expname + "_idleness.csv";
+    resultsfilename = expname + "_results.txt";
+    resultstimecsvfilename = expname + "_timeresults.csv";
 
     FILE *fexplist;
     fexplist = fopen("experiments.txt", "a");
-    fprintf(fexplist,"%s\n",expname);
+    fprintf(fexplist,"%s\n",expname.c_str());
     fclose(fexplist);
 
-    idlfile = fopen (idlfilename,"a");
+    idlfile = fopen (idlfilename.c_str(),"a");
     fprintf(idlfile,"Time;Robot;Node;Idleness;Interferences\n"); // header
 
     FILE *resultstimecsvfile;
-    resultstimecsvfile = fopen(resultstimecsvfilename, "w");
+    resultstimecsvfile = fopen(resultstimecsvfilename.c_str(), "w");
 
     fprintf(resultstimecsvfile,"Time;Idleness min;Idleness avg;Idleness stddev;Idleness max;Interferences\n"); // header
 
@@ -707,7 +709,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 #endif
 
     dolog("Monitor node starting");
-    dolog(expname);
+    dolog(expname.c_str());
 
 #if SAVE_HYSTOGRAMS    
     // Vectors for hystograms
@@ -928,9 +930,6 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   fclose(resultstimecsvfile);
 
 
-  // write info file
-    char infofilename[240];
-    sprintf(infofilename,"%s/%s_info.csv",path4,strnow);
 
     
     duration = current_time-time_zero;
@@ -945,9 +944,11 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
 
     // Write info file with overall results 
+    string infofilename;
+    infofilename = expname + "_info.csv";
 
     FILE *infofile;
-    infofile = fopen (infofilename,"w");
+    infofile = fopen (infofilename.c_str(),"w");
     fprintf(infofile,"%s;%s;%s;%.1f;%.2f;%s;%s;%s;%s;%s;%.1f;%.1f;%d;%s;%.1f;%.1f;%.1f;%.1f;%.2f;%d;%.1f;%d\n",
             mapname.c_str(),teamsize_str,initial_positions.c_str(),goal_reached_wait,comm_delay,nav_mod.c_str(),
             algorithm.c_str(), algparams.c_str(),hostname,
@@ -962,13 +963,13 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
 
 #if SAVE_HYSTOGRAMS
     // Hystogram files
-    char hfilename[240],chfilename[240];
-    sprintf(hfilename, "%s/%s.hist", path4,strnow);
-    sprintf(chfilename,"%s/%s.chist",path4,strnow);
+    string hfilename,chfilename;
+    hfilename = expname + ".hist";
+    chfilename = expname + ".chist";
 
     cout << "Histogram output files: " << hfilename << endl;
-    std::ofstream of1; of1.open(hfilename);
-    std::ofstream of2; of2.open(chfilename);
+    std::ofstream of1; of1.open(hfilename.c_str());
+    std::ofstream of2; of2.open(chfilename.c_str());
     double c=0;
     for (int k=0; k<hn; k++) {
         of1 << k*RESOLUTION << " " << (double)hv[k]/hsum << endl;
@@ -984,7 +985,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   
   sleep(5);
   char cmd[80];
-  sprintf(cmd, "mv ~/.ros/stage-000003.png %s/%s_stage.png", path4,strnow);
+  sprintf(cmd, "mv ~/.ros/stage-000003.png %s/%s_stage.png", path4.c_str(),strnow);
   system(cmd);
   printf("%s\n",cmd);
   printf("Screenshot image copied.\n");
