@@ -83,6 +83,11 @@ void PatrolAgent::init(int argc, char** argv) {
     
     //Get the Graph info from the Graph File
     GetGraphInfo(vertex_web, dimension, graph_file.c_str());
+    
+    
+    uint nedges = GetNumberEdges(vertex_web,dimension);
+    
+    printf("Loaded graph %s with %d nodes and %d edges\n",mapname.c_str(),dimension,nedges);
 
 #if 0
     /* Output Graph Data */   
@@ -245,8 +250,8 @@ void PatrolAgent::readParams() {
     }
 
     if (! ros::param::get("/initial_positions", initial_positions)) {
-      initial_positions = "spread";
-      ROS_WARN("Cannot read parameter /initial_positions. Using default value!");
+      initial_positions = "default";
+      ROS_WARN("Cannot read parameter /initial_positions. Using default value '%s'!", initial_positions.c_str());
       //ros::param::set("/initial_pos", initial_positions);
     }
 

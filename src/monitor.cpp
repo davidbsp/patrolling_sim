@@ -755,8 +755,8 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
     }
 
     if (! ros::param::get("/initial_positions", initial_positions)) {
-      initial_positions = "spread";
-      ROS_WARN("Cannot read parameter /initial_positions. Using default value 'spread'!");
+      initial_positions = "default";
+      ROS_WARN("Cannot read parameter /initial_positions. Using default value '%s'!", initial_positions.c_str());
     }
 
     if (! ros::param::get("/navigation_module", nav_mod)) {

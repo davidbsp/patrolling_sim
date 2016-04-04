@@ -63,7 +63,7 @@ void Cyclic_Agent::init(int argc, char** argv) {
     PatrolAgent::init(argc,argv);
     
     //robot's cyclic path:
-    path = new int[4*dimension];
+    path = new int[8*dimension];
   
     //get cyclic path:
     path_elements = cyclic(dimension, vertex_web, path);
