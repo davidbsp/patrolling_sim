@@ -32,7 +32,7 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014-2016)
 *********************************************************************/
 
 #include <ros/ros.h>
@@ -42,8 +42,10 @@
 uint WIDTH_PX;
 uint HEIGHT_PX;
 float RESOLUTION;
-float WIDTH_M;
-float HEIGHT_M;
+//float WIDTH_M;
+//float HEIGHT_M;
+float OFFSET_X;
+float OFFSET_Y;
 
 uint GetGraphDimension (const char* graph_file){
   
@@ -63,8 +65,10 @@ uint GetGraphDimension (const char* graph_file){
       r=fscanf (file, "%u", &WIDTH_PX);
       r=fscanf (file, "%u", &HEIGHT_PX);
       r=fscanf (file, "%f", &RESOLUTION);
-      WIDTH_M = (float) WIDTH_PX * RESOLUTION;
-      HEIGHT_M = (float) HEIGHT_PX * RESOLUTION;
+      r=fscanf (file, "%f", &OFFSET_X);
+      r=fscanf (file, "%f", &OFFSET_Y);
+      //WIDTH_M = (float) WIDTH_PX * RESOLUTION;
+      //HEIGHT_M = (float) HEIGHT_PX * RESOLUTION;
    }
    fclose(file);
    return dimension;
@@ -96,10 +100,12 @@ void GetGraphInfo (vertex *vertex_web, uint dimension, const char* graph_file){
 	r=fscanf (file, "%u", &vertex_web[i].id);
 	
 	r=fscanf (file, "%f", &vertex_web[i].x);
-	vertex_web[i].x *= RESOLUTION; //convert to m	
+	vertex_web[i].x *= RESOLUTION; //convert to m
+	vertex_web[i].x += OFFSET_X;
 	
 	r=fscanf (file, "%f", &vertex_web[i].y);
 	vertex_web[i].y *= RESOLUTION; //convert to m
+	vertex_web[i].y += OFFSET_Y;
 	
 	r=fscanf (file, "%u", &vertex_web[i].num_neigh);
 	

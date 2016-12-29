@@ -32,7 +32,7 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014-2016)
 *********************************************************************/
 
 #ifndef __GETGRAPH_H__
@@ -43,7 +43,7 @@
 #include <cmath>
 
 //File Line of the First Vertex ID to read (Protection) - fscanf() ignores blank lines
-#define FIRST_VID 5
+#define FIRST_VID 7
 
 typedef unsigned int uint;
 

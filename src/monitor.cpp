@@ -32,7 +32,7 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014-2016)
 *********************************************************************/
 
 #include <sys/stat.h>
@@ -46,6 +46,7 @@
 #include <string>
 
 #include <ros/ros.h>
+#include <ros/package.h> //to get pkg path
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <tf/transform_broadcaster.h>
@@ -98,6 +99,8 @@ double time_zero, last_report_time;
 time_t real_time_zero;
 double goal_reached_wait,comm_delay,lost_message_rate;
 string algorithm, algparams, nav_mod, initial_positions;
+
+const std::string PS_path = ros::package::getPath("patrolling_sim"); 	//D.Portugal => get pkg path
 
 
 #define MAX_DIMENSION 200
@@ -182,6 +185,12 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg)
             if (init_robots[id_robot] == false){   //receive init msg: "ID,msg_type,1"
                 printf("Robot [ID = %d] is Active!\n", id_robot);
                 init_robots[id_robot] = true;
+                
+                //Patch D.Portugal (needed to support other simulators besides Stage):
+                double current_time = ros::Time::now().toSec();
+                //initialize last_goal_reached:
+                set_last_goal_reached(id_robot,current_time);
+                
                 cnt++;
             } 
             if (cnt==teamsize){
@@ -609,6 +618,9 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   string graph_file = "maps/"+mapname+"/"+mapname+".graph";
 
   printf("Graph: %s\n",graph_file.c_str());
+     
+  /** D.Portugal: needed in case you "rosrun" from another folder **/     
+  chdir(PS_path.c_str());
   
   //Check Graph Dimension:
   dimension = GetGraphDimension(graph_file.c_str());

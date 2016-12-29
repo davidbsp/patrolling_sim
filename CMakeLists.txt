@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   roscpp
 #  rospy
-#  roslib
+  roslib
   tf
 )
 

@@ -32,12 +32,13 @@
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
 *
-* Author: David Portugal (2011-2014), and Luca Iocchi (2014)
+* Author: David Portugal (2011-2014), and Luca Iocchi (2014-2016)
 *********************************************************************/
 
 #include <sstream>
 #include <string>
 #include <ros/ros.h>
+#include <ros/package.h> //to get pkg path
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <tf/transform_broadcaster.h>
@@ -51,6 +52,8 @@
 using namespace std;
 
 #define DELTA_TIME_SEQUENTIAL_START 15
+
+const std::string PS_path = ros::package::getPath("patrolling_sim"); 	//D.Portugal => get pkg path
 
 
 void PatrolAgent::init(int argc, char** argv) {
@@ -71,6 +74,9 @@ void PatrolAgent::init(int argc, char** argv) {
         ID_ROBOT = atoi(argv[3]); 
         //printf("ID_ROBOT = %d\n",ID_ROBOT); //-1 in the case there is only 1 robot.
     }
+    
+    /** D.Portugal: needed in case you "rosrun" from another folder **/     
+    chdir(PS_path.c_str());
                 
     mapname = string(argv[2]);
     graph_file = "maps/"+mapname+"/"+mapname+".graph";
