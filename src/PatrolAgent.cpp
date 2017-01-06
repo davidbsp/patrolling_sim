@@ -119,6 +119,7 @@ void PatrolAgent::init(int argc, char** argv) {
     resend_goal_count = 0;
     communication_delay = 0.0;
     lost_message_rate = 0.0;
+    goal_reached_wait = 0.0;
     /* Define Starting Vertex/Position (Launch File Parameters) */
 
     ros::init(argc, argv, "patrol_agent");  // will be replaced by __name:=XXXXXX
@@ -130,19 +131,14 @@ void PatrolAgent::init(int argc, char** argv) {
     wait.sleep();
     
     double initial_x, initial_y;
-    
-    XmlRpc::XmlRpcValue list;
+    std::vector<double> list;
     nh.getParam("initial_pos", list);
-    ROS_ASSERT(list.getType() == XmlRpc::XmlRpcValue::TypeArray);
-    
+       
     int value = ID_ROBOT;
     if (value == -1){value = 0;}
     
-    ROS_ASSERT(list[2*value].getType() == XmlRpc::XmlRpcValue::TypeDouble);
-    initial_x = static_cast<double>(list[2*value]);
-    
-    ROS_ASSERT(list[2*value+1].getType() == XmlRpc::XmlRpcValue::TypeDouble);
-    initial_y = static_cast<double>(list[2*value+1]);
+    initial_x = list[2*value];
+    initial_y = list[2*value+1];
     
     //   printf("initial position: x = %f, y = %f\n", initial_x, initial_y);
     current_vertex = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
@@ -220,11 +216,11 @@ void PatrolAgent::ready() {
     while(!ac->waitForServer(ros::Duration(5.0))){
         ROS_INFO("Waiting for the move_base action server to come up");
     } 
-    ROS_INFO("Connected with move_base action server");
+    ROS_INFO("Connected with move_base action server");    
     
-    initialize_node(); //dizer q está vivo
+    initialize_node(); //announce that agent is alive
     
-    ros::Rate loop_rate(1); //1 segundo
+    ros::Rate loop_rate(1); //1 sec
     
     /* Wait until all nodes are ready.. */
     while(initialize){
@@ -238,25 +234,25 @@ void PatrolAgent::ready() {
 void PatrolAgent::readParams() {
 
     if (! ros::param::get("/goal_reached_wait", goal_reached_wait)) {
-      goal_reached_wait = 0.0;
+      //goal_reached_wait = 0.0;
       ROS_WARN("Cannot read parameter /goal_reached_wait. Using default value!");
       //ros::param::set("/goal_reached_wait", goal_reached_wait);
     }
 
     if (! ros::param::get("/communication_delay", communication_delay)) {
-      communication_delay = 0.0;
+      //communication_delay = 0.0;
       ROS_WARN("Cannot read parameter /communication_delay. Using default value!");
       //ros::param::set("/communication_delay", communication_delay);
     } 
 
     if (! ros::param::get("/lost_message_rate", lost_message_rate)) {
-      lost_message_rate = 0.0;
+      //lost_message_rate = 0.0;
       ROS_WARN("Cannot read parameter /lost_message_rate. Using default value!");
       //ros::param::set("/lost_message_rate", lost_message_rate);
     }
 
     if (! ros::param::get("/initial_positions", initial_positions)) {
-      initial_positions = "default";
+      //initial_positions = "default";
       ROS_WARN("Cannot read parameter /initial_positions. Using default value '%s'!", initial_positions.c_str());
       //ros::param::set("/initial_pos", initial_positions);
     }
@@ -480,7 +476,7 @@ void PatrolAgent::sendGoal(int next_vertex)
     goal.target_pose.header.stamp = ros::Time::now();    
     goal.target_pose.pose.position.x = target_x; // vertex_web[current_vertex].x;
     goal.target_pose.pose.position.y = target_y; // vertex_web[current_vertex].y;  
-    goal.target_pose.pose.orientation = angle_quat; //alpha -> orientação  (queria optimizar este parametro -> através da direcção do vizinho!)
+    goal.target_pose.pose.orientation = angle_quat; //doesn't matter really.
     ac->sendGoal(goal, boost::bind(&PatrolAgent::goalDoneCallback, this, _1, _2), boost::bind(&PatrolAgent::goalActiveCallback,this), boost::bind(&PatrolAgent::goalFeedbackCallback, this,_1));  
 }
 

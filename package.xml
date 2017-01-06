@@ -48,6 +48,7 @@
   <build_depend>tf</build_depend>
   <build_depend>stage_ros</build_depend>
   <build_depend>roslib</build_depend>
+  <build_depend>message_generation</build_depend>
   <run_depend>actionlib</run_depend>
   <run_depend>move_base_msgs</run_depend>
   <run_depend>nav_msgs</run_depend>
@@ -55,13 +56,17 @@
   <run_depend>tf</run_depend>
   <run_depend>stage_ros</run_depend>
   <run_depend>roslib</run_depend>
+  <run_depend>message_runtime</run_depend>
   
 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- You can specify that this package is a metapackage here: -->
+    
     <!-- <metapackage/> -->
+      
+    <!--<cpp cflags="-I${prefix}/srv/cpp"/>-->
 
     <!-- Other tools can request additional information be placed here -->
 

@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 #  rospy
   roslib
   tf
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -55,11 +56,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+   FILES
+   GoToStartPosSrv.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -69,10 +69,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   move_base_msgs#   nav_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -180,9 +180,14 @@ target_link_libraries(DTASSIPart PatrolAgent SSIPatrolAgent ${catkin_LIBRARIES})
  
 ## Declare a cpp executable 
 add_executable(monitor src/monitor.cpp src/getgraph.cpp)
+add_dependencies(monitor ${PROJECT_NAME}_gencpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(monitor ${catkin_LIBRARIES})
- 
+
+add_executable(GoToStartPos src/GoToStartPos.cpp)
+add_dependencies(GoToStartPos ${PROJECT_NAME}_gencpp)
+target_link_libraries(GoToStartPos ${catkin_LIBRARIES})
+
 ## Declare a cpp executable 
 add_executable(idlHistogram src/idlHistogram.cpp)
 ## Specify libraries to link a library or executable target against

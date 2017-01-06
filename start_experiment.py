@@ -11,8 +11,10 @@ import Image, tkFileDialog
 import numpy as np
 import sys, time, os, glob, shutil
 from math import atan2, degrees, radians
-
 import datetime
+
+import os
+dirname, filename = os.path.split(os.path.abspath(__file__))
 
 Alg_names = [ 
         [ 'RAND', 'Random' ],
@@ -392,7 +394,7 @@ class DIP(tk.Frame):
       
       
     def saveConfigFile(self):
-      f = open('lastConfigUsed', 'w')
+      f = open(dirname+'/lastConfigUsed', 'w')
       f.write("[Config]\n")
       f.write("map: %s\n"%self.map_ddm.get())
       f.write("nrobots: %s\n"%self.robots_ddm.get())

@@ -58,6 +58,7 @@ using namespace std;
 
 #include "getgraph.h"
 #include "message_types.h"
+#include "patrolling_sim/GoToStartPosSrv.h"
 
 #define NUM_MAX_ROBOTS 32
 #define MAX_COMPLETE_PATROL 100
@@ -80,9 +81,11 @@ typedef unsigned int uint;
 
 ros::Subscriber results_sub;
 ros::Publisher results_pub, screenshot_pub;
+ros::ServiceServer GotoStartPosMethod;
 
 //Initialization:
 bool initialize = true; // Initialization flag
+bool goto_start_pos = false; //default: robots already start in right position
 uint cnt=0;  // Count number of robots connected
 uint teamsize;
 bool init_robots[NUM_MAX_ROBOTS];
@@ -194,14 +197,38 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg)
                 cnt++;
             } 
             if (cnt==teamsize){
+                
+                // check if robots need to travel to starting positions
+                while(goto_start_pos){ //if or while (?)
+                    
+                    patrolling_sim::GoToStartPosSrv::Request Req;
+                    Req.teamsize.data = teamsize;
+                    Req.sleep_between_goals.data = 20; //time in secs to wait before sending goals to each different robot
+                    patrolling_sim::GoToStartPosSrv::Response Rep;	
+                    
+                    ROS_INFO("Sending all robots to starting position.");
+                    
+                    if (!ros::service::call("/GotoStartPosSrv", Req, Rep)){ //blocking call
+                        ROS_ERROR("Error invoking /GotoStartPosSrv.");	
+                        ROS_ERROR("Sending robots to initial position failed.");
+                        ros::shutdown(); //make sense for while implementation
+                        return;
+                        
+                    }else{
+                        goto_start_pos = false;
+                        system("rosnode kill GoToStartPos &");  //we don't need the service anymore.
+                    }               
+                    
+                }
+                    
                 printf("All Robots GO!\n");
                 initialize = false;
-                
+                    
                 //Clock Reset:
                 time_zero = ros::Time::now().toSec();
                 last_report_time = time_zero; 
-				
-  		time (&real_time_zero);
+                                    
+                time (&real_time_zero);
                 printf("Time zero = %.1f (sim) = %lu (real) \n", time_zero,(long)real_time_zero);
 
                 std_msgs::Int16MultiArray msg;  // -1,msg_type,100,0,0
@@ -211,9 +238,11 @@ void resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg)
                 msg.data.push_back(100);  // Go !!!
                 results_pub.publish(msg);
                 ros::spinOnce();      
+                
+                }
             }
             
-        }
+        //}
         break;
         }
         
@@ -733,13 +762,14 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   ros::init(argc, argv, "monitor");
   ros::NodeHandle nh;
   
-  //Subscrever "results" vindo dos robots
+  //Subscribe "results" from robots
   results_sub = nh.subscribe("results", 100, resultsCB);   
   
-  //Publicar dados para "results"
+  //Publish data to "results"
   results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
   
   screenshot_pub = nh.advertise<std_msgs::String>("/stageGUIRequest", 100);
+    
 
   double duration = 0.0, real_duration = 0.0;
   
@@ -747,6 +777,13 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   
   nh.setParam("/simulation_runnning", "true");
   nh.setParam("/simulation_abort", "false");
+  
+  if(ros::service::exists("/GotoStartPosSrv", false)){ //see if service has been advertised or not
+       goto_start_pos = true;  //if service exists: robots need to be sent to starting positions
+       ROS_INFO("/GotoStartPosSrv is advertised. Robots will be sent to starting positions.");
+  }else{
+      ROS_WARN("/GotoStartPosSrv does not exist. Assuming robots are already at starting positions.");
+  }
     
   double current_time = ros::Time::now().toSec();
   
