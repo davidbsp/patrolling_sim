@@ -85,9 +85,9 @@ def getROStime():
     f.close()
     return t
 
-# get running simulation flag from /simulation_runnning param
+# get running simulation flag from /simulation_running param
 def getSimulationRunning():
-    os.system("rosparam get /simulation_runnning > simrun.txt")
+    os.system("rosparam get /simulation_running > simrun.txt")
     f = open('simrun.txt','r')
     t = True
     line = f.readline();
@@ -97,7 +97,7 @@ def getSimulationRunning():
     return t
 
 # Run the experiment with the given arguments
-# Terminates if simulation is stopped (/simulation_runnning param is false)
+# Terminates if simulation is stopped (/simulation_running param is false)
 # or if timeout is reached (if this is >0)
 # CUSTOM_STAGE: use of extended API for stage (requires custom stage and stage_ros).
 def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP):
@@ -390,7 +390,7 @@ class DIP(tk.Frame):
       self.parent.destroy()
       
     def kill_demo(self):
-      os.system("rosparam set /simulation_runnning false")
+      os.system("rosparam set /simulation_running false")
       
       
     def saveConfigFile(self):

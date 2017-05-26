@@ -72,7 +72,7 @@ void PatrolAgent::init(int argc, char** argv) {
         return;
     }else{
         ID_ROBOT = atoi(argv[3]); 
-        //printf("ID_ROBOT = %d\n",ID_ROBOT); //-1 in the case there is only 1 robot.
+        //printf("ID_ROBOT = %d\n",ID_ROBOT); //-1 for 1 robot (without prefix robot_x)
     }
     
     /** D.Portugal: needed in case you "rosrun" from another folder **/     
@@ -133,6 +133,12 @@ void PatrolAgent::init(int argc, char** argv) {
     double initial_x, initial_y;
     std::vector<double> list;
     nh.getParam("initial_pos", list);
+    
+    if (list.empty()){
+     ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
+     ros::shutdown();
+     exit(-1);
+    }
        
     int value = ID_ROBOT;
     if (value == -1){value = 0;}
@@ -512,7 +518,13 @@ void PatrolAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state
             ROS_INFO("Clear costmap!");
 
             char srvname[80];
-            sprintf(srvname,"/robot_%d/move_base/clear_costmaps",ID_ROBOT);
+            
+            if(ID_ROBOT<=-1){
+                sprintf(srvname,"/move_base/clear_costmaps");
+            }else{
+                sprintf(srvname,"/robot_%d/move_base/clear_costmaps",ID_ROBOT);
+            }
+            
             ros::NodeHandle n;
             ros::ServiceClient client = n.serviceClient<std_srvs::Empty>(srvname);
             std_srvs::Empty srv;
