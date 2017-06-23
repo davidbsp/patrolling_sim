@@ -72,6 +72,7 @@ using namespace std;
 
 #define LOG_MONITOR 0
 #define SAVE_HYSTOGRAMS 0
+#define EXTENDED_STAGE 0
 
 using std::string;
 using std::cout;
@@ -775,7 +776,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   
   ros::Rate loop_rate(30); //0.033 seconds or 30Hz
   
-  nh.setParam("/simulation_runnning", "true");
+  nh.setParam("/simulation_running", "true");
   nh.setParam("/simulation_abort", "false");
   
   if(ros::service::exists("/GotoStartPosSrv", false)){ //see if service has been advertised or not
@@ -944,7 +945,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
                 
       simrun=true; simabort=false;
       std::string psimrun, psimabort; bool bsimabort;
-      if (nh.getParam("/simulation_runnning", psimrun))
+      if (nh.getParam("/simulation_running", psimrun))
           if (psimrun=="false")
               simrun = false;
       if (nh.getParam("/simulation_abort", psimabort))
@@ -955,7 +956,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
         
       if ( (dead) || (!simrun) || (simabort) ) {
           printf ("Simulation is Over\n");                
-          nh.setParam("/simulation_runnning", false);
+          nh.setParam("/simulation_running", false);
           finish_simulation ();
           ros::spinOnce();
           break;
@@ -1031,15 +1032,17 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   printf("Monitor closed.\n");
 
   dolog("Monitor closed");
-  
+
+#if EXTENDED_STAGE
   sleep(5);
   char cmd[80];
   sprintf(cmd, "mv ~/.ros/stage-000003.png %s/%s_stage.png", path4.c_str(),strnow);
   system(cmd);
   printf("%s\n",cmd);
   printf("Screenshot image copied.\n");
-  sleep(3);
-  
+  sleep(3);  
   dolog("Snapshots done");
+#endif
+  
 }
 
