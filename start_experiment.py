@@ -148,8 +148,11 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     os.system("rosparam set /initial_positions "+INITPOS)
 
     cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
-    print cmd
+    rospack = rospkg.RosPack()
+    pkg_folder = rospack.get_path('patrolling_sim')
+    os.system("cd " + pkg_folder) 
     os.system(cmd)
+    print cmd    
     os.system('sleep 1')
 
     cmd_monitor = 'rosrun patrolling_sim monitor '+MAP+' '+ALG_SHORT+' '+NROBOTS  
