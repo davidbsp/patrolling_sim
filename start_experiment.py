@@ -12,6 +12,7 @@ import numpy as np
 import sys, time, os, glob, shutil
 from math import atan2, degrees, radians
 import datetime
+import rospkg
 
 import os
 dirname, filename = os.path.split(os.path.abspath(__file__))
@@ -65,8 +66,9 @@ def findAlgName(alg):
 # load initial poses from configuration file
 def loadInitPoses():
   try:
+    rospack = rospkg.RosPack()
     ConfigIP = ConfigParser.ConfigParser()
-    ConfigIP.read("params/initial_poses.txt")
+    ConfigIP.read(rospack.get_path('patrolling_sim') + "/params/initial_poses.txt")
     for option in ConfigIP.options("InitialPoses"):
         #print option
         initPoses[option] = ConfigIP.get("InitialPoses", option)
@@ -408,9 +410,10 @@ class DIP(tk.Frame):
 
     def loadOldConfig(self):
       try:
+        rospack = rospkg.RosPack()
         self.oldConfigs = {}
         self.Config = ConfigParser.ConfigParser()
-        self.Config.read("lastConfigUsed")
+        self.Config.read(rospack.get_path('patrolling_sim') + "/lastConfigUsed")
         for option in self.Config.options("Config"):
           self.oldConfigs[option] = self.Config.get("Config", option)
       except:
