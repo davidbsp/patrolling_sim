@@ -15,7 +15,7 @@ import datetime
 import rospkg
 
 import os
-dirname, filename = os.path.split(os.path.abspath(__file__))
+dirname = rospkg.RosPack().get_path('patrolling_sim')
 
 Alg_names = [ 
         [ 'RAND', 'Random' ],
@@ -35,7 +35,7 @@ Map_names = ['cumberland','example','grid','1r5','broughton','DIAG_labs','DIAG_f
 
 NRobots_list = ['1','2','4','6','8','10','12']
 
-LocalizationMode_list = ['odom','GPS']
+LocalizationMode_list = ['AMCL','fake_localization']
 
 NavigationMode_list = ['ros','thin_navigation']
 
@@ -66,9 +66,8 @@ def findAlgName(alg):
 # load initial poses from configuration file
 def loadInitPoses():
   try:
-    rospack = rospkg.RosPack()
     ConfigIP = ConfigParser.ConfigParser()
-    ConfigIP.read(rospack.get_path('patrolling_sim') + "/params/initial_poses.txt")
+    ConfigIP.read(dirname+"/params/initial_poses.txt")
     for option in ConfigIP.options("InitialPoses"):
         #print option
         initPoses[option] = ConfigIP.get("InitialPoses", option)
@@ -79,7 +78,7 @@ def loadInitPoses():
 # get ROS time from /clock topic
 def getROStime():
     os.system("rostopic echo -n 1 /clock > rostime.txt")
-    f = open('rostime.txt','r')
+    f = open(dirname+"/rostime.txt",'r')
     t = 0
     for line in f:
         if (line[2:6]=='secs'):
@@ -90,7 +89,7 @@ def getROStime():
 # get running simulation flag from /simulation_running param
 def getSimulationRunning():
     os.system("rosparam get /simulation_running > simrun.txt")
-    f = open('simrun.txt','r')
+    f = open(dirname+"/simrun.txt",'r')
     t = True
     line = f.readline();
     if (line[0:5]=='false'):
@@ -148,9 +147,6 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     os.system("rosparam set /initial_positions "+INITPOS)
 
     cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
-    rospack = rospkg.RosPack()
-    pkg_folder = rospack.get_path('patrolling_sim')
-    os.system("cd " + pkg_folder) 
     os.system(cmd)
     print cmd    
     os.system('sleep 1')
@@ -173,7 +169,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     os.system('sleep 3')
     
     # Start robots
-    if (LOC_MODE == 'odom'):
+    if (LOC_MODE == 'AMCL'):
         robot_launch = 'robot.launch'
     else:
         robot_launch = 'robot_fake_loc.launch'
@@ -251,7 +247,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     #cmd = 'mv ~/.ros/stage-000005.png results/screenshots/stage-%s.png' %(strinittime)
     #os.system(cmd)
 
-    print "Experiment terminated"
+    print "Terminating Experiment"
     os.system("./stop_experiment.sh")
 
 
@@ -399,7 +395,7 @@ class DIP(tk.Frame):
       
       
     def saveConfigFile(self):
-      f = open(dirname+'/lastConfigUsed', 'w')
+      f = open(dirname+"/lastConfigUsed", 'w')
       f.write("[Config]\n")
       f.write("map: %s\n"%self.map_ddm.get())
       f.write("nrobots: %s\n"%self.robots_ddm.get())
@@ -413,10 +409,9 @@ class DIP(tk.Frame):
 
     def loadOldConfig(self):
       try:
-        rospack = rospkg.RosPack()
         self.oldConfigs = {}
         self.Config = ConfigParser.ConfigParser()
-        self.Config.read(rospack.get_path('patrolling_sim') + "/lastConfigUsed")
+        self.Config.read(dirname+"/lastConfigUsed")
         for option in self.Config.options("Config"):
           self.oldConfigs[option] = self.Config.get("Config", option)
       except:
@@ -462,5 +457,6 @@ def main():
 
 
 if __name__ == '__main__':
+    os.chdir(dirname)
     main()
 
