@@ -64,7 +64,7 @@ using namespace std;
 #define MAX_COMPLETE_PATROL 100
 #define MAX_EXPERIMENT_TIME 86400  // seconds
 #define DEAD_ROBOT_TIME 300.0 // (seconds) time from last goal reached after which a robot is considered dead
-#define TIMEOUT_WRITE_RESULTS 180.0 // (seconds) timeout for writing results to file
+#define TIMEOUT_WRITE_RESULTS 180.0 // (seconds) timeout for writing results to file /** YOU MIGHT WANT TO INCREASE THIS IN REAL ROBOT EXPERIMENTS **/
 #define FOREVER true
 // For hystograms
 #define RESOLUTION 1.0 // seconds
@@ -548,7 +548,7 @@ void update_stats(int id_robot, int goal) {
 
     printf("Robot %d reached goal %d (current time: %.2f, alg: %s, nav: %s)\n", id_robot, goal, current_time, algorithm.c_str(), nav_mod.c_str());
             
-    double last_visit_temp = current_time - time_zero; ; //guarda o valor corrente
+    double last_visit_temp = current_time - time_zero; //guarda o valor corrente
     number_of_visits [goal] ++;
     
     set_last_goal_reached(id_robot,current_time);
@@ -941,6 +941,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
       dolog("    check - begin");
 
       // Check if simulation must be terminated
+      /** YOU MIGHT WANT TO IGNORE THIS IN REAL ROBOT EXPERIMENTS (RUN INDEFINITELY) **/
       dead = check_dead_robots();
                 
       simrun=true; simabort=false;
@@ -961,6 +962,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
           ros::spinOnce();
           break;
       }
+      /** YOU MIGHT WANT TO IGNORE THIS IN REAL ROBOT EXPERIMENTS (RUN INDEFINITELY) **/
 
       dolog("    check - end");
 

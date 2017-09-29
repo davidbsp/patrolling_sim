@@ -101,8 +101,10 @@ void DTAGreedy_Agent::init(int argc, char** argv) {
 
     ros::param::set("/algorithm_params",paramss.str());
 
-    getRobotPose(ID_ROBOT,origin_x, origin_y, origin_theta);
-    ROS_INFO("Robot %d: Initial pose %.1f %.1f %.1f",ID_ROBOT,origin_x, origin_y, origin_theta);
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    getRobotPose(value,origin_x, origin_y, origin_theta);
+    ROS_INFO("Robot %d: Initial pose %.1f %.1f %.1f",value,origin_x, origin_y, origin_theta);
     
 }
 
@@ -186,11 +188,14 @@ int DTAGreedy_Agent::compute_next_vertex() {
 // current_vertex (goal just reached)
 // next_vertex (next goal)
 void DTAGreedy_Agent::send_results() {
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    
     //result= [ID,msg_type,global_idleness[1..dimension],next_vertex]
     int msg_type = DTAGREEDY_MSG_TYPE;
     std_msgs::Int16MultiArray msg;
     msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(value);
     msg.data.push_back(msg_type);
     //printf("  ** sending [%d, %d, ",ID_ROBOT,msg_type);
     
@@ -229,8 +234,10 @@ void DTAGreedy_Agent::receive_results() {
     int msg_type = *it; it++;
     
     //printf("  ** received [%d, %d, ... \n",id_sender,msg_type);
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
     
-    if ((id_sender==ID_ROBOT) || (msg_type!=DTAGREEDY_MSG_TYPE)) 
+    if ((id_sender==value) || (msg_type!=DTAGREEDY_MSG_TYPE)) 
         return;
     pthread_mutex_lock(&lock);
     for(size_t i=0; i<dimension; i++) {
@@ -256,8 +263,8 @@ void DTAGreedy_Agent::receive_results() {
     
     // interrupt path if moving to the same target node
     if (sender_next_vertex == next_vertex) { // two robots are going to the same node
-        ROS_INFO("Robots %d and %d are both going to vertex %d",ID_ROBOT,id_sender,next_vertex);
-        ROS_INFO("Robot %d: STOP and choose another target",ID_ROBOT);
+        ROS_INFO("Robots %d and %d are both going to vertex %d",value,id_sender,next_vertex);
+        ROS_INFO("Robot %d: STOP and choose another target",value);
         // change my destination
         cancelGoal(); // stop the current behavior
         current_vertex = next_vertex; // simulate that the goal vertex has been reached (not sent to the monitor)

@@ -169,10 +169,12 @@ int SEBS_Agent::compute_next_vertex() {
 
 
 void SEBS_Agent::send_results() {   
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
     // [ID,msg_type,vertex,intention]
     std_msgs::Int16MultiArray msg;   
     msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(value);
     msg.data.push_back(SEBS_MSG_TYPE);
     msg.data.push_back(current_vertex);
     msg.data.push_back(next_vertex);    
@@ -185,7 +187,10 @@ void SEBS_Agent::receive_results() {
     int id_sender = *it; it++;
     int msg_type = *it; it++;
     
-  	if ((id_sender==ID_ROBOT) || (msg_type!=SEBS_MSG_TYPE)) 
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    
+  	if ((id_sender==value) || (msg_type!=SEBS_MSG_TYPE)) 
     	return;
         
     robot_arrived = vresults[0];

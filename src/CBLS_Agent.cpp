@@ -165,11 +165,14 @@ void CBLS_Agent::onGoalComplete() {
 		}
 		
 		/** PUNISH & REWARD -- NOW **/
-		update_likelihood_new(RL, node_count, instantaneous_idleness, dimension, real_histogram, source, destination, hist_dimension, vertex_web, ID_ROBOT);
+                int value = ID_ROBOT;
+                if (value==-1){value=0;}
+                
+		update_likelihood_new(RL, node_count, instantaneous_idleness, dimension, real_histogram, source, destination, hist_dimension, vertex_web, value);
 		normalize_histogram(real_histogram, histogram, hist_dimension);	
 		  
 		/*if(decision_number%50 == 0){ //write histogram each 50 iterations 
-		  write_histogram_to_file (vertex_web, real_histogram, histogram, source, destination, hist_dimension,decision_number,ID_ROBOT);
+		  write_histogram_to_file (vertex_web, real_histogram, histogram, source, destination, hist_dimension,decision_number,value);
 		}*/
 		  
 		decision_number++;
@@ -246,15 +249,19 @@ void CBLS_Agent::processEvents() {
 }
 
 int CBLS_Agent::compute_next_vertex() {
-    return learning_algorithm (current_vertex, vertex_web, instantaneous_idleness, cur_avg_idleness, tab_intention, histogram, source, destination, hist_dimension, TEAMSIZE, ID_ROBOT, node_count, RL);
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    return learning_algorithm (current_vertex, vertex_web, instantaneous_idleness, cur_avg_idleness, tab_intention, histogram, source, destination, hist_dimension, TEAMSIZE, value, node_count, RL);
 }
 
 
-void CBLS_Agent::send_results() {   
+void CBLS_Agent::send_results() {  
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
     // [ID,msg_type,vertex,intention]
     std_msgs::Int16MultiArray msg;   
     msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(value);
     msg.data.push_back(CBLS_MSG_TYPE);
     msg.data.push_back(current_vertex);
     msg.data.push_back(next_vertex);    
@@ -267,7 +274,10 @@ void CBLS_Agent::receive_results() {
     int id_sender = *it; it++;
     int msg_type = *it; it++;
     
-  	if ((id_sender==ID_ROBOT) || (msg_type!=CBLS_MSG_TYPE)) 
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    
+  	if ((id_sender==value) || (msg_type!=CBLS_MSG_TYPE)) 
     	return;
         
     robot_arrived = vresults[0];

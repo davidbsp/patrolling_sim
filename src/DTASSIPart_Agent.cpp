@@ -181,13 +181,16 @@ void DTASSIPart_Agent::update_tasks(){
 
 ------------*/
 
+        int value = ID_ROBOT;
+        if (value==-1){value=0;}
+
     	nactivetasks=0;
 	bool changed = false;
 	for (size_t i = 0; i< dimension; i++){
-		if (!changed && tasks[i] != (bids[i].robotId == ID_ROBOT)){
+		if (!changed && tasks[i] != (bids[i].robotId == value)){
 			changed = true;		
 		}
-		tasks[i] = (bids[i].robotId == ID_ROBOT);
+		tasks[i] = (bids[i].robotId == value);
 		if (tasks[i]) nactivetasks++;
 	}
 

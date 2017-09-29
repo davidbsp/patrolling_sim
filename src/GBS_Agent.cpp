@@ -144,10 +144,12 @@ int GBS_Agent::compute_next_vertex() {
 
 
 void GBS_Agent::send_results() {   
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
     // [ID,msg_type,vertex]
     std_msgs::Int16MultiArray msg;   
     msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(value);
     msg.data.push_back(GBS_MSG_TYPE);
     msg.data.push_back(current_vertex);
     do_send_message(msg);
@@ -159,7 +161,10 @@ void GBS_Agent::receive_results() {
     int id_sender = *it; it++;
     int msg_type = *it; it++;
     
-  	if ((id_sender==ID_ROBOT) || (msg_type!=GBS_MSG_TYPE)) 
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    
+  	if ((id_sender==value) || (msg_type!=GBS_MSG_TYPE)) 
     	return;
         
     robot_arrived = vresults[0];

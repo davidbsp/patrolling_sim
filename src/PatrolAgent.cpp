@@ -72,7 +72,7 @@ void PatrolAgent::init(int argc, char** argv) {
         return;
     }else{
         ID_ROBOT = atoi(argv[3]); 
-        //printf("ID_ROBOT = %d\n",ID_ROBOT); //-1 for 1 robot (without prefix robot_x)
+        //printf("ID_ROBOT = %d\n",ID_ROBOT); //-1 for 1 robot without prefix (robot_0)
     }
     
     /** D.Portugal: needed in case you "rosrun" from another folder **/     
@@ -270,6 +270,26 @@ void PatrolAgent::run() {
     // get ready
     ready();
     
+    //initially clear the costmap (to make sure the robot is not trapped):
+    std_srvs::Empty srv;
+    std::string mb_string;
+     
+     if (ID_ROBOT>-1){
+             std::ostringstream id_string;
+             id_string << ID_ROBOT;
+             mb_string = "robot_" + id_string.str() + "/";
+    }
+    mb_string += "move_base/clear_costmaps";
+    
+    ROS_ERROR("%s",mb_string.c_str());
+    
+    if (ros::service::call(mb_string.c_str(), srv)){
+    //if (ros::service::call("move_base/clear_costmaps", srv)){
+        ROS_INFO("Costmap correctly cleared before patrolling task.");
+    }else{
+        ROS_WARN("Was not able to clear costmap before patrolling...");
+    }
+    
     // Asynch spinner (non-blocking)
     ros::AsyncSpinner spinner(2); // Use n threads
     spinner.start();
@@ -396,12 +416,14 @@ void PatrolAgent::update_idleness() {
 }
 
 void PatrolAgent::initialize_node (){ //ID,msg_type,1
-  
-    ROS_INFO("Initialize Node: Robot %d",ID_ROBOT); 
+    
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    ROS_INFO("Initialize Node: Robot %d",value); 
     
     std_msgs::Int16MultiArray msg;   
     msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(value);
     msg.data.push_back(INITIALIZE_MSG_TYPE);
     msg.data.push_back(1);  // Robot initialized
     
@@ -429,7 +451,13 @@ void PatrolAgent::getRobotPose(int robotid, float &x, float &y, float &theta) {
     std::stringstream ss; ss << "robot_" << robotid;
     std::string robotname = ss.str();
     std::string sframe = "/map";                //Patch David Portugal: Remember that the global map frame is "/map"
-    std::string dframe = "/" + robotname + "/base_link";
+    std::string dframe;
+    if(ID_ROBOT>-1){
+        dframe = "/" + robotname + "/base_link";
+    }else{
+        dframe = "/base_link";
+    }
+    
     tf::StampedTransform transform;
 
     try {
@@ -550,14 +578,20 @@ void PatrolAgent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackCon
 
     send_positions();
     
-    interference = check_interference(ID_ROBOT);    
+    int value = ID_ROBOT;
+    if (value==-1){ value = 0;}
+    interference = check_interference(value);    
 }
 
 void PatrolAgent::send_goal_reached() {
+    
+    int value = ID_ROBOT;
+    if (value==-1){ value = 0;}
+    
     // [ID,msg_type,vertex,intention,0]
     std_msgs::Int16MultiArray msg;   
     msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(value);
     msg.data.push_back(TARGET_REACHED_MSG_TYPE);
     msg.data.push_back(current_vertex);
     //msg.data.push_back(next_vertex);
@@ -567,7 +601,7 @@ void PatrolAgent::send_goal_reached() {
     ros::spinOnce();  
 }
 
-bool PatrolAgent::check_interference (int ID_ROBOT){ //verificar se os robots estao proximos
+bool PatrolAgent::check_interference (int robot_id){ //verificar se os robots estao proximos
     
     int i;
     double dist_quad;
@@ -576,9 +610,9 @@ bool PatrolAgent::check_interference (int ID_ROBOT){ //verificar se os robots es
         return false; // false if within 10 seconds from the last one
     
     /* Poderei usar TEAMSIZE para afinar */
-    for (i=0; i<ID_ROBOT; i++){ //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
+    for (i=0; i<robot_id; i++){ //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
         
-        dist_quad = (xPos[i] - xPos[ID_ROBOT])*(xPos[i] - xPos[ID_ROBOT]) + (yPos[i] - yPos[ID_ROBOT])*(yPos[i] - yPos[ID_ROBOT]);
+        dist_quad = (xPos[i] - xPos[robot_id])*(xPos[i] - xPos[robot_id]) + (yPos[i] - yPos[robot_id])*(yPos[i] - yPos[robot_id]);
         
         if (dist_quad <= INTERFERENCE_DISTANCE*INTERFERENCE_DISTANCE){    //robots are ... meter or less apart
 //          ROS_INFO("Feedback: Robots are close. INTERFERENCE! Dist_Quad = %f", dist_quad);
@@ -649,8 +683,10 @@ void PatrolAgent::do_interference_behavior()
     ros::spinOnce();        
                 
     //Waiting until conflict is solved...
+    int value = ID_ROBOT;
+    if (value == -1){ value = 0;}
     while(interference){
-        interference = check_interference(ID_ROBOT);
+        interference = check_interference(value);
         if (goal_complete || ResendGoal){
             interference = false;
         }
@@ -765,12 +801,14 @@ void PatrolAgent::receive_results() {
 
 void PatrolAgent::send_interference(){
     //interference: [ID,msg_type]
-
-    printf("Send Interference: Robot %d\n",ID_ROBOT);   
+    
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    printf("Send Interference: Robot %d\n",value);   
     
     std_msgs::Int16MultiArray msg;   
     msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(value);
     msg.data.push_back(INTERFERENCE_MSG_TYPE);
     
     results_pub.publish(msg);   
@@ -821,24 +859,25 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
     if (!initialize) {
 #if 0
         // communication delay
-        if ((communication_delay>0.001) && (id_sender!=ID_ROBOT)) {
-        	double current_time = ros::Time::now().toSec();
-        	if (current_time-last_communication_delay_time>1.0) { 
-		        ROS_INFO("Communication delay %.1f",communication_delay);
-		        ros::Duration delay(communication_delay); // seconds
-		        delay.sleep();
-		        last_communication_delay_time = current_time;
+        if(ID_ROBOT>-1){
+            if ((communication_delay>0.001) && (id_sender!=ID_ROBOT)) {
+                    double current_time = ros::Time::now().toSec();
+                    if (current_time-last_communication_delay_time>1.0) { 
+                            ROS_INFO("Communication delay %.1f",communication_delay);
+                            ros::Duration delay(communication_delay); // seconds
+                            delay.sleep();
+                            last_communication_delay_time = current_time;
+                }
+            }
+            bool lost_message = false;
+            if ((lost_message_rate>0.0001)&& (id_sender!=ID_ROBOT)) {
+                double r = (rand() % 1000)/1000.0;
+                lost_message = r < lost_message_rate;
+            }
+            if (lost_message) {
+                ROS_INFO("Lost message");
             }
         }
-        bool lost_message = false;
-        if ((lost_message_rate>0.0001)&& (id_sender!=ID_ROBOT)) {
-            double r = (rand() % 1000)/1000.0;
-            lost_message = r < lost_message_rate;
-        }
-        if (lost_message) {
-            ROS_INFO("Lost message");
-        }
-        else
 #endif
             receive_results();
     }

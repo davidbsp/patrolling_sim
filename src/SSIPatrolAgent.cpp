@@ -467,7 +467,9 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 
     int mnv = select_next_vertex(cv,selected_vertices);	
     double bidvalue = compute_bid(mnv); 
-    force_bid(mnv,bidvalue,ID_ROBOT); 
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    force_bid(mnv,bidvalue,value); 
     send_target(mnv,bidvalue);
 #if DEBUG_PRINT    
     printf("DTAP [%.1f] compute_next_vertex: waiting for bids\n",ros::Time::now().toSec());
@@ -491,7 +493,7 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 
     	if (best_bid(mnv)){ //if I am in the best position to go to mnv 
 			update_tasks();
-			//force_bid(mnv,0,ID_ROBOT); TODO: check
+			//force_bid(mnv,0,value); TODO: check
 			break;
     	} else {
 		if (greedy_best_bid(cv,mnv)){ //if the greedy action condition is true stop the vertex selection and go to mvn (do not update your task)
@@ -505,7 +507,7 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 			sprintf(strnow,"%d%02d%02d_%02d%02d%02d",  timeinfo->tm_year+1900,timeinfo->tm_mon+1,timeinfo->tm_mday,timeinfo->tm_hour,timeinfo->tm_min,timeinfo->tm_sec);
 			//open file
  			FILE* fp = fopen("greedy-actions.txt","a");
-			fprintf(fp,"time: %s; robot: %d; target vertex: %d; current vertex: %d\n",strnow,ID_ROBOT,mnv,cv);
+			fprintf(fp,"time: %s; robot: %d; target vertex: %d; current vertex: %d\n",strnow,value,mnv,cv);
 			fclose(fp);
 #endif
 			//exit from while loop	
@@ -513,7 +515,7 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 		} else {
 			mnv = select_next_vertex(cv,selected_vertices);	
 			bidvalue = compute_bid(mnv); 
-			force_bid(mnv,bidvalue,ID_ROBOT); 
+			force_bid(mnv,bidvalue,value); 
 			send_target(mnv,bidvalue);
 			//printf("  ... waiting for bids (%.2f seconds) ... \n",timeout);
 			wait();
@@ -534,23 +536,28 @@ int SSIPatrolAgent::compute_next_vertex(int cv) {
 
 // NOTE: redefined in DTASSIPart_Agent
 void SSIPatrolAgent::update_tasks(){
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
     for (size_t i = 0; i< dimension; i++){
-        tasks[i] = (bids[i].robotId == ID_ROBOT);
+        tasks[i] = (bids[i].robotId == value);
     }
 }
 
 void SSIPatrolAgent::send_target(int nv,double bv) {
 	//msg format: [ID_ROBOT,msg_type,next_vertex_index,bid_value]
+        int value = ID_ROBOT;
+        if (value==-1){value=0;}
+    
     	int msg_type = DTASSI_TR;
     	std_msgs::Int16MultiArray msg;
     	msg.data.clear();
 
-	msg.data.push_back(ID_ROBOT);
+	msg.data.push_back(value);
         msg.data.push_back(msg_type);
         msg.data.push_back(nv);
 #if DEBUG_PRINT
         printf("DTAP [%.1f]  ** sending Task Request [robot:%d, msgtype:%d, next_vertex:%d, bid:%.2f ] \n",
-		ros::Time::now().toSec(),ID_ROBOT,msg_type,nv,bv);
+		ros::Time::now().toSec(),value,msg_type,nv,bv);
 #endif
         int ibv = (int)(bv);
         if (ibv>32767) { // Int16 is used to send messages
@@ -565,16 +572,19 @@ void SSIPatrolAgent::send_target(int nv,double bv) {
 
 
 void SSIPatrolAgent::send_bid(int nv,double bv) {
+        int value = ID_ROBOT;
+        if (value==-1){value=0;}
+        
 	//msg format: [ID_ROBOT,msg_type,next_vertex_index,bid_value]
     	int msg_type = DTASSI_BID;
     	std_msgs::Int16MultiArray msg;
     	msg.data.clear();
 
-	msg.data.push_back(ID_ROBOT);
+	msg.data.push_back(value);
         msg.data.push_back(msg_type);
         msg.data.push_back(nv);
 #if DEBUG_PRINT
-    	printf("DTAP  ** sending Bid [robot:%d, msgtype:%d, next_vertex:%d, bid:%.2f ] \n",ID_ROBOT,msg_type,nv,bv);
+    	printf("DTAP  ** sending Bid [robot:%d, msgtype:%d, next_vertex:%d, bid:%.2f ] \n",value,msg_type,nv,bv);
 #endif
         int ibv = (int)(bv);
         if (ibv>32767) { // Int16 is used to send messages
@@ -632,8 +642,9 @@ bool SSIPatrolAgent::best_bid(int nv){
         }
         printf("] \n"); 
 */
-
-	return (bids[nv].robotId==ID_ROBOT);	
+        int value = ID_ROBOT;
+        if (value==-1){value=0;}
+	return (bids[nv].robotId==value);	
 }
 
 // current_vertex (goal just reached)
@@ -641,11 +652,14 @@ bool SSIPatrolAgent::best_bid(int nv){
 //make this blocking to wait for bids
 //
 void SSIPatrolAgent::send_results() {
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    
     //result= [ID,msg_type,global_idleness[1..dimension],next_vertex]
     int msg_type = DTAGREEDY_MSG_TYPE;
     std_msgs::Int16MultiArray msg;
     msg.data.clear();
-    msg.data.push_back(ID_ROBOT);
+    msg.data.push_back(value);
     msg.data.push_back(msg_type);
     // printf("  ** sending [%d, %d, ",ID_ROBOT,msg_type);
     pthread_mutex_lock(&lock);
@@ -741,12 +755,14 @@ void SSIPatrolAgent::task_request_msg_handler(std::vector<int>::const_iterator i
 
 // CHECK: added Luca !!!
         //if (nv==next_vertex || nv==next_next_vertex) {
-            double my_bidValue = compute_bid(nv); 
-	    update_bids(nv,my_bidValue,ID_ROBOT);  // update bids with my value
+            double my_bidValue = compute_bid(nv);
+            int value = ID_ROBOT;
+            if (value==-1){value=0;}
+	    update_bids(nv,my_bidValue,value);  // update bids with my value
 	//}
 
 //      if (my_bidValue<bv*(1+hist)){
-        if (bids[nv].robotId==ID_ROBOT){
+        if (bids[nv].robotId==value){
 //              send_bid(nv,my_bidValue);
                 send_bid(nv,bids[nv].bidValue);
         }
@@ -769,7 +785,9 @@ void SSIPatrolAgent::receive_results() {
         
     std::vector<int>::const_iterator it = vresults.begin();
     int id_sender = *it; it++;
-    if (id_sender==ID_ROBOT) return;
+    int value = ID_ROBOT;
+    if (value==-1){value=0;}
+    if (id_sender==value) return;
     int msg_type = *it; it++;
     //printf("  ** received [%d, %d, ... ] \n",id_sender,msg_type);
     switch (msg_type){
