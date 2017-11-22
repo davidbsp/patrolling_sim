@@ -46,12 +46,12 @@
 #include <nav_msgs/Odometry.h>
 #include <std_srvs/Empty.h>
 
-
 #include "PatrolAgent.h"
 
 using namespace std;
 
 #define DELTA_TIME_SEQUENTIAL_START 15
+#define SIMULATE_FOREVER true //WARNING: Set this to false, if you want a finishing condition.
 
 const std::string PS_path = ros::package::getPath("patrolling_sim"); 	//D.Portugal => get pkg path
 
@@ -849,11 +849,13 @@ void PatrolAgent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr& msg) {
             wait.sleep();
             initialize = false;
         }
-        
+
+#if SIMULATE_FOREVER == false
         if (initialize==false && vresults[2]==999) {   //"-1,msg_type,999" (END)
             ROS_INFO("The simulation is over. Let's leave");
             end_simulation = true;     
         }
+#endif        
     }
     
     if (!initialize) {

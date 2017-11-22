@@ -61,11 +61,8 @@ using namespace std;
 #include "patrolling_sim/GoToStartPosSrv.h"
 
 #define NUM_MAX_ROBOTS 32
-#define MAX_COMPLETE_PATROL 100
-#define MAX_EXPERIMENT_TIME 86400  // seconds
 #define DEAD_ROBOT_TIME 300.0 // (seconds) time from last goal reached after which a robot is considered dead
-#define TIMEOUT_WRITE_RESULTS 180.0 // (seconds) timeout for writing results to file /** YOU MIGHT WANT TO INCREASE THIS IN REAL ROBOT EXPERIMENTS **/
-#define FOREVER true
+#define TIMEOUT_WRITE_RESULTS 180.0 // (seconds) timeout for writing results to file 
 // For hystograms
 #define RESOLUTION 1.0 // seconds
 #define MAXIDLENESS 500.0 // seconds
@@ -73,6 +70,9 @@ using namespace std;
 #define LOG_MONITOR 0
 #define SAVE_HYSTOGRAMS 0
 #define EXTENDED_STAGE 0
+
+#define SIMULATE_FOREVER true                   //WARNING: Set this to false, if you want a finishing condition.
+#define TIMEOUT_WRITE_RESULTS_FOREVER 900.0     // timeout for writing results to file when simulating forever
 
 using std::string;
 using std::cout;
@@ -831,8 +831,14 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
       
       // printf("### report time=%.1f  last_report_time=%.1f diff = %.1f\n",report_time, last_report_time, report_time - last_report_time);
       
-      // write results every TIMEOUT_WRITE_RESULTS seconds anyway
-      bool timeout_write_results = (report_time - last_report_time > TIMEOUT_WRITE_RESULTS);
+      // write results every TIMEOUT_WRITE_RESULTS_(FOREVER) seconds anyway
+      bool timeout_write_results;
+      
+#if SIMULATE_FOREVER
+      timeout_write_results = (report_time - last_report_time > TIMEOUT_WRITE_RESULTS_FOREVER);
+#else
+      timeout_write_results = (report_time - last_report_time > TIMEOUT_WRITE_RESULTS);
+#endif
       
       if ((patrol_cnt == complete_patrol) || timeout_write_results){ 
 
@@ -941,7 +947,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
       dolog("    check - begin");
 
       // Check if simulation must be terminated
-      /** YOU MIGHT WANT TO IGNORE THIS IN REAL ROBOT EXPERIMENTS (RUN INDEFINITELY) **/
+#if SIMULATE_FOREVER == false
       dead = check_dead_robots();
                 
       simrun=true; simabort=false;
@@ -962,7 +968,7 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
           ros::spinOnce();
           break;
       }
-      /** YOU MIGHT WANT TO IGNORE THIS IN REAL ROBOT EXPERIMENTS (RUN INDEFINITELY) **/
+#endif
 
       dolog("    check - end");
 
