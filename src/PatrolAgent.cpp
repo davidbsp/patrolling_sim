@@ -281,13 +281,11 @@ void PatrolAgent::run() {
     }
     mb_string += "move_base/clear_costmaps";
     
-    ROS_ERROR("%s",mb_string.c_str());
-    
     if (ros::service::call(mb_string.c_str(), srv)){
     //if (ros::service::call("move_base/clear_costmaps", srv)){
         ROS_INFO("Costmap correctly cleared before patrolling task.");
     }else{
-        ROS_WARN("Was not able to clear costmap before patrolling...");
+        ROS_WARN("Was not able to clear costmap (%s) before patrolling...", mb_string.c_str());
     }
     
     // Asynch spinner (non-blocking)
