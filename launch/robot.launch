@@ -4,8 +4,8 @@
   <arg name="mapname" default="grid" />
   <arg name="use_amcl" default="true" />
   <arg name="use_move_base" default="true" />
-  <arg name="use_thin_localizer" default="false" />
-  <arg name="use_thin_planner" default="false" />
+  <arg name="use_srrg_localizer" default="false" />
+  <arg name="use_spqrel_planner" default="false" />
 
 
   <group ns="$(arg robotname)">    
@@ -46,36 +46,37 @@
     </group>
 
 
-    <!-- thin_navigation modules from RoCoCo lab Sapienza University of Rome, Italy -->       
+    <!-- spqrel_navigation modules from RoCoCo lab Sapienza University of Rome, Italy -->       
 
-    <group if="$(arg use_thin_localizer)">
+    <!--- srrg_localizer -->
+    <group if="$(arg use_srrg_localizer)">
           <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 /map /$(arg robotname)/map 100" />
       
-            <!--- thin_localizer -->
-          <node pkg="thin_navigation" type="thin_localizer_node" name="thin_localizer" output="screen">
+            
+          <node pkg="spqrel_navigation" type="srrg_localizer2d_node" name="srrg_localizer" output="screen">
               <param name="global_frame_id" value="/$(arg robotname)/map"/>
               <param name="base_frame_id" value="/$(arg robotname)/base_link"/>
               <param name="odom_frame_id" value="/$(arg robotname)/odom"/>
               <param name="laser_topic" value="/$(arg robotname)/base_scan"/>
+              <param name="use_gui" value="false"/>
           </node>
     </group>
 
-    
-    <group if="$(arg use_thin_planner)">            
-           <node pkg="thin_navigation" type="thin_planner_node" name="thin_planner" output="screen">
+    <!--- spqrel_planner -->    
+    <group if="$(arg use_spqrel_planner)">            
+           <node pkg="spqrel_navigation" type="spqrel_planner_node" name="spqrel_planner" output="screen">
               <param name="max_range" value="10.0"/>
-              <param name="max_tv" value="1.0"/>
-              <param name="max_rv" value="1.0"/>
+              <param name="max_linear_vel" value="1.0"/>
+              <param name="max_angular_vel" value="1.0"/>
               <param name="global_frame_id" value="/$(arg robotname)/map"/>
               <param name="base_frame_id" value="/$(arg robotname)/base_link"/>
               <param name="laser_topic" value="/$(arg robotname)/base_scan"/>
               <param name="command_vel_topic" value="/$(arg robotname)/cmd_vel"/>
-              <param name="robot_radius" value="0.67"/>
-              <param name="distance_threshold" value="3.0"/>
-              <param name="distance_cost" value="1.5"/>
+              <param name="robot_radius" value="0.5"/>
+              <param name="use_gui" value="false"/>
            </node>
     </group>
-
+srrg
 
     <!-- INITIAL POSES FOR LOCALIZER -->
     

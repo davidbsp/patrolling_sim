@@ -7,8 +7,8 @@
 # NROBOTS: number of robots
 # INITPOS: initial positions of the robots: (default,a,b,c,...)
 # ALG: Algorithm: RAND,CR,HCR,HPCC,CGG,MSP,GBS,SEBS,CBLS,DTAG,DTAP
-# LOC: Localization mode: odom, GPS
-# NAV: Navigation module: ros, thin_navigation
+# LOC: Localization mode: AMCL, fake_localization
+# NAV: Navigation module: ros, spqrel_navigation
 # GWAIT: Goal wait: how much time the robot stops when it reaches a goal
 # COMMDELAY: communication delay of all messages (in seconds)
 # TERM: Terminal to use gnome-terminal,xterm
@@ -20,7 +20,7 @@ MAP=DISlabs
 NROBOTS=8
 INITPOS=default
 ALG=DTAP
-LOC=odom
+LOC=AMCL
 NAV=ros
 GWAIT=3
 COMMDELAY=0.2

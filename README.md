@@ -74,15 +74,12 @@ Default navigation modules are standard ROS nodes amcl (localization) and move_b
 They work (usually) fine, but they require many computational resources that may limit the simulation of many robots 
 in a single machine.
 
-New navigation modules, called thin_navigation, are available at https://bitbucket.org/ggrisetti/thin_navigation.
-thin_localizer and thin_planner have the same interface as amcl and move_base so they can be used in their replacement
-by just changing the launch file. To install thin_navigation, just download the package in a catkin workspace and
-compile it with catkin_make (see README file for other details).
+New navigation modules, called spqrel_navigation, are available at https://github.com/LCAS/spqrel_navigation/wiki.
+The localizer and the planner have the same interface as amcl and move_base so they can be used in their replacement
+by just changing the launch file. To install spqrel_navigation, follow instructions in the web site.
 
-The thin_navigation modules have been fully integrated in patrolling_sim. Just select thin_navigation instead of ros
+The spqrel_navigation modules have been fully integrated in patrolling_sim. Just select spqrel_navigation instead of ros
 as navigation module either in the start_experiment.py GUI or in the run_exp.sh script.
-
-Warning: the thin_navigation modules are still under testing and debug!!!
 
 ************
 

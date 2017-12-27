@@ -37,7 +37,7 @@ NRobots_list = ['1','2','4','6','8','10','12']
 
 LocalizationMode_list = ['AMCL','fake_localization']
 
-NavigationMode_list = ['ros','thin_navigation']
+NavigationMode_list = ['ros','spqrel_navigation']
 
 GWait_list = ['0','3','10']
 
@@ -50,8 +50,6 @@ Terminal_list = ['gnome-terminal','xterm']
 initPoses = {}
 
 COMMDELAY_DEFAULT = 0.0
-
-NAVMODULE_DEFAULT = "ros" # "thin_navigation" or "ros"
 
 INITPOS_DEFAULT = "default"
 
@@ -180,12 +178,10 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
         cmd = 'bash -c \'roslaunch patrolling_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+' '
         
         # Set navigation modules
-        if (NAV_MODULE=="ros_navigation"):
-           cmd = cmd + ' use_amcl:=true use_move_base:=true use_thin_localizer:=false use_thin_planner:=false '
-        elif (NAV_MODULE=="thin_navigation"):
-           cmd = cmd + ' use_amcl:=false use_move_base:=false  use_thin_localizer:=true use_thin_planner:=true '
-        elif (NAV_MODULE=="thin_localizer_only"):
-           cmd = cmd + ' use_amcl:=false use_move_base:=true  use_thin_localizer:=true use_thin_planner:=false '
+        if (NAV_MODULE=="ros"):
+           cmd = cmd + ' use_amcl:=true use_move_base:=true '
+        elif (NAV_MODULE=="spqrel_navigation"):
+           cmd = cmd + ' use_amcl:=false use_move_base:=false use_srrg_localizer:=true use_spqrel_planner:=true '
            
         cmd = cmd + "'"
         print cmd
@@ -325,7 +321,7 @@ class DIP(tk.Frame):
         self.locmode_list = LocalizationMode_list
         self.locmode_ddm = StringVar(self)
         try:
-            lastlocmode=self.oldConfigs["locMode"]
+            lastlocmode=self.oldConfigs["locmode"]
         except:
             lastlocmode=self.locmode_list[0]
         self.locmode_ddm.set(lastlocmode)
@@ -339,7 +335,7 @@ class DIP(tk.Frame):
         self.navmode_list = NavigationMode_list
         self.navmode_ddm = StringVar(self)
         try:
-            lastnavmode=self.oldConfigs["navMode"]
+            lastnavmode=self.oldConfigs["navmode"]
         except:
             lastnavmode=self.navmode_list[0]
         self.navmode_ddm.set(lastnavmode)
@@ -384,7 +380,7 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), NAVMODULE_DEFAULT, self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false",1.0) )
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), self.navmode_ddm.get(), self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false",1.0) )
 
     
     def quit(self):
