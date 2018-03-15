@@ -287,10 +287,13 @@ void finish_simulation (){ //-1,msg_type,999,0,0
   results_pub.publish(msg);
   ros::spinOnce();  
 
+#if EXTENDED_STAGE  
   ROS_INFO("Taking a screenshot of the simulator...");
   std_msgs::String ss;
   ss.data = "screenshot";
   screenshot_pub.publish(ss);
+#endif
+  
   ros::spinOnce();  
 }
 
@@ -769,8 +772,9 @@ int main(int argc, char** argv){  //pass TEAMSIZE GRAPH ALGORITHM
   //Publish data to "results"
   results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
   
+#if EXTENDED_STAGE  
   screenshot_pub = nh.advertise<std_msgs::String>("/stageGUIRequest", 100);
-    
+#endif    
 
   double duration = 0.0, real_duration = 0.0;
   
