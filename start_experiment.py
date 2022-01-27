@@ -1,13 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 
-import Tkinter as tk
-import tkMessageBox
-import ConfigParser
-import thread
-from Tkinter import *
-from ttk import *
-import Image, tkFileDialog
+import tkinter as tk
+import tkinter.messagebox
+import configparser
+import _thread
+from tkinter import *
+from tkinter.ttk import *
+from PIL import Image 
+from tkinter import filedialog
 import numpy as np
 import sys, time, os, glob, shutil
 from math import atan2, degrees, radians
@@ -64,13 +65,13 @@ def findAlgName(alg):
 # load initial poses from configuration file
 def loadInitPoses():
   try:
-    ConfigIP = ConfigParser.ConfigParser()
+    ConfigIP = configparser.ConfigParser()
     ConfigIP.read(dirname+"/params/initial_poses.txt")
     for option in ConfigIP.options("InitialPoses"):
-        #print option
+        print(option)
         initPoses[option] = ConfigIP.get("InitialPoses", option)
   except:
-    print "Could not load initial poses file"
+    print("Could not load initial poses file")
 
 
 # get ROS time from /clock topic
@@ -102,19 +103,19 @@ def getSimulationRunning():
 def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP):
 
     ALG = findAlgName(ALG_SHORT)
-    print 'Run the experiment'
-    print 'Loading map ',MAP
-    print 'Initial pos ',INITPOS
-    print 'N. robot ',NROBOTS
-    print 'Algorithm ',ALG,'  ',ALG_SHORT
-    print 'Localization Mode ',LOC_MODE
-    print 'Navigation module ', NAV_MODULE
-    print 'Goal wait time ', GWAIT
-    print 'Communication delay ',COMMDELAY
-    print 'Terminal ',TERM
-    print 'Timeout ',TIMEOUT
-    print 'Custom Stage ',CUSTOM_STAGE
-    print 'Simulator speed-up ',SPEEDUP    
+    print("Run the experiment")
+    print("Loading map ",MAP)
+    print("Initial pos ",INITPOS)
+    print("N. robot ",NROBOTS)
+    print("Algorithm ",ALG," ",ALG_SHORT)
+    print("Localization Mode ",LOC_MODE)
+    print("Navigation module ", NAV_MODULE)
+    print("Goal wait time ", GWAIT)
+    print("Communication delay ",COMMDELAY)
+    print("Terminal ",TERM)
+    print("Timeout ",TIMEOUT)
+    print("Custom Stage ",CUSTOM_STAGE)
+    print("Simulator speed-up ",SPEEDUP)    
 
     if (TIMEOUT>0):
         TIMEOUT = TIMEOUT + 10 # Let's give more time to complete actions and logging
@@ -127,13 +128,13 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
         scenario = scenario+"_"+INITPOS
 
     iposes = initPoses[scenario.lower()]
-    print scenario,'   ',iposes
+    print(scenario,'   ',iposes)
     
     if (TERM == 'xterm'):
         roscore_cmd = 'xterm -e roscore &'
     else:
         roscore_cmd = 'gnome-terminal -e "bash -c \'roscore\'" &'
-    print roscore_cmd
+    print(roscore_cmd)
 
     os.system(roscore_cmd)
     os.system('sleep 3')
@@ -146,7 +147,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
 
     cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
     os.system(cmd)
-    print cmd    
+    print(cmd)
     os.system('sleep 1')
 
     cmd_monitor = 'rosrun patrolling_sim monitor '+MAP+' '+ALG_SHORT+' '+NROBOTS  
@@ -156,8 +157,8 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     cmd_stage = 'roslaunch patrolling_sim map.launch map:='+MAP+custom_stage
     if (os.getenv('ROS_DISTRO')=='groovy'):
       cmd_stage = cmd_stage + " stage_pkg:=stage"
-    print cmd_monitor
-    print cmd_stage
+    print(cmd_monitor)
+    print(cmd_stage)
     if (TERM == 'xterm'):
         os.system('xterm -e  "'+cmd_monitor+'" &') 
         os.system('xterm -e  "'+cmd_stage+'" &')
@@ -174,7 +175,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     
     gcmd = 'gnome-terminal '
     for i in range(0,int(NROBOTS)):
-        print 'Run robot ',i
+        print("Run robot ",i)
         cmd = 'bash -c \'roslaunch patrolling_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+' '
         
         # Set navigation modules
@@ -184,21 +185,21 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
            cmd = cmd + ' use_amcl:=false use_move_base:=false use_srrg_localizer:=true use_spqrel_planner:=true '
            
         cmd = cmd + "'"
-        print cmd
+        print(cmd)
         if (TERM == 'xterm'):
-	  os.system('xterm -e  "'+cmd+'" &')
-	  os.system('sleep 1')
+            os.system('xterm -e  "'+cmd+'" &')
+        os.system('sleep 1')
         gcmd = gcmd + ' --tab -e "'+cmd+'" '
     gcmd = gcmd + '&'
     if (TERM == 'gnome-terminal'):
 	#print gcmd
-	os.system(gcmd)
+	    os.system(gcmd)
     os.system('sleep 5')    
         
     # Start patrol behaviors
     gcmd = 'gnome-terminal '
     for i in range(0,int(NROBOTS)):
-        print 'Run patrol robot ',i
+        print("Run patrol robot ",i)
         if (ALG_SHORT=='MSP'):
             cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+'\''
         elif (ALG_SHORT=='GBS' or ALG_SHORT=='SEBS' or ALG_SHORT=='CBLS'):
@@ -208,18 +209,18 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
             dateString = now.strftime("%Y-%m-%d-%H:%M")
             #cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
             cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+'\''
-        print cmd
+        print(cmd)
         if (TERM == 'xterm'):
-	  os.system('xterm -e  "'+cmd+'" &')
-	  os.system('sleep 1')
+	        os.system('xterm -e  "'+cmd+'" &')
+        os.system('sleep 1')
         gcmd = gcmd + ' --tab -e "'+cmd+'" '
     gcmd = gcmd + '&'
     if (TERM == 'gnome-terminal'):
       #print gcmd
-      os.system(gcmd)
+        os.system(gcmd)
     os.system('sleep '+NROBOTS)
 
-    print 'Stage simulator footprints and speedup'
+    print("Stage simulator footprints and speedup")
     os.system('rostopic pub /stageGUIRequest std_msgs/String "data: \'footprints\'"  --once')
     os.system('rostopic pub /stageGUIRequest std_msgs/String "data: \'speedup_%.1f\'"  --once' %(SPEEDUP))
     #os.system('rm ~/.ros/stage-000003.png')
@@ -227,7 +228,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     now = datetime.datetime.now()
     strinittime = now.strftime("%Y%m%d_%H%M%S")
 
-    print 'Experiment started at ',strinittime
+    print("Experiment started at ",strinittime)
     # wait for termination
     run = True
     while (run):
@@ -243,7 +244,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     #cmd = 'mv ~/.ros/stage-000005.png results/screenshots/stage-%s.png' %(strinittime)
     #os.system(cmd)
 
-    print "Terminating Experiment"
+    print("Terminating Experiment")
     os.system("./stop_experiment.sh")
 
 
@@ -380,7 +381,7 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), self.navmode_ddm.get(), self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false",1.0) )
+        _thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), self.navmode_ddm.get(), self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false",1.0) )
 
     
     def quit(self):
@@ -406,12 +407,12 @@ class DIP(tk.Frame):
     def loadOldConfig(self):
       try:
         self.oldConfigs = {}
-        self.Config = ConfigParser.ConfigParser()
+        self.Config = configparser.ConfigParser()
         self.Config.read(dirname+"/lastConfigUsed")
         for option in self.Config.options("Config"):
           self.oldConfigs[option] = self.Config.get("Config", option)
       except:
-        print "Could not load config file"
+        print("Could not load config file")
 
 
     
@@ -426,8 +427,8 @@ def main():
     root.mainloop()  
 
   elif (len(sys.argv)<10):
-    print "Use: ",sys.argv[0]
-    print " or  ",sys.argv[0],' <map> <n.robots> <init_pos> <alg_short> <loc_mode> <nav_module> <goal_wait_time> <communication_delay> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
+    print("Use: ",sys.argv[0])
+    print(" or  ",sys.argv[0],' <map> <n.robots> <init_pos> <alg_short> <loc_mode> <nav_module> <goal_wait_time> <communication_delay> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]')
 
   else:
     MAP = sys.argv[1]

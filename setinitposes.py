@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 
 import sys, time, os
@@ -8,11 +8,11 @@ colors = ['blue', 'red', 'cyan', 'magenta', 'blue', 'red', 'cyan', 'magenta', 'b
 
 def setIP(mapname,vip):
     cmd = 'rosparam set initial_pos "'+vip+'"'
-    print cmd
+    print(cmd)
     os.system(cmd)
     ip = eval(vip)
-    n = len(ip)/2
-    print 'Set initial poses of ',n,' robots'
+    n = int(len(ip)/2)
+    print("Set initial poses of ",n," robots")
 
     fnr = 'maps/'+mapname+'/robots.inc'
     fr = open(fnr, 'w')
