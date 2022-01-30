@@ -63,7 +63,7 @@ typedef struct {
 }reinforcement_learning;
 
 
-inline long double log2(const long double x);
+//inline long double log2_new(const long double x);
 
 uint random (uint current_vertex, vertex *vertex_web);
 

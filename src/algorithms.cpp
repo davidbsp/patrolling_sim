@@ -50,9 +50,9 @@ using namespace std;
 
 
 
-inline long double log2(const long double x){
+/*inline long double log2_new(const long double x){
     return  log(x) * M_LOG2E;
-}
+}*/
 
 
 uint random (uint current_vertex, vertex *vertex_web){
