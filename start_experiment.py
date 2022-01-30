@@ -7,7 +7,8 @@ import ConfigParser
 import thread
 from Tkinter import *
 from ttk import *
-import Image, tkFileDialog
+from PIL import Image 
+import tkFileDialog
 import numpy as np
 import sys, time, os, glob, shutil
 from math import atan2, degrees, radians
