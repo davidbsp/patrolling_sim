@@ -14,10 +14,10 @@
     <node pkg="fake_localization" type="fake_localization" respawn="false" name="fake_localization" output="screen">
       <param name="delta_x" value="0.0"/>
       <param name="delta_y" value="0.0"/>
-      <param name="delta_yaw" value="-1.57079632679"/>
+      <param name="delta_yaw" value="0.0"/>
       <param name="global_frame_id" value="map"/>     
-      <param name="odom_frame_id" value="/$(arg robotname)/odom"/>         
-      <param name="base_frame_id" value="/$(arg robotname)/base_link"/>       
+      <param name="odom_frame_id" value="$(arg robotname)/odom"/>         
+      <param name="base_frame_id" value="$(arg robotname)/base_link"/>       
     </node>
     
     <!-- Override AMCL Frame Params to include prefix -->
