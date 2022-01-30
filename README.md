@@ -1,5 +1,5 @@
 =================================
-patrolling_sim v2.2.4 (Dec. 2022)
+patrolling_sim v2.2.4 (Jan. 2022)
 =================================
 
 patrolling_sim for ROS (Noetic) -- catkin version
