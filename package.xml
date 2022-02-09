@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>patrolling_sim</name>
-  <version>2.2.2</version>
+  <version>2.2.4</version>
   <description>Multi-Robot Patrolling Stage/ROS Simulation Package.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
@@ -9,6 +9,7 @@
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
   <maintainer email="davidbsp@ingeniarius.pt">David Portugal</maintainer>
   <maintainer email="iocchi@dis.uniroma1.it">Luca Iocchi</maintainer>
+  <maintainer email="joao.castilho@isr.uc.pt">João Castilho</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
