@@ -4,19 +4,23 @@ patrolling_sim v2.2.4 (Jan. 2022)
 
 patrolling_sim for ROS (Noetic) -- catkin version
 
-Authors:
+## Instalation instructions for Noetic version:
 
-Main framework and basic algorithms:
- David Portugal (2011-2014), Luca Iocchi (2014-2016)
+- For the ROS Noetic version to work it needs to use a modified version of stage_ros. Please clone this [repo](https://github.com/imranlivt/stage_ros) into your catkin workspace and compile it again.
+
+## Authors:
+
+### Main framework and basic algorithms:
+* David Portugal (2011-2014), Luca Iocchi (2014-2016)
  
-Additional algorithms:
+### Additional algorithms:
 * DTAP: Alessandro Farinelli (2014)
 
-ROS Noetic migration:
+### ROS Noetic migration:
 * João Pedro Castilho (2022)
 
 =================================
-patrolling_sim v2.2.2 (Dec. 2016)
+# patrolling_sim v2.2.2 (Dec. 2016)
 =================================
 
 patrolling_sim for ROS (Groovy/Hydro/Indigo) -- catkin version
